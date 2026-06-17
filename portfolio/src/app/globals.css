@@ -173,6 +173,45 @@ h1, h2, h3, h4, h5, h6 {
     color: #ffffff;
   }
 
+  /* Custom dropdown/button styles */
+  .dropdown-btn {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+  }
+
+  .dropdown-menu {
+    min-width: 10rem;
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    border: 1px solid rgba(255,255,255,0.06);
+    backdrop-filter: blur(8px);
+  }
+
+  .dropdown-item {
+    background: transparent;
+    border: 0;
+    color: inherit;
+  }
+
+  /* Mobile Bottom Navbar Styles */
+  @media (max-width: 768px) {
+    main {
+      padding-bottom: 5rem;
+    }
+
+    /* Smooth scroll behavior */
+    html {
+      scroll-behavior: smooth;
+    }
+  }
+
+  @media (max-width: 480px) {
+    /* Extra small screens: reduce nav width */
+  }
+
   .glass-card {
     background: rgba(255, 255, 255, 0.06);
     backdrop-filter: blur(20px);
@@ -297,6 +336,436 @@ h1, h2, h3, h4, h5, h6 {
 
   .card-glow:hover::before {
     opacity: 1;
+  }
+}
+
+/* ---- Workflow Animation ---- */
+
+.wf-root {
+  position: relative;
+  padding: 2rem 2rem 1.5rem;
+  margin: 1rem 0 2.5rem;
+  background: rgba(255, 255, 255, 0.015);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 1.5rem;
+  overflow: hidden;
+}
+
+.wf-root::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 20% 40%, rgba(99, 102, 241, 0.05) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 40%, rgba(14, 165, 233, 0.05) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 90%, rgba(167, 139, 250, 0.03) 0%, transparent 40%);
+  pointer-events: none;
+}
+
+/* ── Header ── */
+
+.wf-header {
+  text-align: center;
+  margin-bottom: 1.75rem;
+}
+
+.wf-header-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  padding: 0.4rem 1.25rem;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(14, 165, 233, 0.12));
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  color: var(--foreground);
+}
+
+.wf-header-sub {
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--muted-foreground);
+  letter-spacing: 0.01em;
+}
+
+/* ── Characters Row (side by side) ── */
+
+.wf-characters {
+  display: flex;
+  align-items: stretch;
+  gap: 1rem;
+  min-height: 240px;
+}
+
+/* ── Character Cards ── */
+
+.wf-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 1rem 1rem 1.25rem;
+  border-radius: 1.25rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  position: relative;
+  min-width: 0;
+}
+
+.wf-card:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.wf-card--client {
+  box-shadow: inset 0 0 40px rgba(99, 102, 241, 0.02);
+}
+
+.wf-card--dev {
+  box-shadow: inset 0 0 40px rgba(14, 165, 233, 0.02);
+}
+
+.wf-card-label {
+  margin-top: 0.5rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted-foreground);
+  background: rgba(255, 255, 255, 0.04);
+  padding: 0.2rem 0.75rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.wf-card-bubble-area {
+  min-height: 52px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  margin-bottom: 0.5rem;
+  width: 100%;
+}
+
+/* ── Avatar ── */
+
+.wf-avatar-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.wf-avatar-svg {
+  position: relative;
+  z-index: 1;
+}
+
+.wf-avatar-glow {
+  position: absolute;
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  filter: blur(20px);
+  z-index: 0;
+}
+
+.wf-avatar-glow--client {
+  background: rgba(99, 102, 241, 0.25);
+}
+
+.wf-avatar-glow--dev {
+  background: rgba(14, 165, 233, 0.25);
+}
+
+/* ── Speech Bubbles ── */
+
+.wf-speech {
+  position: relative;
+  padding: 0.5rem 0.85rem;
+  border-radius: 0.875rem;
+  border: 1px solid;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--foreground);
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.wf-speech-icon {
+  font-size: 0.95rem;
+  flex-shrink: 0;
+}
+
+.wf-speech-text {
+  min-width: 14px;
+}
+
+.wf-speech-cursor {
+  font-size: 0.85rem;
+  font-weight: 300;
+  color: var(--muted-foreground);
+}
+
+.wf-speech-tail {
+  position: absolute;
+  bottom: -8px;
+  z-index: 1;
+}
+
+.wf-speech-tail--left {
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.wf-speech-tail--right {
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* ── Thinking Dots ── */
+
+.wf-thinking {
+  display: flex;
+  gap: 0.2rem;
+  font-size: 1.1rem;
+  color: #a78bfa;
+  margin-top: 0.25rem;
+}
+
+/* ── Pipeline Area ── */
+
+.wf-pipeline-area {
+  flex: 0 0 auto;
+  width: clamp(80px, 15vw, 160px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+}
+
+.wf-pipeline {
+  width: 100%;
+  position: relative;
+}
+
+.wf-packet {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.3rem;
+  filter: drop-shadow(0 0 8px rgba(99, 102, 241, 0.4));
+  pointer-events: none;
+  z-index: 5;
+}
+
+/* ── Stage Timeline ── */
+
+.wf-timeline {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0;
+  margin-top: 1.5rem;
+  padding: 0 1rem;
+}
+
+.wf-timeline-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  position: relative;
+  max-width: 140px;
+}
+
+.wf-timeline-connector {
+  position: absolute;
+  top: 10px;
+  right: 50%;
+  width: 100%;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.06);
+  z-index: 0;
+  transition: background 0.4s ease;
+}
+
+.wf-timeline-connector.active {
+  background: linear-gradient(90deg, #6366f1, #60a5fa);
+}
+
+.wf-timeline-dot {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 1;
+  transition: all 0.3s ease;
+}
+
+.wf-timeline-dot.done {
+  border-color: transparent;
+}
+
+.wf-timeline-dot.current {
+  border-color: transparent;
+  transform: scale(1.1);
+}
+
+.wf-timeline-dot.pending {
+  opacity: 0.5;
+}
+
+.wf-timeline-dot-icon {
+  font-size: 0.65rem;
+  line-height: 1;
+}
+
+.wf-timeline-label {
+  margin-top: 0.4rem;
+  font-size: 0.62rem;
+  font-weight: 500;
+  color: var(--muted-foreground);
+  text-align: center;
+  opacity: 0.5;
+  transition: opacity 0.3s ease, color 0.3s ease;
+  line-height: 1.3;
+}
+
+.wf-timeline-label.active {
+  opacity: 1;
+  color: var(--foreground);
+}
+
+/* ── Status Bar ── */
+
+.wf-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 1.25rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--muted-foreground);
+  letter-spacing: 0.01em;
+}
+
+.wf-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #818cf8;
+  animation: wf-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes wf-pulse {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.3); }
+}
+
+/* ── Responsive ── */
+
+@media (max-width: 768px) {
+  .wf-root {
+    padding: 1.5rem 1rem 1rem;
+  }
+
+  .wf-characters {
+    flex-direction: row;
+    gap: 0.5rem;
+    min-height: 200px;
+  }
+
+  .wf-card {
+    padding: 0.75rem 0.5rem 1rem;
+  }
+
+  .wf-avatar-svg {
+    width: 70px;
+    height: 84px;
+  }
+
+  .wf-avatar-glow {
+    width: 60px;
+    height: 60px;
+  }
+
+  .wf-pipeline-area {
+    width: 50px;
+    min-width: 40px;
+  }
+
+  .wf-speech {
+    font-size: 0.65rem;
+    padding: 0.35rem 0.6rem;
+  }
+
+  .wf-card-label {
+    font-size: 0.6rem;
+  }
+
+  .wf-timeline {
+    gap: 0;
+    padding: 0 0.25rem;
+  }
+
+  .wf-timeline-label {
+    font-size: 0.5rem;
+  }
+
+  .wf-timeline-dot {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .wf-characters {
+    gap: 0.25rem;
+  }
+
+  .wf-pipeline-area {
+    width: 36px;
+    min-width: 30px;
+  }
+
+  .wf-avatar-svg {
+    width: 56px;
+    height: 67px;
+  }
+
+  .wf-card-bubble-area {
+    min-height: 40px;
+  }
+
+  .wf-speech {
+    font-size: 0.58rem;
+    padding: 0.3rem 0.5rem;
+    border-radius: 0.6rem;
+  }
+
+  .wf-timeline {
+    flex-wrap: wrap;
+    gap: 0.25rem;
+  }
+
+  .wf-timeline-step {
+    flex: 0 0 auto;
+    min-width: 50px;
   }
 }
 
