@@ -2,9 +2,11 @@
 
 import Image from "next/image";
 import { useRef, useState, useEffect } from "react";
-import { motion, useScroll, useTransform, useInView } from "framer-motion";
+import { motion, AnimatePresence, useScroll, useTransform, useInView } from "framer-motion";
 import { Mail, ExternalLink, Code2, Briefcase, Award, Code, Globe2, Wrench, ChevronDown, ArrowUpRight, Terminal } from "lucide-react";
 import { FaGithub, FaLinkedin } from "react-icons/fa";
+import Link from "next/link";
+import WorkflowAnimation from "./components/WorkflowAnimation";
 
 /* ─── Data ─── */
 
@@ -631,11 +633,204 @@ function SkillBar({ name, level, delay }: { name: string; level: number; delay: 
   );
 }
 
+/* Simple custom language dropdown to replace native select for improved UI */
+function LanguageDropdown({
+  selectedLang,
+  onChange,
+  ariaLabel,
+}: {
+  selectedLang: Language;
+  onChange: (lang: Language) => void;
+  ariaLabel?: string;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const selectedOption = LANG_OPTIONS.find(opt => opt.code === selectedLang) || LANG_OPTIONS[0];
+
+  return (
+    <div className="relative" ref={dropdownRef}>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        aria-label={ariaLabel}
+        className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 text-sm font-medium px-4 py-2 glass hover:bg-white/10 transition-all duration-300"
+      >
+        <span>{selectedOption.flag}</span>
+        <span className="hidden sm:inline">{selectedOption.label}</span>
+        <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${isOpen ? "rotate-180" : ""}`} />
+      </button>
+      
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+            transition={{ duration: 0.2 }}
+            className="absolute top-full right-0 mt-2 w-40 rounded-xl glass border border-white/10 shadow-2xl overflow-hidden z-50 flex flex-col"
+            style={{ backgroundColor: 'var(--background)' }}
+          >
+            {LANG_OPTIONS.map((option) => (
+              <button
+                key={option.code}
+                onClick={() => {
+                  onChange(option.code as Language);
+                  setIsOpen(false);
+                }}
+                className={`flex items-center gap-3 px-4 py-3 text-sm text-left transition-colors hover:bg-white/10 ${
+                  selectedLang === option.code ? "bg-white/5 text-indigo-400 font-semibold" : "text-[var(--foreground)]"
+                }`}
+              >
+                <span>{option.flag}</span>
+                <span>{option.label}</span>
+              </button>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+/* ─── Mobile Bottom Navigation Component ─── */
+
+type NavIconType = React.ElementType;
+
+const MOBILE_NAV_ICONS: Record<string, NavIconType> = {
+  home: Terminal,
+  projects: Code2,
+  experience: Briefcase,
+  skills: Wrench,
+  certifications: Award,
+};
+
+function MobileBottomNav({ t, isRTL }: { t: typeof TRANSLATIONS["en"]; isRTL: boolean }) {
+  const [activeSection, setActiveSection] = useState<string>("home");
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const sections = NAV_LINKS.map((link) => link.labelKey);
+      let current = "home";
+
+      for (const labelKey of sections) {
+        const section = document.getElementById(
+          NAV_LINKS.find((l) => l.labelKey === labelKey)?.href?.slice(1) || ""
+        );
+        if (section) {
+          const rect = section.getBoundingClientRect();
+          if (rect.top <= window.innerHeight / 2) {
+            current = labelKey;
+          }
+        }
+      }
+      setActiveSection(current);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  return (
+    <motion.nav
+      initial={{ opacity: 0, y: 50 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.5, duration: 0.4 }}
+      className="md:hidden fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50 w-[95vw] max-w-sm"
+    >
+      <div className="flex items-center justify-around px-2 py-3 glass rounded-2xl shadow-2xl border border-white/10 backdrop-blur-xl">
+        {NAV_LINKS.map((link, idx) => {
+          const Icon = MOBILE_NAV_ICONS[link.labelKey] || Code2;
+          const isActive = activeSection === link.labelKey;
+
+          return (
+            <motion.a
+              key={link.href}
+              href={link.href}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
+              className={`relative flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-all duration-300 group ${
+                isActive
+                  ? "text-indigo-400"
+                  : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+              }`}
+            >
+              {/* Active indicator background */}
+              {isActive && (
+                <motion.div
+                  layoutId="activeIndicator"
+                  className="absolute inset-0 bg-indigo-500/10 rounded-xl -z-10"
+                  transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                />
+              )}
+
+              {/* Icon with glow on active */}
+              <motion.div
+                animate={isActive ? { scale: 1.15 } : { scale: 1 }}
+                transition={{ duration: 0.2 }}
+                className={`transition-all ${isActive ? "drop-shadow-[0_0_8px_rgba(99,102,241,0.6)]" : ""}`}
+              >
+                <Icon className={`w-5 h-5 ${isActive ? "" : "group-hover:translate-y-[-2px] transition-transform"}`} />
+              </motion.div>
+
+              {/* Label - show on active only or on hover */}
+              <motion.span
+                initial={false}
+                animate={isActive ? { opacity: 1, height: "auto" } : { opacity: 0, height: 0 }}
+                className="text-xs font-semibold whitespace-nowrap overflow-hidden"
+              >
+                {t.nav[link.labelKey]}
+              </motion.span>
+
+              {/* Hover underline effect */}
+              {!isActive && (
+                <motion.div
+                  className="absolute bottom-0 left-1/2 h-0.5 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full"
+                  initial={{ width: 0, x: "-50%" }}
+                  whileHover={{ width: "60%" }}
+                  transition={{ duration: 0.3 }}
+                />
+              )}
+            </motion.a>
+          );
+        })}
+      </div>
+    </motion.nav>
+  );
+}
+
 /* ─── Main Page ─── */
 
 export default function Home() {
-  const [isDark, setIsDark] = useState(false);
-  const [selectedLang, setSelectedLang] = useState<Language>("en");
+  const [isDark, setIsDark] = useState<boolean>(() => {
+    try {
+      if (typeof window === "undefined") return false;
+      const stored = localStorage.getItem("theme");
+      return stored === "dark" || document.documentElement.classList.contains("dark");
+    } catch (e) {
+      return false;
+    }
+  });
+
+  const [selectedLang, setSelectedLang] = useState<Language>(() => {
+    try {
+      if (typeof window === "undefined") return "en";
+      const stored = localStorage.getItem("language") as Language | null;
+      return stored && (stored in TRANSLATIONS) ? stored : "en";
+    } catch (e) {
+      return "en";
+    }
+  });
+
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -689,37 +884,30 @@ export default function Home() {
 
       {/* ─── Navigation ─── */}
       <header className="fixed top-0 left-0 w-full z-50 glass" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-        <div className="container mx-auto px-6 h-16 flex items-center justify-between">
+        <div className="container mx-auto px-6 h-16 flex items-center justify-between relative">
           <a href="#home" className="group flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm">
               W
             </div>
             <span className="text-lg font-bold tracking-tight text-gradient">Wajahat</span>
           </a>
-          <nav className="hidden md:flex gap-1">
+          <nav className="hidden md:flex md:items-center md:justify-center md:gap-2 lg:absolute lg:left-1/2 lg:transform lg:-translate-x-1/2 items-center justify-center gap-2 bg-white/5 border border-white/10 rounded-full px-4 py-2 glass shadow-lg">
             {NAV_LINKS.map((link) => (
               <a
                 key={link.href}
                 href={link.href}
-                className="nav-link text-sm font-medium text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors px-4 py-2"
+                className="nav-link text-sm font-medium text-[var(--muted-foreground)] hover:text-indigo-400 hover:bg-white/5 rounded-full transition-all px-4 py-2"
               >
                 {t.nav[link.labelKey]}
               </a>
             ))}
           </nav>
           <div className="flex items-center gap-3">
-            <select
-              value={selectedLang}
-              onChange={(event) => setSelectedLang(event.target.value as Language)}
-              className="themed-select rounded-lg border border-white/10 bg-white/5 text-sm font-medium text-[var(--foreground)] px-4 py-2 glass focus:outline-none shadow-lg transition-all duration-300"
-              aria-label={t.ui.languageSelect}
-            >
-              {LANG_OPTIONS.map((option) => (
-                <option key={option.code} value={option.code}>
-                  {`${option.flag} ${option.label}`}
-                </option>
-              ))}
-            </select>
+            <LanguageDropdown
+              selectedLang={selectedLang}
+              onChange={(lang) => setSelectedLang(lang)}
+              ariaLabel={t.ui.languageSelect}
+            />
             {mounted && (
               <button
                 onClick={() => setIsDark(!isDark)}
@@ -749,6 +937,9 @@ export default function Home() {
           </div>
         </div>
       </header>
+
+      {/* Enhanced Mobile bottom navbar with icons and active states */}
+      <MobileBottomNav t={t} isRTL={isRTL} />
 
       {/* ─── Ambient Background ─── */}
       <div className="fixed inset-0 pointer-events-none z-0">
@@ -885,6 +1076,11 @@ export default function Home() {
 
         <SectionDivider />
 
+        {/* Workflow animation (client-side) */}
+        <section className="container mx-auto px-6 py-12">
+          <WorkflowAnimation />
+        </section>
+
         {/* ═══════════════════════════════════════════
             PROJECTS SECTION
         ═══════════════════════════════════════════ */}
@@ -947,7 +1143,7 @@ export default function Home() {
         {/* ═══════════════════════════════════════════
             EXPERIENCE SECTION
         ═══════════════════════════════════════════ */}
-        <section id="experience" className="container mx-auto px-6 py-20">
+        <a href="/experience"><section id="experience" className="container mx-auto px-6 py-20" >
           <SectionHeading icon={Briefcase} title={t.experience.title} color="blue" isRTL={isRTL} />
 
           <motion.div
@@ -986,7 +1182,7 @@ export default function Home() {
               </motion.div>
             ))}
           </motion.div>
-        </section>
+        </section></a>
 
         <SectionDivider />
 
@@ -1130,3 +1326,6 @@ export default function Home() {
     </main>
   );
 }
+
+
+
