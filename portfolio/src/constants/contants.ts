@@ -27,6 +27,10 @@ export const TRANSLATIONS = {
     },
     experience: {
       title: "Experience",
+      cmit_role: "Full Stack Development Intern",
+      cmit_company: "CMIT Internship Program, Lahore",
+      cmit_duration: "July 2026 – Present",
+      cmit_desc: "Architected a full-stack blog platform (React + Vite + Supabase PostgreSQL) with RBAC, JWT-based sessions, MFA/AAL2 step-up auth, complete CRUD with role-based post scheduling, and PostgreSQL cron jobs (pg_cron) for automated announcements and subscription lifecycle management.",
       devflovv_role: "Associate Software Engineer",
       devflovv_company: "DevFlovv, Lahore",
       devflovv_duration: "June 2025 – June 2026",
@@ -91,6 +95,10 @@ export const TRANSLATIONS = {
     },
     experience: {
       title: "تجربہ",
+      cmit_role: "فل اسٹیک ڈویلپمنٹ انٹرن",
+      cmit_company: "سی ایم آئی ٹی انٹرنشپ پروگرام، لاہور",
+      cmit_duration: "جولائی 2026 – حال",
+      cmit_desc: "ری ایکٹ، ویٹ اور سوپا بیس پوسٹگری ایس کیو ایل کے ساتھ ایک فل اسٹیک بلاگ پلیٹ فارم بنایا جس میں رول بیسڈ رسائی، جے ڈبلیو ٹی سیشن، ایم ایف اے اور خودکار اعلانات کے لیے پی جی کرون جابز شامل ہیں۔",
       devflovv_role: "ایسوسی ایٹ سافٹ ویئر انجینئر",
       devflovv_company: "ڈیو فلوو، لاہور",
       devflovv_duration: "جون 2025 – جون 2026",
@@ -155,6 +163,10 @@ export const TRANSLATIONS = {
     },
     experience: {
       title: "अनुभव",
+      cmit_role: "फुल स्टैक डेवलपमेंट इंटर्न",
+      cmit_company: "CMIT इंटर्नशिप प्रोग्राम, लाहौर",
+      cmit_duration: "जुलाई 2026 – वर्तमान",
+      cmit_desc: "React, Vite और Supabase PostgreSQL के साथ एक फुल-स्टैक ब्लॉग प्लेटफॉर्म बनाया, जिसमें RBAC, JWT सत्र, MFA और pg_cron से स्वचालित घोषणाएं शामिल हैं।",
       devflovv_role: "एसोसिएट सॉफ्टवेयर इंजीनियर",
       devflovv_company: "देवफ्लोव (DevFlovv), लाहौर",
       devflovv_duration: "जून 2025 - जून 2026",
@@ -219,6 +231,10 @@ export const TRANSLATIONS = {
     },
     experience: {
       title: "الخبرة",
+      cmit_role: "متدرب تطوير متكامل",
+      cmit_company: "برنامج CMIT للتدريب، لاهور",
+      cmit_duration: "يوليو 2026 – حتى الآن",
+      cmit_desc: "بناء منصة مدونة متكاملة (React + Vite + Supabase PostgreSQL) مع التحكم في الوصول القائم على الأدوار، والمصادقة JWT، وMFA، وجدولة المنشورات، ووظائف cron التلقائية.",
       devflovv_role: "مهندس برمجيات مشارك",
       devflovv_company: "DevFlovv، لاهور",
       devflovv_duration: "يونيو 2025 - يونيو 2026",
@@ -283,6 +299,10 @@ export const TRANSLATIONS = {
     },
     experience: {
       title: "Expérience",
+      cmit_role: "Stagiaire Développeur Full Stack",
+      cmit_company: "Programme de Stage CMIT, Lahore",
+      cmit_duration: "Juillet 2026 – Présent",
+      cmit_desc: "Conception d'une plateforme de blog full-stack (React + Vite + Supabase PostgreSQL) avec RBAC, sessions JWT, MFA/AAL2, CRUD complet avec planification de publications et tâches cron PostgreSQL automatisées.",
       devflovv_role: "Ingénieur Logiciel Associé",
       devflovv_company: "DevFlovv, Lahore",
       devflovv_duration: "Juin 2025 – Juin 2026",
@@ -347,6 +367,10 @@ export const TRANSLATIONS = {
     },
     experience: {
       title: "Erfahrung",
+      cmit_role: "Full Stack Entwicklungspraktikant",
+      cmit_company: "CMIT Praktikumsprogramm, Lahore",
+      cmit_duration: "Juli 2026 – Heute",
+      cmit_desc: "Entwicklung einer Full-Stack-Blogplattform (React + Vite + Supabase PostgreSQL) mit RBAC, JWT-Sitzungen, MFA/AAL2, vollständigem CRUD mit Veröffentlichungsplanung und automatisierten PostgreSQL-Cron-Jobs.",
       devflovv_role: "Junior-Softwareentwickler",
       devflovv_company: "DevFlovv, Lahore",
       devflovv_duration: "Juni 2025 – Juni 2026",
@@ -419,6 +443,12 @@ export const PROJECTS = [
 ];
 
 export const WORK_HISTORY = [
+  {
+    companyKey: "cmit_company" as const,
+    roleKey: "cmit_role" as const,
+    durationKey: "cmit_duration" as const,
+    descKey: "cmit_desc" as const,
+  },
   {
     companyKey: "devflovv_company" as const,
     roleKey: "devflovv_role" as const,
