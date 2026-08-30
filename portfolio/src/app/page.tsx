@@ -7,6 +7,7 @@ import { Mail, ExternalLink, Code2, Briefcase, Award, Code, Globe2, Wrench, Chev
 import { FaGithub, FaLinkedin } from "react-icons/fa";
 import Link from "next/link";
 import WorkflowAnimation from "./components/WorkflowAnimation";
+import GitHubActivity from "./components/GitHubActivity";
 import { TRANSLATIONS, PROJECTS, dotColorStyles, colorStyles, scaleUp, slideInLeft, slideInRight, itemVariants, containerVariants, LANG_OPTIONS, NAV_LINKS, LANGUAGES, TOOLS, SKILLS, CERTIFICATIONS, WORK_HISTORY } from "../constants/contants";
 import type { Language } from "../types/types";
 
@@ -589,6 +590,9 @@ export default function Home() {
               </motion.a>
             ))}
           </motion.div>
+
+          {/* ─── GitHub Activity Feed ─── */}
+          <GitHubActivity />
         </section>
 
         <SectionDivider />
