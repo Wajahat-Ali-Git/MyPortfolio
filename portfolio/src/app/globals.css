@@ -199,7 +199,8 @@ h1, h2, h3, h4, h5, h6 {
   /* Mobile Bottom Navbar Styles */
   @media (max-width: 768px) {
     main {
-      padding-bottom: 5rem;
+      /* Extra padding so content isn't hidden behind the nav + any device home bar */
+      padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
     }
 
     /* Smooth scroll behavior */
@@ -209,7 +210,10 @@ h1, h2, h3, h4, h5, h6 {
   }
 
   @media (max-width: 480px) {
-    /* Extra small screens: reduce nav width */
+    /* Extra small screens: tighten page-level horizontal padding */
+    main {
+      padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
+    }
   }
 
   .glass-card {

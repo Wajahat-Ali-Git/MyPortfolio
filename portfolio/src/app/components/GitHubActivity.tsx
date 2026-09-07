@@ -27,6 +27,10 @@ interface GitHubEvent {
     commits?: { sha: string; message: string; author: { name: string } }[];
     pull_request?: { title: string; html_url: string; merged: boolean; number: number };
     size?: number;
+    /** SHA before the push */
+    before?: string;
+    /** HEAD SHA after the push */
+    head?: string;
   };
 }
 
@@ -37,11 +41,16 @@ interface ParsedEvent {
   title: string;
   description: string;
   repo: string;
+  /** Full owner/repo name for API calls */
+  repoFullName: string;
   repoUrl: string;
   time: string;
   relativeTime: string;
   commitCount?: number;
   color: string;
+  /** SHAs for fetching commit details via Compare API */
+  beforeSha?: string;
+  headSha?: string;
 }
 
 /* ─── Helpers ─── */
@@ -65,7 +74,8 @@ function getRelativeTime(dateStr: string): string {
 }
 
 function parseEvent(event: GitHubEvent): ParsedEvent | null {
-  const repo = event.repo.name.split("/").pop() || event.repo.name;
+  const repoShort = event.repo.name.split("/").pop() || event.repo.name;
+  const repoFullName = event.repo.name; // e.g. "Wajahat-Ali-Git/MyPortfolio"
   const repoUrl = `https://github.com/${event.repo.name}`;
   const time = new Date(event.created_at).toLocaleString("en-US", {
     month: "short",
@@ -77,21 +87,25 @@ function parseEvent(event: GitHubEvent): ParsedEvent | null {
 
   switch (event.type) {
     case "PushEvent": {
-      const commits = event.payload.commits || [];
       const branch = event.payload.ref?.replace("refs/heads/", "") || "main";
-      const latestMsg = commits.length > 0 ? commits[commits.length - 1].message.split("\n")[0] : "pushed code";
+      // GitHub removed commits array AND size from PushEvent payloads (Oct 2025).
+      // We'll enrich commit counts later via the Compare API.
+      const commitCount = event.payload.size ?? event.payload.commits?.length;
       return {
         id: event.id,
         type: "push",
         icon: GitCommit,
         title: `Pushed to ${branch}`,
-        description: latestMsg,
-        repo,
+        description: "Loading commit info…",
+        repo: repoShort,
+        repoFullName,
         repoUrl,
         time,
         relativeTime,
-        commitCount: commits.length,
+        commitCount,
         color: "emerald",
+        beforeSha: event.payload.before,
+        headSha: event.payload.head,
       };
     }
     case "PullRequestEvent": {
@@ -105,7 +119,8 @@ function parseEvent(event: GitHubEvent): ParsedEvent | null {
         icon: merged ? GitMerge : GitPullRequest,
         title: `${merged ? "Merged" : action.charAt(0).toUpperCase() + action.slice(1)} PR #${pr.number}`,
         description: pr.title,
-        repo,
+        repo: repoShort,
+        repoFullName,
         repoUrl,
         time,
         relativeTime,
@@ -120,8 +135,9 @@ function parseEvent(event: GitHubEvent): ParsedEvent | null {
         type: "create",
         icon: Activity,
         title: `Created ${refType}${ref ? ` ${ref}` : ""}`,
-        description: `New ${refType} in ${repo}`,
-        repo,
+        description: `New ${refType} in ${repoShort}`,
+        repo: repoShort,
+        repoFullName,
         repoUrl,
         time,
         relativeTime,

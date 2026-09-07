@@ -7,7 +7,7 @@ import { Mail, ExternalLink, Code2, Briefcase, Award, Code, Globe2, Wrench, Chev
 import { FaGithub, FaLinkedin } from "react-icons/fa";
 import Link from "next/link";
 import WorkflowAnimation from "./components/WorkflowAnimation";
-import GitHubActivity from "./components/GitHubActivity";
+import GitHubRepos from "./components/GitHubRepos";
 import { TRANSLATIONS, PROJECTS, dotColorStyles, colorStyles, scaleUp, slideInLeft, slideInRight, itemVariants, containerVariants, LANG_OPTIONS, NAV_LINKS, LANGUAGES, TOOLS, SKILLS, CERTIFICATIONS, WORK_HISTORY } from "../constants/contants";
 import type { Language } from "../types/types";
 
@@ -174,87 +174,117 @@ function MobileBottomNav({ t, isRTL }: { t: typeof TRANSLATIONS["en"]; isRTL: bo
   const [activeSection, setActiveSection] = useState<string>("home");
 
   useEffect(() => {
-    const handleScroll = () => {
-      const sections = NAV_LINKS.map((link) => link.labelKey);
-      let current = "home";
+    // Use IntersectionObserver for accurate section detection
+    const sectionIds = NAV_LINKS.map((l) => l.href.slice(1));
+    const observers: IntersectionObserver[] = [];
+    const visibilityMap: Record<string, number> = {};
 
-      for (const labelKey of sections) {
-        const section = document.getElementById(
-          NAV_LINKS.find((l) => l.labelKey === labelKey)?.href?.slice(1) || ""
-        );
-        if (section) {
-          const rect = section.getBoundingClientRect();
-          if (rect.top <= window.innerHeight / 2) {
-            current = labelKey;
-          }
+    const updateActive = () => {
+      // Pick the section with the highest intersection ratio
+      let best = "home";
+      let bestRatio = -1;
+      for (const id of sectionIds) {
+        if ((visibilityMap[id] ?? 0) > bestRatio) {
+          bestRatio = visibilityMap[id] ?? 0;
+          best = NAV_LINKS.find((l) => l.href.slice(1) === id)?.labelKey ?? best;
         }
       }
-      setActiveSection(current);
+      setActiveSection(best);
     };
 
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+    sectionIds.forEach((id) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const obs = new IntersectionObserver(
+        ([entry]) => {
+          visibilityMap[id] = entry.intersectionRatio;
+          updateActive();
+        },
+        { threshold: Array.from({ length: 11 }, (_, i) => i / 10), rootMargin: "0px 0px -30% 0px" }
+      );
+      obs.observe(el);
+      observers.push(obs);
+    });
+
+    return () => observers.forEach((obs) => obs.disconnect());
   }, []);
 
   return (
     <motion.nav
-      initial={{ opacity: 0, y: 50 }}
+      initial={{ opacity: 0, y: 60 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.5, duration: 0.4 }}
-      className="md:hidden fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50 w-[95vw] max-w-sm"
+      transition={{ delay: 0.5, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+      aria-label="Mobile navigation"
+      style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
+      className="md:hidden fixed bottom-3 left-1/2 -translate-x-1/2 z-50"
     >
-      <div className="flex items-center justify-around px-2 py-3 glass rounded-2xl shadow-2xl border border-white/10 backdrop-blur-xl">
-        {NAV_LINKS.map((link, idx) => {
+      {/* Nav pill container — full-width minus 1rem gutter on each side, capped at 400px */}
+      <div
+        className="flex items-center justify-around glass rounded-2xl shadow-2xl border border-white/10 backdrop-blur-xl"
+        style={{
+          width: "min(calc(100vw - 2rem), 400px)",
+          padding: "6px 4px",
+        }}
+      >
+        {NAV_LINKS.map((link) => {
           const Icon = MOBILE_NAV_ICONS[link.labelKey] || Code2;
           const isActive = activeSection === link.labelKey;
+          const label = t.nav[link.labelKey as keyof typeof t.nav];
 
           return (
             <motion.a
               key={link.href}
               href={link.href}
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
-              className={`relative flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-all duration-300 group ${isActive
-                  ? "text-indigo-400"
-                  : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
-                }`}
+              whileTap={{ scale: 0.88 }}
+              aria-label={label}
+              aria-current={isActive ? "page" : undefined}
+              className="relative flex flex-col items-center justify-center rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/60"
+              style={{
+                flex: isActive ? "0 0 auto" : "1 1 0",
+                minWidth: 0,
+                padding: "7px 6px 5px",
+              }}
             >
-              {/* Active indicator background */}
+              {/* Sliding active background */}
               {isActive && (
                 <motion.div
-                  layoutId="activeIndicator"
-                  className="absolute inset-0 bg-indigo-500/10 rounded-xl -z-10"
-                  transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                  layoutId="mobileNavBg"
+                  className="absolute inset-0 rounded-xl"
+                  style={{ background: "linear-gradient(135deg, rgba(99,102,241,0.18), rgba(139,92,246,0.12))", border: "1px solid rgba(99,102,241,0.25)" }}
+                  transition={{ type: "spring", stiffness: 400, damping: 35 }}
                 />
               )}
 
-              {/* Icon with glow on active */}
+              {/* Glowing dot above icon (active only) */}
               <motion.div
-                animate={isActive ? { scale: 1.15 } : { scale: 1 }}
-                transition={{ duration: 0.2 }}
-                className={`transition-all ${isActive ? "drop-shadow-[0_0_8px_rgba(99,102,241,0.6)]" : ""}`}
+                animate={isActive ? { scaleX: 1, opacity: 1 } : { scaleX: 0, opacity: 0 }}
+                transition={{ duration: 0.25 }}
+                className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full bg-gradient-to-r from-indigo-400 to-purple-400 shadow-[0_0_6px_rgba(99,102,241,0.7)]"
+                style={{ transformOrigin: "center" }}
+              />
+
+              {/* Icon */}
+              <motion.div
+                animate={isActive ? { scale: 1.1, y: -1 } : { scale: 1, y: 0 }}
+                transition={{ type: "spring", stiffness: 350, damping: 25 }}
+                className={`flex items-center justify-center transition-colors ${
+                  isActive
+                    ? "text-indigo-400 drop-shadow-[0_0_6px_rgba(99,102,241,0.55)]"
+                    : "text-[var(--muted-foreground)]"
+                }`}
               >
-                <Icon className={`w-5 h-5 ${isActive ? "" : "group-hover:translate-y-[-2px] transition-transform"}`} />
+                <Icon className="w-[18px] h-[18px] xs:w-5 xs:h-5" />
               </motion.div>
 
-              {/* Label - show on active only or on hover */}
+              {/* Label — always visible but dimmed when inactive; truncates on tiny screens */}
               <motion.span
-                initial={false}
-                animate={isActive ? { opacity: 1, height: "auto" } : { opacity: 0, height: 0 }}
-                className="text-xs font-semibold whitespace-nowrap overflow-hidden"
+                animate={isActive ? { opacity: 1, color: "rgb(129,140,248)" } : { opacity: 0.45, color: "var(--muted-foreground)" }}
+                transition={{ duration: 0.2 }}
+                className="block mt-[3px] font-semibold leading-none"
+                style={{ fontSize: "clamp(8px, 2.5vw, 11px)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "100%" }}
               >
-                {t.nav[link.labelKey]}
+                {label}
               </motion.span>
-
-              {/* Hover underline effect */}
-              {!isActive && (
-                <motion.div
-                  className="absolute bottom-0 left-1/2 h-0.5 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full"
-                  initial={{ width: 0, x: "-50%" }}
-                  whileHover={{ width: "60%" }}
-                  transition={{ duration: 0.3 }}
-                />
-              )}
             </motion.a>
           );
         })}
@@ -334,11 +364,30 @@ export default function Home() {
   const heroScale = useTransform(scrollYProgress, [0, 1], [1, 0.95]);
   const heroY = useTransform(scrollYProgress, [0, 1], [0, 100]);
 
+  // Header scroll opacity
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   return (
     <main className="min-h-screen relative overflow-hidden bg-[var(--background)] pt-16">
 
       {/* ─── Navigation ─── */}
-      <header className="fixed top-0 left-0 w-full z-50 glass" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+      <motion.header
+        animate={{
+          backgroundColor: scrolled ? "rgba(12, 12, 18, 0.82)" : "rgba(12, 12, 18, 0)",
+          backdropFilter: scrolled ? "blur(20px) saturate(1.4)" : "blur(0px)",
+          WebkitBackdropFilter: scrolled ? "blur(20px) saturate(1.4)" : "blur(0px)",
+          borderBottomColor: scrolled ? "rgba(255,255,255,0.10)" : "rgba(255,255,255,0)",
+          boxShadow: scrolled ? "0 4px 32px rgba(0,0,0,0.28)" : "none",
+        }}
+        transition={{ duration: 0.35, ease: "easeInOut" }}
+        className="fixed top-0 left-0 w-full z-50"
+        style={{ borderBottom: "1px solid transparent" }}
+      >
         <div className="container mx-auto px-6 h-16 flex items-center justify-between relative">
           <a href="#home" className="group flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm">
@@ -391,7 +440,7 @@ export default function Home() {
             </a>
           </div>
         </div>
-      </header>
+      </motion.header>
 
       {/* Enhanced Mobile bottom navbar with icons and active states */}
       <MobileBottomNav t={t} isRTL={isRTL} />
@@ -591,9 +640,14 @@ export default function Home() {
             ))}
           </motion.div>
 
-          {/* ─── GitHub Activity Feed ─── */}
-          <GitHubActivity />
         </section>
+
+        <SectionDivider />
+
+        {/* ═══════════════════════════════════════════
+            GITHUB REPOSITORIES SECTION
+        ═══════════════════════════════════════════ */}
+        <GitHubRepos selectedLang={selectedLang} t={t} isRTL={isRTL} />
 
         <SectionDivider />
 
