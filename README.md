@@ -27,11 +27,10 @@ portfolio/
 ├── public/                 # Static assets (images, icons)
 ├── src/
 │   ├── app/                # Next.js App Router (pages, layout, globals.css)
-│   │   ├── components/     # Reusable React components (GitHubRepos, WorkflowAnimation, etc.)
+│   │   ├── components/     # Reusable React components (GitHubActivity, WorkflowAnimation, etc.)
 │   │   └── experience/     # Additional routes/pages
 │   ├── constants/          # Data layer (projects, experience, skills, translations)
-│   ├── types/              # TypeScript type definitions
-│   └── utils/              # Utility functions and helpers
+│   └── lib/                # Utility functions and helpers
 ├── eslint.config.mjs       # ESLint configuration
 ├── next.config.ts          # Next.js configuration
 ├── package.json            # Dependencies and scripts
@@ -46,12 +45,7 @@ portfolio/
 
 - **Multi-language Support**: Fully translated content (English, Urdu, Hindi, Arabic, French, German) with LTR and RTL support.
 - **Dynamic Theming**: Seamless dark/light mode integration.
-- **Recent Code Activity**: Live GitHub repositories section showing your 6 most recently committed-to repositories with:
-  - Last commit information (message, SHA, timestamp)
-  - Programming language indicators with GitHub's official color scheme
-  - Star and fork counts
-  - **Dual View Modes**: Toggle between card grid view and compact list view
-  - Sorted by actual commit time (not just repo updates)
+- **Real-time GitHub Activity**: Live feed of recent GitHub commits, pull requests, and repository creations.
 - **Animated UI**: Smooth scroll animations, staggering elements, and micro-interactions powered by Framer Motion.
 - **Content-Driven**: Easy to update projects, experience, and skills via a centralized constants file.
 - **Responsive Design**: Mobile-first architecture using Tailwind CSS, ensuring a perfect layout on any device.
@@ -103,36 +97,24 @@ Currently, the portfolio operates entirely without private environment variables
 
 ## API Integrations (GitHub)
 
-The portfolio includes a `GitHubRepos` component (`src/app/components/GitHubRepos.tsx`) that integrates with the GitHub REST API to fetch recent repository activity.
+The portfolio includes a `GitHubActivity` component (`src/app/components/GitHubActivity.tsx`) that integrates with the GitHub REST API to fetch recent activity.
 
 ### Integration Details
-- **Endpoints**: 
-  - `https://api.github.com/users/{username}/repos` - Fetches all public repositories
-  - `https://api.github.com/repos/{username}/{repo}/commits` - Fetches last commit for each repo
-- **Authentication**: No authentication required (fetches public data).
-- **Sorting**: Repositories are sorted by actual last commit time, showing the 6 most recently active projects.
+- **Endpoint**: `https://api.github.com/users/{username}/events/public?per_page=30`
+- **Authentication**: No authentication required (fetches public events).
+- **Caching**: Implements Next.js `revalidate: 300` (5 minutes) to avoid hitting rate limits.
 
-### Features
-1. **Dual View Modes**: Users can toggle between:
-   - **Card View**: 3-column grid layout with full repo details, commit cards, and metadata
-   - **List View**: Compact horizontal layout for quick scanning
-2. **Commit Information**: Displays commit SHA, message, and relative time ("2 hours ago", "3 days ago", etc.)
-3. **Language Colors**: Programming languages shown with GitHub's official color scheme
-4. **Stats Display**: Shows star counts and fork counts when available
-5. **Responsive Design**: Adapts from 1 column (mobile) to 3 columns (desktop)
+### Supported Activity Types
+The component parses the following GitHub event types:
+1. **PushEvent**: Displays the latest commit message and branch.
+2. **PullRequestEvent**: Displays PR status (Opened, Merged, etc.) and PR title.
+3. **CreateEvent**: Displays repository or branch creation events.
 
-### UI States
-- **Loading State**: Displays 6 skeleton cards with pulse animation
-- **Error State**: Shows error message with details if API fails
-- **Success State**: Renders repositories in selected view mode with smooth animations
-- **Empty State**: Automatically filtered to only show non-forked, active repositories
-
-### View Toggle
-- Located in top-right corner of the section
-- Glass morphism design with rounded pill shape
-- Icons: Grid icon for card view, List icon for list view
-- Active state highlighted with purple accent
-- Smooth transition animations when switching modes
+### UI States Documented
+- **Loading State**: Displays a skeletal shimmer UI (`animate-pulse`) while fetching events.
+- **Empty State**: Renders a fallback "No recent activity found" UI if the user has no public events.
+- **Error State**: Captures failed network requests or API limits, displaying an error message with a "Try again" refresh button.
+- **Success State**: Displays a grid of up to 8 of the latest parsed events with contextual icons (Lucide React) and dynamic color mapping based on event type.
 
 ---
 
@@ -213,8 +195,7 @@ Currently, Vercel provides automatic CI/CD on every push to the `main` branch. N
 
 ## Troubleshooting
 
-- **GitHub Repositories not loading**: If the repos section fails to load, you may have hit the unauthenticated GitHub API rate limit (60 requests per hour per IP). The component fetches repos + commits for each, which can consume the rate limit quickly. Wait an hour or authenticate with a GitHub token if needed.
-- **View toggle not working**: Ensure JavaScript is enabled in your browser. The view toggle requires client-side state management.
+- **GitHub Activity not loading**: If the activity feed fails to load, you may have hit the unauthenticated GitHub API rate limit (60 requests per hour per IP). Wait a few minutes or switch networks.
 - **Styles not applying**: Ensure the class names are correctly spelled. If you added a new file outside of the `src` directory that contains Tailwind classes, make sure to add that path to your Tailwind configuration `content` array.
 - **Hydration Errors**: Next.js hydration mismatches usually occur if browser extensions inject elements into the DOM, or if you use `window` objects without a `useEffect` or `typeof window !== 'undefined'` check.
 
