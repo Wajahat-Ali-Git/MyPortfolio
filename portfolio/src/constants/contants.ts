@@ -66,7 +66,7 @@ export const TRANSLATIONS = {
       themeToggle: "Toggle dark mode",
     },
     github: {
-      title: "GitHub Repositories",
+      title: "Recent Code Activity",
       view_all: "View All Repositories",
       no_description: "No description provided",
       error: "Failed to load repositories",
@@ -155,7 +155,7 @@ export const TRANSLATIONS = {
       themeToggle: "ڈارک موڈ تبدیل کریں",
     },
     github: {
-      title: "گٹ ہب ریپوزٹریز",
+      title: "حالیہ کوڈ سرگرمی",
       view_all: "تمام ریپوزٹریز دیکھیں",
       no_description: "کوئی تفصیل فراہم نہیں کی گئی",
       error: "ریپوزٹریز لوڈ کرنے میں ناکام",
@@ -244,7 +244,7 @@ export const TRANSLATIONS = {
       themeToggle: "डार्क मोड टॉगल करें",
     },
     github: {
-      title: "गिटहब रिपॉजिटरी",
+      title: "हालिया कोड गतिविधि",
       view_all: "सभी रिपॉजिटरी देखें",
       no_description: "कोई विवरण प्रदान नहीं किया गया",
       error: "रिपॉजिटरी लोड करने में विफल",
@@ -333,7 +333,7 @@ export const TRANSLATIONS = {
       themeToggle: "تبديل الوضع الداكن",
     },
     github: {
-      title: "مستودعات جيت هاب",
+      title: "نشاط الكود الأخير",
       view_all: "عرض جميع المستودعات",
       no_description: "لم يتم توفير وصف",
       error: "فشل في تحميل المستودعات",
@@ -422,7 +422,7 @@ export const TRANSLATIONS = {
       themeToggle: "Basculer le mode sombre",
     },
     github: {
-      title: "Dépôts GitHub",
+      title: "Activité Code Récente",
       view_all: "Voir Tous les Dépôts",
       no_description: "Aucune description fournie",
       error: "Échec du chargement des dépôts",
@@ -511,7 +511,7 @@ export const TRANSLATIONS = {
       themeToggle: "Dunkelmodus umschalten",
     },
     github: {
-      title: "GitHub-Repositories",
+      title: "Aktuelle Code-Aktivität",
       view_all: "Alle Repositories anzeigen",
       no_description: "Keine Beschreibung vorhanden",
       error: "Fehler beim Laden der Repositories",
@@ -611,7 +611,6 @@ export const LANGUAGES = [
 export const NAV_LINKS = [
   { labelKey: "home" as const, href: "#home" },
   { labelKey: "projects" as const, href: "#projects" },
-  { labelKey: "github" as const, href: "#github" },
   { labelKey: "experience" as const, href: "#experience" },
   { labelKey: "skills" as const, href: "#skills" },
   { labelKey: "certifications" as const, href: "#certifications" },

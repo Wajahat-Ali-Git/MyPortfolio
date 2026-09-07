@@ -642,10 +642,8 @@ export default function Home() {
 
         </section>
 
-        <SectionDivider />
-
         {/* ═══════════════════════════════════════════
-            GITHUB REPOSITORIES SECTION
+            RECENT CODE ACTIVITY SECTION
         ═══════════════════════════════════════════ */}
         <GitHubRepos selectedLang={selectedLang} t={t} isRTL={isRTL} />
 
