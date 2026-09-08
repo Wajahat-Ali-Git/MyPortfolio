@@ -13,11 +13,63 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const NODE_ENV = process.env.NODE_ENV || 'development';
 
-// Supabase Client
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+// Database Client (Supabase or PostgreSQL)
+let supabase = null;
+let useLocalPostgres = false;
+
+// Check if using local PostgreSQL via Docker
+if (process.env.DATABASE_URL && !process.env.SUPABASE_URL) {
+  useLocalPostgres = true;
+  console.log('Using local PostgreSQL database');
+  const { Pool } = require('pg');
+  const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+  });
+  
+  // Create a Supabase-like interface for PostgreSQL
+  supabase = {
+    from: (table) => ({
+      insert: async (data) => {
+        const client = await pool.connect();
+        try {
+          const columns = Object.keys(data[0]).join(', ');
+          const values = data.map((_, i) => `($${i * Object.keys(data[0]).length + 1}:${(i + 1) * Object.keys(data[0]).length})`).join(', ');
+          const flatValues = data.flatMap(obj => Object.values(obj));
+          
+          const query = `INSERT INTO ${table} (${columns}) VALUES ${values} RETURNING *`;
+          const result = await client.query(query, flatValues);
+          return { data: result.rows, error: null };
+        } catch (error) {
+          return { data: null, error };
+        } finally {
+          client.release();
+        }
+      },
+      select: () => ({
+        order: async (column, options) => {
+          const client = await pool.connect();
+          try {
+            const order = options?.ascending ? 'ASC' : 'DESC';
+            const result = await client.query(`SELECT * FROM ${table} ORDER BY ${column} ${order}`);
+            return { data: result.rows, error: null };
+          } catch (error) {
+            return { data: null, error };
+          } finally {
+            client.release();
+          }
+        }
+      })
+    })
+  };
+} else if (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+  console.log('Using Supabase cloud database');
+  supabase = createClient(
+    process.env.SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+  );
+} else {
+  console.error('ERROR: No database configured! Set either DATABASE_URL or SUPABASE credentials.');
+}
 
 // =============================================================================
 // MIDDLEWARE
