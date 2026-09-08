@@ -1,0 +1,37 @@
+version: '3.8'
+
+# =============================================================================
+# Development Override Configuration
+# Use: docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+# =============================================================================
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    
+    environment:
+      NODE_ENV: development
+      DEBUG: "true"
+      LOG_LEVEL: debug
+    
+    volumes:
+      # Hot reload: mount entire src directory
+      - ./src:/app/src
+      - /app/node_modules
+    
+    command: npm run dev
+    
+    # Development doesn't need health checks as frequently
+    healthcheck:
+      interval: 60s
+      timeout: 5s
+      retries: 3
+
+  postgres:
+    # Expose more verbose logging in development
+    command: postgres -c log_statement=all -c log_destination=stderr
+    
+    ports:
+      - "5432:5432"

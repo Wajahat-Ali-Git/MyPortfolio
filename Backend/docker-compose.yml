@@ -1,0 +1,136 @@
+version: '3.8'
+
+services:
+  # =============================================================================
+  # PostgreSQL Database
+  # =============================================================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: portfolio-postgres
+    restart: unless-stopped
+    
+    environment:
+      POSTGRES_DB: portfolio
+      POSTGRES_USER: portfolio_user
+      POSTGRES_PASSWORD: portfolio_password_change_me
+      PGDATA: /var/lib/postgresql/data/pgdata
+    
+    volumes:
+      # Persist database data
+      - postgres_data:/var/lib/postgresql/data
+      # Initialize database with schema
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    
+    ports:
+      - "5432:5432"
+    
+    networks:
+      - portfolio-network
+    
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U portfolio_user -d portfolio"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # =============================================================================
+  # Backend API Server
+  # =============================================================================
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    
+    container_name: portfolio-backend
+    restart: unless-stopped
+    
+    environment:
+      # Database connection (using local PostgreSQL)
+      DATABASE_URL: postgresql://portfolio_user:portfolio_password_change_me@postgres:5432/portfolio
+      
+      # Server configuration
+      NODE_ENV: development
+      PORT: 5000
+      
+      # CORS settings
+      CORS_ORIGIN: http://localhost:3000,http://localhost:3001
+      CORS_CREDENTIALS: "true"
+      
+      # Rate limiting
+      RATE_LIMIT_WINDOW_MS: 900000
+      RATE_LIMIT_MAX_REQUESTS: 100
+      
+      # API Key for admin endpoints
+      API_KEY: your_secure_api_key_change_me
+      
+      # Supabase credentials (optional - for cloud backup)
+      SUPABASE_URL: ${SUPABASE_URL:-}
+      SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY:-}
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY:-}
+    
+    ports:
+      - "5000:5000"
+    
+    depends_on:
+      postgres:
+        condition: service_healthy
+    
+    networks:
+      - portfolio-network
+    
+    volumes:
+      # Mount source code for development (hot reload with nodemon)
+      - ./src:/app/src:ro
+      # Mount node_modules as a volume to avoid conflicts
+      - /app/node_modules
+    
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # =============================================================================
+  # pgAdmin - PostgreSQL Administration Tool (Optional)
+  # =============================================================================
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: portfolio-pgadmin
+    restart: unless-stopped
+    
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@portfolio.local
+      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    
+    ports:
+      - "5050:80"
+    
+    depends_on:
+      - postgres
+    
+    networks:
+      - portfolio-network
+    
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    
+    profiles:
+      - admin
+
+# =============================================================================
+# Networks
+# =============================================================================
+networks:
+  portfolio-network:
+    driver: bridge
+
+# =============================================================================
+# Volumes
+# =============================================================================
+volumes:
+  postgres_data:
+    driver: local
+  pgadmin_data:
+    driver: local
