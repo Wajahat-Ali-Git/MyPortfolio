@@ -1,163 +1,85 @@
-# Portfolio Backend API
+# Supabase Database & Backend Configuration
 
-Express.js backend with Supabase/PostgreSQL database for portfolio contact form.
+This folder manages the **Supabase PostgreSQL database schema, migrations, and configuration** for the portfolio website.
 
----
-
-## 🚀 Quick Start
-
-```bash
-# Start with Docker (Recommended)
-docker-compose up
-
-# Or use Makefile
-make start
-
-# Or install and run manually
-npm install
-npm run dev
-```
-
-**API:** http://localhost:5000
+The portfolio frontend communicates directly with Supabase via `@supabase/supabase-js` and Next.js Server Actions, eliminating the need for a separate custom Express server.
 
 ---
 
-## 📚 Documentation
-
-**→ [Start Here: Documentation Index](./docs/INDEX.md)** ⭐
-
-All comprehensive documentation is organized in the `docs/` folder:
-
-### Quick Access
-- **[Quick Start](./docs/QUICKSTART.md)** - Get running in 2 minutes
-- **[API Reference](./docs/API_DOCUMENTATION.md)** - All 30+ endpoints
-- **[Supabase RPC](./docs/SUPABASE_RPC_GUIDE.md)** - RPC functions & optimization
-- **[Deploy to Supabase](./docs/APPLY_TO_SUPABASE.md)** - Cloud deployment
-
-### Core Documentation
-- **[Main API Docs](./docs/README.md)** - Complete API documentation & usage
-- **[QUICKSTART.md](./docs/QUICKSTART.md)** - Get running in 2 minutes
-- **[SETUP_CHECKLIST.md](./docs/SETUP_CHECKLIST.md)** - Detailed step-by-step setup
-
-### Specialized Guides
-- **[DOCKER.md](./docs/DOCKER.md)** - Complete Docker setup guide
-- **[DATABASE.md](./docs/DATABASE.md)** - Database schema & management
-
----
-
-## 🛠️ Technology Stack
-
-- **Framework:** Express.js
-- **Database:** PostgreSQL 16 (Docker) or Supabase (Cloud)
-- **Security:** Helmet, CORS, Rate Limiting
-- **Container:** Docker + Docker Compose
-
----
-
-## 📁 Project Structure
+## 📁 Folder Structure
 
 ```
 Backend/
-├── docs/                      # 📚 All documentation
-│   ├── README.md             # Complete API docs
-│   ├── QUICKSTART.md         # Quick start guide
-│   ├── SETUP_CHECKLIST.md    # Setup steps
-│   ├── DOCKER.md             # Docker guide
-│   └── DATABASE.md           # Database docs
-│
-├── src/                       # API source code
-│   └── index.js              # Main Express server
-│
-├── database/                  # Database schemas
-│   ├── schema.sql            # Supabase schema
-│   └── schema-docker.sql     # Docker schema
-│
-├── docker-compose.yml         # Docker configuration
-├── Dockerfile                 # Production image
-├── Dockerfile.dev            # Development image
-├── Makefile                  # Quick commands
-├── package.json              # Dependencies
-├── .env.example              # Environment template
-└── .gitignore               # Git ignore rules
+├── supabase/
+│   ├── config.toml           # Supabase CLI project configuration
+│   └── migrations/           # SQL migration files
+│       ├── 20260909000001_initial_schema.sql
+│       ├── 20260909000002_rpc_functions.sql
+│       └── 20260910000001_contact_messages.sql
+└── README.md                 # Supabase database & CLI guide
 ```
 
 ---
 
-## 🔌 API Endpoints
+## 🚀 Supabase CLI Commands
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/health` | GET | Health check |
-| `/api/contact` | POST | Submit contact form |
-| `/api/messages` | GET | Get all messages (admin) |
+### 1. Prerequisites
+Install the Supabase CLI globally:
+```bash
+npm install -g supabase
+```
 
----
-
-## 📦 Quick Commands
+### 2. Remote Project Management (Cloud)
 
 ```bash
-# Docker
-make start         # Start all services
-make stop          # Stop services
-make logs          # View logs
-make test          # Test API
-make db-shell      # Database shell
+# Log in to your Supabase account
+supabase login
 
-# Manual
-npm install        # Install dependencies
-npm run dev        # Development server
-npm start          # Production server
+# Link this directory to your remote Supabase project
+supabase link --project-ref <your-project-ref>
+
+# Push pending SQL migrations to your remote Supabase project
+supabase db push
+
+# Pull schema changes from remote database
+supabase db pull
 ```
 
 ---
 
-## 🔒 Environment Variables
+## 🧪 Local Supabase Testing (with Docker)
 
-Required in `.env`:
-
-```env
-# Database (choose one)
-DATABASE_URL=postgresql://user:pass@localhost:5432/portfolio
-# OR
-SUPABASE_URL=https://xxx.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=xxx
-
-# Server
-PORT=5000
-NODE_ENV=development
-```
-
-See [.env.example](./.env.example) for complete configuration.
-
----
-
-## 🧪 Testing
+You can run the entire Supabase backend stack locally on your machine using Docker.
 
 ```bash
-# Health check
-curl http://localhost:5000/health
+# Start the local Supabase instance
+supabase start
 
-# Submit message
-curl -X POST http://localhost:5000/api/contact \
-  -H "Content-Type: application/json" \
-  -d '{"name":"Test","email":"test@example.com","message":"Hello!"}'
+# Reset local database and run all migrations from scratch
+supabase db reset
+
+# Check status and view local URLs (Studio, API, Database)
+supabase status
+
+# Stop local Supabase instance
+supabase stop
 ```
+
+When `supabase start` finishes, you can access:
+- **Local Supabase Studio (Web UI):** `http://localhost:54323`
+- **Local API Gateway:** `http://localhost:54321`
+- **Local PostgreSQL DB:** `postgresql://postgres:postgres@localhost:54322/postgres`
 
 ---
 
-## 🐛 Troubleshooting
+## 🔒 Security & Row Level Security (RLS)
 
-Check the comprehensive documentation:
-- [DOCKER.md](./docs/DOCKER.md) - Docker issues
-- [DATABASE.md](./docs/DATABASE.md) - Database issues
-- [SETUP_CHECKLIST.md](./docs/SETUP_CHECKLIST.md) - Setup problems
+All tables have Row Level Security enabled.
+- **`contact_messages`**: Anonymous (`anon`) and authenticated users can `INSERT`. Only authenticated admin users can `SELECT`, `UPDATE`, or `DELETE`.
+- Secrets and service role keys are never exposed on the client side.
 
 ---
 
 ## 📄 License
 
-MIT License - See LICENSE file for details
-
----
-
-**For complete documentation, see the [docs/](./docs/) folder.**
+MIT License - See root LICENSE for details.

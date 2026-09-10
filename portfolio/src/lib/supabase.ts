@@ -1,12 +1,20 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Supabase configuration
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+// Supabase configuration with safe build-time fallbacks
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-anon-key';
+
+// Helper to check if real Supabase credentials are provided
+export const isSupabaseConfigured = () => {
+  return (
+    !!process.env.NEXT_PUBLIC_SUPABASE_URL &&
+    process.env.NEXT_PUBLIC_SUPABASE_URL !== 'https://placeholder.supabase.co' &&
+    !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  );
+};
 
 // Create Supabase client
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
 
 // Type definitions for contact message
 export interface ContactMessage {
