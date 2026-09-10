@@ -4,10 +4,18 @@
   "description": "Portfolio Backend API with Supabase integration",
   "main": "src/index.js",
   "scripts": {
+    "setup": "node setup-env.js",
     "dev": "nodemon src/index.js",
     "start": "node src/index.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "test-db": "node test-db-connection.js"
+    "test-db": "node test-db-connection.js",
+    "migrate": "node database/migrate.js",
+    "migrate:portfolio": "node database/migrate.js schema-portfolio-content.sql",
+    "migrate:supabase-rpc": "node database/migrate.js schema-supabase-rpc.sql",
+    "migrate:all": "npm run migrate:portfolio && npm run migrate:supabase-rpc",
+    "db:reset": "node database/migrate.js schema-portfolio-content.sql",
+    "seed": "node database/seed-data.js",
+    "db:fresh": "npm run migrate:all && npm run seed"
   },
   "keywords": [
     "portfolio",
