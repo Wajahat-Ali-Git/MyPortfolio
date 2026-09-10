@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { supabase, isSupabaseConfigured, createAuthenticatedClient } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,6 +19,32 @@ type Props = {
 };
 
 /**
+ * Authenticate incoming request using Supabase auth header or session
+ */
+async function authenticateRequest(req: NextRequest) {
+  if (!isSupabaseConfigured()) {
+    // If Supabase is not configured yet (development fallback), allow read/write with default client
+    return { authenticated: true, client: supabase };
+  }
+
+  const authHeader = req.headers.get('Authorization');
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    // Check if session can be verified or fallback to default client for GET
+    return { authenticated: false, client: supabase, error: 'Missing Authorization header' };
+  }
+
+  const token = authHeader.substring(7);
+  const { data, error } = await supabase.auth.getUser(token);
+
+  if (error || !data.user) {
+    return { authenticated: false, client: supabase, error: 'Invalid or expired token' };
+  }
+
+  const authenticatedClient = createAuthenticatedClient(token);
+  return { authenticated: true, user: data.user, client: authenticatedClient };
+}
+
+/**
  * GET /api/admin/[resource]
  * Fetches all records of a given resource for admin display
  */
@@ -30,7 +56,10 @@ export async function GET(req: NextRequest, { params }: Props) {
   }
 
   try {
-    const { data, error } = await supabase
+    const auth = await authenticateRequest(req);
+    const client = auth.client;
+
+    const { data, error } = await client
       .from(resource)
       .select('*')
       .order('created_at', { ascending: false });
@@ -56,9 +85,14 @@ export async function POST(req: NextRequest, { params }: Props) {
     return NextResponse.json({ error: `Invalid resource: ${resource}` }, { status: 400 });
   }
 
+  const auth = await authenticateRequest(req);
+  if (isSupabaseConfigured() && !auth.authenticated) {
+    return NextResponse.json({ success: false, error: auth.error || 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     const body = await req.json();
-    const { data, error } = await supabase.from(resource).upsert([body]).select();
+    const { data, error } = await auth.client.from(resource).upsert([body]).select();
 
     if (error) throw error;
     return NextResponse.json({ success: true, data });
@@ -87,8 +121,13 @@ export async function DELETE(req: NextRequest, { params }: Props) {
     return NextResponse.json({ error: 'Missing required query parameter "id"' }, { status: 400 });
   }
 
+  const auth = await authenticateRequest(req);
+  if (isSupabaseConfigured() && !auth.authenticated) {
+    return NextResponse.json({ success: false, error: auth.error || 'Unauthorized' }, { status: 401 });
+  }
+
   try {
-    const { error } = await supabase.from(resource).delete().eq('id', id);
+    const { error } = await auth.client.from(resource).delete().eq('id', id);
     if (error) throw error;
     return NextResponse.json({ success: true, message: `Deleted ${id} from ${resource}` });
   } catch (err) {
