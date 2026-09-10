@@ -44,6 +44,30 @@ Complete documentation for the Portfolio Backend API.
    - Migrations
    - Monitoring
 
+### API & Integration
+6. **[API_DOCUMENTATION.md](./API_DOCUMENTATION.md)** 📡
+   - Complete API reference
+   - All 30+ endpoints
+   - Request/response examples
+   - Multi-language support
+   - Error handling
+   - Testing guide
+
+### Supabase Guides
+7. **[SUPABASE_RPC_GUIDE.md](./SUPABASE_RPC_GUIDE.md)** ⚡
+   - RPC functions reference
+   - Performance optimizations
+   - Row Level Security (RLS)
+   - Usage examples
+   - Migration guide
+   - Best practices
+
+8. **[APPLY_TO_SUPABASE.md](./APPLY_TO_SUPABASE.md)** 🚀
+   - Quick deployment to Supabase Cloud
+   - Step-by-step migration
+   - Troubleshooting
+   - Verification steps
+
 ---
 
 ## 🎯 Quick Navigation
@@ -56,10 +80,16 @@ Complete documentation for the Portfolio Backend API.
 - **Use Docker** → [DOCKER.md](./DOCKER.md)
 
 #### Learn About
-- **API endpoints** → [README.md](./README.md#-api-endpoints)
+- **API endpoints** → [API_DOCUMENTATION.md](./API_DOCUMENTATION.md)
+- **RPC functions** → [SUPABASE_RPC_GUIDE.md](./SUPABASE_RPC_GUIDE.md)
 - **Database schema** → [DATABASE.md](./DATABASE.md#-table-structure)
 - **Security features** → [README.md](./README.md#-security-features)
 - **Environment config** → [README.md](./README.md#%EF%B8%8F-environment-variables)
+
+#### Deployment
+- **Deploy to Supabase** → [APPLY_TO_SUPABASE.md](./APPLY_TO_SUPABASE.md)
+- **Docker deployment** → [DOCKER.md](./DOCKER.md#-deployment)
+- **Production setup** → [README.md](./README.md#-deployment)
 
 #### Troubleshoot
 - **Docker issues** → [DOCKER.md](./DOCKER.md#-troubleshooting)
@@ -88,9 +118,16 @@ Complete documentation for the Portfolio Backend API.
 3. Check [DATABASE.md](./DATABASE.md) for database management
 
 ### For Production Deployment
-1. Review [README.md](./README.md) - Security & Deployment
-2. Study [DOCKER.md](./DOCKER.md) - Deployment section
-3. Understand [DATABASE.md](./DATABASE.md) - Backup procedures
+1. Review [API_DOCUMENTATION.md](./API_DOCUMENTATION.md)
+2. Study [APPLY_TO_SUPABASE.md](./APPLY_TO_SUPABASE.md) for Supabase
+3. Or follow [DOCKER.md](./DOCKER.md) for Docker deployment
+4. Understand [DATABASE.md](./DATABASE.md) - Backup procedures
+
+### For Supabase Users
+1. Start with [QUICKSTART.md](./QUICKSTART.md) - Option 2
+2. Follow [APPLY_TO_SUPABASE.md](./APPLY_TO_SUPABASE.md) to apply migrations
+3. Read [SUPABASE_RPC_GUIDE.md](./SUPABASE_RPC_GUIDE.md) for RPC functions
+4. Use [API_DOCUMENTATION.md](./API_DOCUMENTATION.md) for endpoints
 
 ---
 
@@ -100,20 +137,30 @@ Complete documentation for the Portfolio Backend API.
 
 ```
 Backend/
-├── docs/                          # You are here
+├── docs/                          # You are here ⭐
 │   ├── INDEX.md                  # This file
-│   ├── README.md                 # API documentation
-│   ├── QUICKSTART.md             # Quick start
+│   ├── README.md                 # Main API documentation
+│   ├── QUICKSTART.md             # Quick start guide
 │   ├── SETUP_CHECKLIST.md        # Detailed setup
 │   ├── DOCKER.md                 # Docker guide
-│   └── DATABASE.md               # Database docs
+│   ├── DATABASE.md               # Database docs
+│   ├── API_DOCUMENTATION.md      # Complete API reference
+│   ├── SUPABASE_RPC_GUIDE.md     # Supabase RPC functions
+│   └── APPLY_TO_SUPABASE.md      # Deploy to Supabase Cloud
 │
 ├── src/                          # Source code
-│   └── index.js                 # Main server
+│   ├── index.js                 # Main server
+│   ├── routes/                  # API routes
+│   ├── services/                # Business logic
+│   └── middleware/              # Middleware
 │
 ├── database/                     # SQL schemas
-│   ├── schema.sql               # Supabase
-│   └── schema-docker.sql        # Docker
+│   ├── schema-portfolio-content.sql  # Base schema
+│   └── schema-supabase-rpc.sql       # RPC functions
+│
+├── supabase/                     # Supabase migrations
+│   ├── migrations/              # Migration files
+│   └── seed.sql                 # Seed data
 │
 ├── docker-compose.yml            # Docker config
 ├── Dockerfile                    # Production image

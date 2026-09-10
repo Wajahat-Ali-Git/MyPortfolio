@@ -112,13 +112,22 @@ if (NODE_ENV === 'development') {
 // ROUTES
 // =============================================================================
 
+// Import route modules
+const projectsRoutes = require('./routes/projects');
+const experiencesRoutes = require('./routes/experiences');
+const skillsRoutes = require('./routes/skills');
+const certificationsRoutes = require('./routes/certifications');
+const profileRoutes = require('./routes/profile');
+const toolsRoutes = require('./routes/tools');
+const githubRoutes = require('./routes/github');
+
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.json({
     status: 'ok',
     environment: NODE_ENV,
     timestamp: new Date().toISOString(),
-    supabase: process.env.SUPABASE_URL ? 'connected' : 'not configured'
+    database: useLocalPostgres ? 'PostgreSQL' : (process.env.SUPABASE_URL ? 'Supabase' : 'not configured')
   });
 });
 
@@ -126,14 +135,30 @@ app.get('/health', (req, res) => {
 app.get('/', (req, res) => {
   res.json({
     message: 'Portfolio Backend API',
-    version: '1.0.0',
+    version: '2.0.0',
     endpoints: {
-      health: '/health',
-      contact: 'POST /api/contact',
-      messages: 'GET /api/messages (requires API key)'
-    }
+      health: 'GET /health',
+      projects: 'GET /api/projects',
+      experiences: 'GET /api/experiences',
+      skills: 'GET /api/skills',
+      certifications: 'GET /api/certifications',
+      profile: 'GET /api/profile',
+      tools: 'GET /api/tools',
+      github: 'GET /api/github/repos',
+      contact: 'POST /api/contact'
+    },
+    documentation: 'See README.md for full API documentation'
   });
 });
+
+// Register API routes
+app.use('/api/projects', projectsRoutes);
+app.use('/api/experiences', experiencesRoutes);
+app.use('/api/skills', skillsRoutes);
+app.use('/api/certifications', certificationsRoutes);
+app.use('/api/profile', profileRoutes);
+app.use('/api/tools', toolsRoutes);
+app.use('/api/github', githubRoutes);
 
 // Contact form submission endpoint
 app.post('/api/contact', async (req, res) => {
