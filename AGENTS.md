@@ -85,18 +85,14 @@ credentials.json
 
 ```
 MyPortfolio/
-├── Backend/              # Express.js API with Supabase/PostgreSQL
-│   ├── src/             # API source code
-│   ├── database/        # Database schemas and migrations
-│   ├── .env             # Local secrets (NOT in git)
-│   ├── .env.example     # Template (safe to commit)
-│   └── docker-compose.yml
+├── Backend/              # Supabase database configuration & migrations
+│   └── supabase/        # Supabase CLI config & SQL migrations
 │
 ├── portfolio/           # Next.js 16 frontend
 │   ├── src/
-│   │   ├── app/        # App router pages
+│   │   ├── app/        # App router pages & Server Actions
 │   │   ├── components/ # React components
-│   │   └── lib/        # Utility functions
+│   │   └── lib/        # Utility functions (Supabase client)
 │   ├── .env.local      # Local secrets (NOT in git)
 │   └── .env.local.example
 │
@@ -108,11 +104,10 @@ MyPortfolio/
 ## 🛠️ Technology Stack
 
 ### Backend
-- **Framework:** Express.js
-- **Database:** PostgreSQL 16 (Docker) or Supabase (Cloud)
-- **ORM:** Supabase Client / node-postgres (pg)
-- **Security:** Helmet, CORS, Rate Limiting
-- **Container:** Docker + Docker Compose
+- **Database:** PostgreSQL 16 (Supabase Cloud / Local Supabase CLI)
+- **Client:** `@supabase/supabase-js`
+- **Security:** Row Level Security (RLS) policies
+- **Server Actions:** Next.js Server Actions for secure direct mutations
 
 ### Frontend
 - **Framework:** Next.js 16.x (App Router)
@@ -590,21 +585,19 @@ docker-compose.yml     ✅ Safe to commit (uses env vars)
 
 ### Common Commands
 ```bash
-# Backend
+# Supabase Backend
 cd Backend
-npm install              # Install dependencies
-npm run dev             # Start development server
-docker-compose up       # Start with Docker
-make start              # Start with Makefile
+supabase login           # Login to Supabase
+supabase link            # Link remote project
+supabase db push         # Push migrations to remote database
+supabase start           # Start local Supabase (Docker)
+supabase db reset        # Reset and run all local migrations
 
 # Frontend
 cd portfolio
-npm install             # Install dependencies
-npm run dev            # Start development server
-
-# Database
-make db-shell          # Access PostgreSQL (Docker)
-make db-backup         # Backup database
+npm install              # Install dependencies
+npm run dev              # Start development server (http://localhost:3000)
+npm run build            # Build for production
 ```
 
 ---

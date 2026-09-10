@@ -9,6 +9,7 @@ import Link from "next/link";
 import WorkflowAnimation from "./components/WorkflowAnimation";
 import GitHubRepos from "./components/GitHubRepos";
 import { TRANSLATIONS, PROJECTS, dotColorStyles, colorStyles, scaleUp, slideInLeft, slideInRight, itemVariants, containerVariants, LANG_OPTIONS, NAV_LINKS, LANGUAGES, TOOLS, SKILLS, CERTIFICATIONS, WORK_HISTORY } from "../constants/contants";
+import { fetchAllPortfolioData, type DynamicProject, type DynamicExperience, type DynamicSkill, type DynamicCertification } from "../lib/portfolioData";
 import type { Language } from "../types/types";
 
 
@@ -317,6 +318,27 @@ export default function Home() {
   });
 
   const [mounted, setMounted] = useState(false);
+  const [portfolioData, setPortfolioData] = useState<{
+    projects: DynamicProject[];
+    experiences: DynamicExperience[];
+    skills: DynamicSkill[];
+    tools: string[];
+    certifications: DynamicCertification[];
+  }>({
+    projects: PROJECTS,
+    experiences: WORK_HISTORY,
+    skills: SKILLS,
+    tools: TOOLS,
+    certifications: CERTIFICATIONS,
+  });
+
+  useEffect(() => {
+    fetchAllPortfolioData().then((data) => {
+      if (data) {
+        setPortfolioData(data);
+      }
+    });
+  }, []);
 
   useEffect(() => {
     setMounted(true);
@@ -598,46 +620,52 @@ export default function Home() {
             viewport={{ once: true, margin: "-80px" }}
             className="grid grid-cols-1 md:grid-cols-2 gap-6"
           >
-            {PROJECTS.map((project) => (
-              <motion.a
-                key={project.title}
-                href={project.link}
-                target="_blank"
-                rel="noopener noreferrer"
-                variants={itemVariants}
-                whileHover={{ y: -6 }}
-                className={`glass-card card-glow shimmer-effect p-8 flex flex-col h-full group cursor-pointer ${project.featured ? "md:col-span-2" : ""
-                  }`}
-              >
-                <div className="flex justify-between items-start mb-5">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-3 h-3 rounded-full ${dotColorStyles[project.color] || "bg-purple-400/80"}`} />
-                    <h3 className="text-xl font-bold tracking-tight">{project.title}</h3>
-                    {project.featured && (
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 font-medium">
-                        {t.projects.fyp}
-                      </span>
-                    )}
+            {portfolioData.projects.map((project) => {
+              const desc = (project.descKey && t.projects[project.descKey as keyof typeof t.projects])
+                ? t.projects[project.descKey as keyof typeof t.projects]
+                : (project.description || "");
+
+              return (
+                <motion.a
+                  key={project.id || project.title}
+                  href={project.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  variants={itemVariants}
+                  whileHover={{ y: -6 }}
+                  className={`glass-card card-glow shimmer-effect p-8 flex flex-col h-full group cursor-pointer ${project.featured ? "md:col-span-2" : ""
+                    }`}
+                >
+                  <div className="flex justify-between items-start mb-5">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-3 h-3 rounded-full ${dotColorStyles[project.color] || "bg-purple-400/80"}`} />
+                      <h3 className="text-xl font-bold tracking-tight">{project.title}</h3>
+                      {project.featured && (
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 font-medium">
+                          {t.projects.fyp}
+                        </span>
+                      )}
+                    </div>
+                    <ExternalLink className="w-4 h-4 text-[var(--muted-foreground)] group-hover:text-[var(--foreground)] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
                   </div>
-                  <ExternalLink className="w-4 h-4 text-[var(--muted-foreground)] group-hover:text-[var(--foreground)] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
-                </div>
 
-                <p className="text-[var(--muted-foreground)] flex-grow mb-6 leading-relaxed">
-                  {t.projects[project.descKey]}
-                </p>
+                  <p className="text-[var(--muted-foreground)] flex-grow mb-6 leading-relaxed">
+                    {desc}
+                  </p>
 
-                <div className="flex flex-wrap gap-2 mt-auto">
-                  {project.tech.map((tech) => (
-                    <span
-                      key={tech}
-                      className="px-3 py-1 text-xs font-mono font-medium rounded-full bg-white/10 border border-white/10 text-[var(--muted-foreground)]"
-                    >
-                      {tech}
-                    </span>
-                  ))}
-                </div>
-              </motion.a>
-            ))}
+                  <div className="flex flex-wrap gap-2 mt-auto">
+                    {project.tech.map((tech) => (
+                      <span
+                        key={tech}
+                        className="px-3 py-1 text-xs font-mono font-medium rounded-full bg-white/10 border border-white/10 text-[var(--muted-foreground)]"
+                      >
+                        {tech}
+                      </span>
+                    ))}
+                  </div>
+                </motion.a>
+              );
+            })}
           </motion.div>
 
         </section>
@@ -665,31 +693,48 @@ export default function Home() {
             {/* Timeline line */}
             <div className="absolute left-8 top-0 bottom-0 w-px bg-gradient-to-b from-blue-500/50 via-blue-500/20 to-transparent hidden md:block" />
 
-            {WORK_HISTORY.map((work, idx) => (
-              <motion.div
-                key={idx}
-                variants={slideInLeft}
-                className="relative md:pl-20 mb-8"
-              >
-                {/* Timeline dot */}
-                <div className="absolute left-[26px] top-8 w-5 h-5 rounded-full border-2 border-blue-500 bg-[var(--background)] hidden md:flex items-center justify-center">
-                  <div className="w-2 h-2 rounded-full bg-blue-400" />
-                </div>
+            {portfolioData.experiences.map((work, idx) => {
+              const roleText = (work.roleKey && t.experience[work.roleKey as keyof typeof t.experience])
+                ? t.experience[work.roleKey as keyof typeof t.experience]
+                : (work.role || "");
+              const companyText = (work.companyKey && t.experience[work.companyKey as keyof typeof t.experience])
+                ? t.experience[work.companyKey as keyof typeof t.experience]
+                : (work.companyName || "");
+              const durationText = (work.durationKey && t.experience[work.durationKey as keyof typeof t.experience])
+                ? t.experience[work.durationKey as keyof typeof t.experience]
+                : (work.duration || "");
+              const descText = (work.descKey && t.experience[work.descKey as keyof typeof t.experience])
+                ? t.experience[work.descKey as keyof typeof t.experience]
+                : (work.description || "");
 
-                <div className="glass-card card-glow p-8">
-                  <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-3">
-                    <div>
-                      <h3 className="text-2xl font-bold">{t.experience[work.roleKey]}</h3>
-                      <p className="text-[var(--muted-foreground)] text-lg">{t.experience[work.companyKey]}</p>
-                    </div>
-                    <span className="px-4 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-sm font-medium whitespace-nowrap">
-                      {t.experience[work.durationKey]}
-                    </span>
+              return (
+                <motion.div
+                  key={work.id || idx}
+                  variants={slideInLeft}
+                  className="relative md:pl-20 mb-8"
+                >
+                  {/* Timeline dot */}
+                  <div className="absolute left-[26px] top-8 w-5 h-5 rounded-full border-2 border-blue-500 bg-[var(--background)] hidden md:flex items-center justify-center">
+                    <div className="w-2 h-2 rounded-full bg-blue-400" />
                   </div>
-                  <p className="text-[var(--muted-foreground)] leading-relaxed">{t.experience[work.descKey]}</p>
-                </div>
-              </motion.div>
-            ))}
+
+                  <div className="glass-card card-glow p-8">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-3">
+                      <div>
+                        <h3 className="text-2xl font-bold">{roleText}</h3>
+                        <p className="text-[var(--muted-foreground)] text-lg">{companyText}</p>
+                      </div>
+                      {durationText && (
+                        <span className="px-4 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-sm font-medium whitespace-nowrap">
+                          {durationText}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[var(--muted-foreground)] leading-relaxed">{descText}</p>
+                  </div>
+                </motion.div>
+              );
+            })}
           </motion.div>
         </section></a>
 
@@ -704,8 +749,8 @@ export default function Home() {
             <div>
               <SectionHeading icon={Code} title={t.skills.title} color="green" isRTL={isRTL} />
               <div className="space-y-5">
-                {SKILLS.map((skill, idx) => (
-                  <SkillBar key={skill.name} name={skill.name} level={skill.level} delay={idx * 0.1} />
+                {portfolioData.skills.map((skill, idx) => (
+                  <SkillBar key={skill.id || skill.name} name={skill.name} level={skill.level} delay={idx * 0.1} />
                 ))}
               </div>
             </div>
@@ -720,7 +765,7 @@ export default function Home() {
                 viewport={{ once: true, margin: "-80px" }}
                 className="grid grid-cols-2 gap-3"
               >
-                {TOOLS.map((tool) => (
+                {portfolioData.tools.map((tool) => (
                   <motion.div
                     key={tool}
                     variants={itemVariants}
@@ -753,25 +798,34 @@ export default function Home() {
             viewport={{ once: true, margin: "-80px" }}
             className="grid grid-cols-1 md:grid-cols-2 gap-5"
           >
-            {CERTIFICATIONS.map((cert, idx) => (
-              <motion.div
-                key={idx}
-                variants={itemVariants}
-                whileHover={{ scale: 1.02 }}
-                className="glass-card card-glow p-6 flex items-start gap-4"
-              >
-                <div className="p-2 rounded-lg bg-yellow-500/10 border border-yellow-500/20 flex-shrink-0 mt-0.5">
-                  <Award className="w-5 h-5 text-yellow-400" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-[var(--foreground)] mb-1">{t.certifications[cert.titleKey]}</h3>
-                  <p className="text-sm text-[var(--muted-foreground)]">
-                    {t.certifications.by} {cert.provider}
-                    <span className="ml-2 px-2 py-0.5 rounded-full bg-white/5 text-xs">{t.certifications[cert.typeKey]}</span>
-                  </p>
-                </div>
-              </motion.div>
-            ))}
+            {portfolioData.certifications.map((cert, idx) => {
+              const titleText = (cert.titleKey && t.certifications[cert.titleKey as keyof typeof t.certifications])
+                ? t.certifications[cert.titleKey as keyof typeof t.certifications]
+                : (cert.title || "");
+              const typeText = (cert.typeKey && t.certifications[cert.typeKey as keyof typeof t.certifications])
+                ? t.certifications[cert.typeKey as keyof typeof t.certifications]
+                : (cert.typeKey || "Online");
+
+              return (
+                <motion.div
+                  key={cert.id || idx}
+                  variants={itemVariants}
+                  whileHover={{ scale: 1.02 }}
+                  className="glass-card card-glow p-6 flex items-start gap-4"
+                >
+                  <div className="p-2 rounded-lg bg-yellow-500/10 border border-yellow-500/20 flex-shrink-0 mt-0.5">
+                    <Award className="w-5 h-5 text-yellow-400" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-[var(--foreground)] mb-1">{titleText}</h3>
+                    <p className="text-sm text-[var(--muted-foreground)]">
+                      {t.certifications.by} {cert.provider}
+                      <span className="ml-2 px-2 py-0.5 rounded-full bg-white/5 text-xs">{typeText}</span>
+                    </p>
+                  </div>
+                </motion.div>
+              );
+            })}
           </motion.div>
         </section>
 
