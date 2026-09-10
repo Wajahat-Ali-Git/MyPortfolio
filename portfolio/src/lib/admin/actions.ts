@@ -1,6 +1,6 @@
 'use server';
 
-import { supabase } from '@/lib/supabase';
+import { supabase, isSupabaseConfigured, createAuthenticatedClient } from '@/lib/supabase';
 import type {
   AdminProjectInput,
   AdminExperienceInput,
@@ -12,6 +12,32 @@ import type {
 } from './types';
 
 // =============================================================================
+// AUTH HELPER
+// =============================================================================
+
+/**
+ * Returns an authenticated Supabase client using the current session token.
+ * Server Actions run on the server and need an explicit auth header to satisfy
+ * Supabase RLS write policies (auth.role() = 'authenticated').
+ *
+ * If Supabase is not configured or there is no active session, writes will be
+ * rejected by RLS — which is the correct secure-by-default behaviour.
+ */
+async function getAdminClient() {
+  if (!isSupabaseConfigured()) {
+    throw new Error('Supabase is not configured. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.');
+  }
+
+  const { data, error } = await supabase.auth.getSession();
+
+  if (error || !data.session?.access_token) {
+    throw new Error('Unauthorized: No active admin session found. Please log in.');
+  }
+
+  return createAuthenticatedClient(data.session.access_token);
+}
+
+// =============================================================================
 // 1. PROJECTS ADMIN ACTIONS
 // =============================================================================
 
@@ -19,6 +45,7 @@ export async function adminUpsertProject(
   input: AdminProjectInput
 ): Promise<AdminActionResult> {
   try {
+    const client = await getAdminClient();
     const payload = {
       title: input.title,
       slug: input.slug,
@@ -33,7 +60,7 @@ export async function adminUpsertProject(
       ...(input.id ? { id: input.id } : {}),
     };
 
-    const { data, error } = await supabase
+    const { data, error } = await client
       .from('projects')
       .upsert([payload], { onConflict: 'slug' })
       .select()
@@ -49,7 +76,8 @@ export async function adminUpsertProject(
 
 export async function adminDeleteProject(id: string): Promise<AdminActionResult> {
   try {
-    const { error } = await supabase.from('projects').delete().eq('id', id);
+    const client = await getAdminClient();
+    const { error } = await client.from('projects').delete().eq('id', id);
     if (error) throw error;
     return { success: true };
   } catch (err) {
@@ -66,6 +94,7 @@ export async function adminUpsertExperience(
   input: AdminExperienceInput
 ): Promise<AdminActionResult> {
   try {
+    const client = await getAdminClient();
     const payload = {
       company_name: input.company_name,
       company_slug: input.company_slug,
@@ -82,7 +111,7 @@ export async function adminUpsertExperience(
       ...(input.id ? { id: input.id } : {}),
     };
 
-    const { data, error } = await supabase
+    const { data, error } = await client
       .from('experiences')
       .upsert([payload], { onConflict: 'company_slug' })
       .select()
@@ -98,7 +127,8 @@ export async function adminUpsertExperience(
 
 export async function adminDeleteExperience(id: string): Promise<AdminActionResult> {
   try {
-    const { error } = await supabase.from('experiences').delete().eq('id', id);
+    const client = await getAdminClient();
+    const { error } = await client.from('experiences').delete().eq('id', id);
     if (error) throw error;
     return { success: true };
   } catch (err) {
@@ -115,6 +145,7 @@ export async function adminUpsertSkill(
   input: AdminSkillInput
 ): Promise<AdminActionResult> {
   try {
+    const client = await getAdminClient();
     const payload = {
       name: input.name,
       category: input.category,
@@ -125,7 +156,7 @@ export async function adminUpsertSkill(
       ...(input.id ? { id: input.id } : {}),
     };
 
-    const { data, error } = await supabase
+    const { data, error } = await client
       .from('skills')
       .upsert([payload], { onConflict: 'name' })
       .select()
@@ -141,7 +172,8 @@ export async function adminUpsertSkill(
 
 export async function adminDeleteSkill(id: string): Promise<AdminActionResult> {
   try {
-    const { error } = await supabase.from('skills').delete().eq('id', id);
+    const client = await getAdminClient();
+    const { error } = await client.from('skills').delete().eq('id', id);
     if (error) throw error;
     return { success: true };
   } catch (err) {
@@ -158,6 +190,7 @@ export async function adminUpsertTool(
   input: AdminToolInput
 ): Promise<AdminActionResult> {
   try {
+    const client = await getAdminClient();
     const payload = {
       name: input.name,
       category: input.category || 'other',
@@ -166,7 +199,7 @@ export async function adminUpsertTool(
       ...(input.id ? { id: input.id } : {}),
     };
 
-    const { data, error } = await supabase
+    const { data, error } = await client
       .from('tools')
       .upsert([payload], { onConflict: 'name' })
       .select()
@@ -182,7 +215,8 @@ export async function adminUpsertTool(
 
 export async function adminDeleteTool(id: string): Promise<AdminActionResult> {
   try {
-    const { error } = await supabase.from('tools').delete().eq('id', id);
+    const client = await getAdminClient();
+    const { error } = await client.from('tools').delete().eq('id', id);
     if (error) throw error;
     return { success: true };
   } catch (err) {
@@ -199,6 +233,7 @@ export async function adminUpsertCertification(
   input: AdminCertificationInput
 ): Promise<AdminActionResult> {
   try {
+    const client = await getAdminClient();
     const payload = {
       title: input.title,
       provider: input.provider,
@@ -209,7 +244,7 @@ export async function adminUpsertCertification(
       ...(input.id ? { id: input.id } : {}),
     };
 
-    const { data, error } = await supabase
+    const { data, error } = await client
       .from('certifications')
       .upsert([payload])
       .select()
@@ -225,7 +260,8 @@ export async function adminUpsertCertification(
 
 export async function adminDeleteCertification(id: string): Promise<AdminActionResult> {
   try {
-    const { error } = await supabase.from('certifications').delete().eq('id', id);
+    const client = await getAdminClient();
+    const { error } = await client.from('certifications').delete().eq('id', id);
     if (error) throw error;
     return { success: true };
   } catch (err) {
@@ -242,6 +278,7 @@ export async function adminUpdatePersonalInfo(
   input: AdminPersonalInfoInput
 ): Promise<AdminActionResult> {
   try {
+    const client = await getAdminClient();
     const payload = {
       full_name: input.full_name,
       role: input.role,
@@ -254,7 +291,7 @@ export async function adminUpdatePersonalInfo(
       ...(input.id ? { id: input.id } : {}),
     };
 
-    const { data, error } = await supabase
+    const { data, error } = await client
       .from('personal_info')
       .upsert([payload])
       .select()

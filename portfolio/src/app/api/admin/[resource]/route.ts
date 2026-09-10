@@ -19,12 +19,21 @@ type Props = {
 };
 
 /**
- * Authenticate incoming request using Supabase auth header (Bearer token)
+ * Authenticate incoming request using Supabase auth header (Bearer token).
+ * Returns a typed result so callers can distinguish 401, 403, and 503.
  */
-async function authenticateRequest(req: NextRequest) {
+async function authenticateRequest(req: NextRequest): Promise<
+  | { authenticated: true; user: import('@supabase/supabase-js').User; client: ReturnType<typeof createAuthenticatedClient> }
+  | { authenticated: false; forbidden?: boolean; unavailable?: boolean; error: string; client: typeof supabase }
+> {
+  // Supabase must be configured — never allow unauthenticated fallback in any environment.
   if (!isSupabaseConfigured()) {
-    // If Supabase is not configured yet (local dev fallback), allow with default client
-    return { authenticated: true, client: supabase };
+    return {
+      authenticated: false,
+      unavailable: true,
+      client: supabase,
+      error: 'Service unavailable: Supabase is not configured. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.',
+    };
   }
 
   const authHeader = req.headers.get('Authorization');
@@ -39,13 +48,24 @@ async function authenticateRequest(req: NextRequest) {
     return { authenticated: false, client: supabase, error: 'Unauthorized: Invalid or expired token' };
   }
 
-  // Optional Admin Email / Role Restriction
+  // Admin email or role restriction — always enforced (see checkIsAdmin in auth.ts).
   const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL?.trim().toLowerCase();
   const userEmail = data.user.email?.toLowerCase();
   const userRole = data.user.app_metadata?.role || data.user.user_metadata?.role;
 
-  if (adminEmail && userEmail !== adminEmail && userRole !== 'admin') {
-    return { authenticated: false, forbidden: true, client: supabase, error: 'Forbidden: User is not authorized as an administrator' };
+  // If NEXT_PUBLIC_ADMIN_EMAIL is set, user must match it or carry role=admin.
+  // If it is NOT set, fall back to role check only — access is denied without an explicit role.
+  const isAdmin =
+    (adminEmail && (userEmail === adminEmail || userRole === 'admin')) ||
+    (!adminEmail && userRole === 'admin');
+
+  if (!isAdmin) {
+    return {
+      authenticated: false,
+      forbidden: true,
+      client: supabase,
+      error: 'Forbidden: User is not authorized as an administrator',
+    };
   }
 
   const authenticatedClient = createAuthenticatedClient(token);
@@ -64,8 +84,8 @@ export async function GET(req: NextRequest, { params }: Props) {
   }
 
   const auth = await authenticateRequest(req);
-  if (isSupabaseConfigured() && !auth.authenticated) {
-    const status = auth.forbidden ? 403 : 401;
+  if (!auth.authenticated) {
+    const status = auth.unavailable ? 503 : auth.forbidden ? 403 : 401;
     return NextResponse.json({ success: false, error: auth.error || 'Unauthorized' }, { status });
   }
 
@@ -99,8 +119,8 @@ export async function POST(req: NextRequest, { params }: Props) {
   }
 
   const auth = await authenticateRequest(req);
-  if (isSupabaseConfigured() && !auth.authenticated) {
-    const status = auth.forbidden ? 403 : 401;
+  if (!auth.authenticated) {
+    const status = auth.unavailable ? 503 : auth.forbidden ? 403 : 401;
     return NextResponse.json({ success: false, error: auth.error || 'Unauthorized' }, { status });
   }
 
@@ -136,8 +156,8 @@ export async function DELETE(req: NextRequest, { params }: Props) {
   }
 
   const auth = await authenticateRequest(req);
-  if (isSupabaseConfigured() && !auth.authenticated) {
-    const status = auth.forbidden ? 403 : 401;
+  if (!auth.authenticated) {
+    const status = auth.unavailable ? 503 : auth.forbidden ? 403 : 401;
     return NextResponse.json({ success: false, error: auth.error || 'Unauthorized' }, { status });
   }
 

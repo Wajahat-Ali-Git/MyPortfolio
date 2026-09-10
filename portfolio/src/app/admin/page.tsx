@@ -13,7 +13,6 @@ import {
   UserCheck,
   MessageSquare,
   Globe,
-  Loader2,
   Plus,
   Trash2,
   Edit,
@@ -25,7 +24,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import Link from 'next/link';
-import { AdminAuthProvider, useAdminAuth } from './AdminAuthContext';
+import { useAdminAuth } from './AdminAuthContext';
 import {
   adminUpsertProject,
   adminDeleteProject,
@@ -60,7 +59,10 @@ function AdminDashboardContent() {
   const [searchTerm, setSearchTerm] = useState('');
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
-  // Check for admin session on mount / authentication state changes
+  // Redirect to login if not authenticated. isLoading is already false here
+  // because layout.tsx's AdminSessionGate blocks rendering until the session
+  // check completes — so this redirect fires immediately on mount when there
+  // is no valid session, with no content flash.
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       router.replace('/admin/login');
@@ -134,19 +136,10 @@ function AdminDashboardContent() {
     }
   };
 
-  if (isLoading || !isAuthenticated) {
-    return (
-      <div className="min-h-screen bg-[#0a0a16] text-white flex flex-col justify-center items-center p-4">
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
-          className="mb-4"
-        >
-          <Loader2 className="w-10 h-10 text-cyan-400" />
-        </motion.div>
-        <p className="text-gray-400 font-mono text-sm">Verifying admin session...</p>
-      </div>
-    );
+  // Layout gate already blocked rendering while isLoading was true.
+  // This guard covers the edge case where the session expires mid-session.
+  if (!isAuthenticated) {
+    return null;
   }
 
   const tabs: { id: TabType; label: string; icon: React.ReactNode }[] = [
@@ -304,7 +297,7 @@ function AdminDashboardContent() {
           </div>
         ) : isFetching ? (
           <div className="p-16 text-center text-gray-400">
-            <Loader2 className="w-8 h-8 text-cyan-400 animate-spin mx-auto mb-3" />
+            <div className="w-8 h-8 border-4 border-cyan-400/30 border-t-cyan-400 rounded-full animate-spin mx-auto mb-3" />
             <p className="font-mono text-xs">Loading {activeTab.replace('_', ' ')}...</p>
           </div>
         ) : filteredItems.length === 0 ? (
@@ -363,9 +356,5 @@ function AdminDashboardContent() {
 }
 
 export default function AdminPage() {
-  return (
-    <AdminAuthProvider>
-      <AdminDashboardContent />
-    </AdminAuthProvider>
-  );
+  return <AdminDashboardContent />;
 }

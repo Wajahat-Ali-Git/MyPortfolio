@@ -3,13 +3,13 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Lock, Mail, Eye, EyeOff, ShieldCheck, AlertCircle, Loader2, ArrowLeft, CheckCircle2 } from 'lucide-react';
+import { Lock, Mail, Eye, EyeOff, ShieldCheck, AlertCircle, ArrowLeft, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
-import { AdminAuthProvider, useAdminAuth } from '../AdminAuthContext';
+import { useAdminAuth } from '../AdminAuthContext';
 
 function AdminLoginForm() {
   const router = useRouter();
-  const { user, isAuthenticated, isLoading, isConfigured, login } = useAdminAuth();
+  const { user, isAuthenticated, isConfigured, login } = useAdminAuth();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -17,12 +17,13 @@ function AdminLoginForm() {
   const [errorMsg, setErrorMsg] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // If already authenticated on mount or after login, redirect to /admin
+  // Layout gate already handled the loading state. If session is valid,
+  // redirect immediately — no need to wait for isLoading here.
   useEffect(() => {
-    if (!isLoading && isAuthenticated && user) {
+    if (isAuthenticated && user) {
       router.replace('/admin');
     }
-  }, [isAuthenticated, isLoading, user, router]);
+  }, [isAuthenticated, user, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,21 +48,6 @@ function AdminLoginForm() {
       setIsSubmitting(false);
     }
   };
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-[#0a0a16] text-white flex flex-col justify-center items-center p-4">
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
-          className="mb-4"
-        >
-          <Loader2 className="w-10 h-10 text-cyan-400" />
-        </motion.div>
-        <p className="text-gray-400 font-mono text-sm">Checking admin session...</p>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-[#0a0a16] text-white relative overflow-hidden flex flex-col justify-center items-center p-4">
@@ -178,7 +164,11 @@ function AdminLoginForm() {
             >
               {isSubmitting ? (
                 <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <motion.span
+                    animate={{ rotate: 360 }}
+                    transition={{ repeat: Infinity, duration: 0.8, ease: 'linear' }}
+                    className="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full"
+                  />
                   <span>Authenticating...</span>
                 </>
               ) : (
@@ -204,9 +194,5 @@ function AdminLoginForm() {
 }
 
 export default function AdminLoginPage() {
-  return (
-    <AdminAuthProvider>
-      <AdminLoginForm />
-    </AdminAuthProvider>
-  );
+  return <AdminLoginForm />;
 }
