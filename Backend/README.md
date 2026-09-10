@@ -24,10 +24,18 @@ npm run dev
 
 ## 📚 Documentation
 
+**→ [Start Here: Documentation Index](./docs/INDEX.md)** ⭐
+
 All comprehensive documentation is organized in the `docs/` folder:
 
+### Quick Access
+- **[Quick Start](./docs/QUICKSTART.md)** - Get running in 2 minutes
+- **[API Reference](./docs/API_DOCUMENTATION.md)** - All 30+ endpoints
+- **[Supabase RPC](./docs/SUPABASE_RPC_GUIDE.md)** - RPC functions & optimization
+- **[Deploy to Supabase](./docs/APPLY_TO_SUPABASE.md)** - Cloud deployment
+
 ### Core Documentation
-- **[README.md](./docs/README.md)** - Complete API documentation & usage
+- **[Main API Docs](./docs/README.md)** - Complete API documentation & usage
 - **[QUICKSTART.md](./docs/QUICKSTART.md)** - Get running in 2 minutes
 - **[SETUP_CHECKLIST.md](./docs/SETUP_CHECKLIST.md)** - Detailed step-by-step setup
 
