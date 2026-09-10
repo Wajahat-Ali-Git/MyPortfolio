@@ -23,7 +23,6 @@ Additional rules specific to the Next.js frontend.
 ### Environment Variables
 ```env
 # ✅ Public (safe to expose in browser)
-NEXT_PUBLIC_API_URL=http://localhost:5000
 NEXT_PUBLIC_SUPABASE_URL=https://xxx.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=xxx  # Anonymous key only!
 

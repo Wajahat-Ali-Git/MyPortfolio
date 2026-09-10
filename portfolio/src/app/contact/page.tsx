@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { contactAPI } from '@/lib/supabase';
+import { submitContactMessage } from './actions';
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -20,9 +20,13 @@ export default function ContactPage() {
     setSuccess(false);
 
     try {
-      await contactAPI.submit(formData);
-      setSuccess(true);
-      setFormData({ name: '', email: '', message: '' });
+      const result = await submitContactMessage(formData);
+      if (result.success) {
+        setSuccess(true);
+        setFormData({ name: '', email: '', message: '' });
+      } else {
+        setError(result.error || 'Failed to send message');
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to send message');
     } finally {
