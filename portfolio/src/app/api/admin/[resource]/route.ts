@@ -19,25 +19,33 @@ type Props = {
 };
 
 /**
- * Authenticate incoming request using Supabase auth header or session
+ * Authenticate incoming request using Supabase auth header (Bearer token)
  */
 async function authenticateRequest(req: NextRequest) {
   if (!isSupabaseConfigured()) {
-    // If Supabase is not configured yet (development fallback), allow read/write with default client
+    // If Supabase is not configured yet (local dev fallback), allow with default client
     return { authenticated: true, client: supabase };
   }
 
   const authHeader = req.headers.get('Authorization');
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    // Check if session can be verified or fallback to default client for GET
-    return { authenticated: false, client: supabase, error: 'Missing Authorization header' };
+    return { authenticated: false, client: supabase, error: 'Unauthorized: Missing Authorization header' };
   }
 
   const token = authHeader.substring(7);
   const { data, error } = await supabase.auth.getUser(token);
 
   if (error || !data.user) {
-    return { authenticated: false, client: supabase, error: 'Invalid or expired token' };
+    return { authenticated: false, client: supabase, error: 'Unauthorized: Invalid or expired token' };
+  }
+
+  // Optional Admin Email / Role Restriction
+  const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL?.trim().toLowerCase();
+  const userEmail = data.user.email?.toLowerCase();
+  const userRole = data.user.app_metadata?.role || data.user.user_metadata?.role;
+
+  if (adminEmail && userEmail !== adminEmail && userRole !== 'admin') {
+    return { authenticated: false, forbidden: true, client: supabase, error: 'Forbidden: User is not authorized as an administrator' };
   }
 
   const authenticatedClient = createAuthenticatedClient(token);
@@ -46,7 +54,7 @@ async function authenticateRequest(req: NextRequest) {
 
 /**
  * GET /api/admin/[resource]
- * Fetches all records of a given resource for admin display
+ * Fetches all records of a given resource for admin display (Strictly Protected)
  */
 export async function GET(req: NextRequest, { params }: Props) {
   const { resource } = await params;
@@ -55,8 +63,13 @@ export async function GET(req: NextRequest, { params }: Props) {
     return NextResponse.json({ error: `Invalid resource: ${resource}` }, { status: 400 });
   }
 
+  const auth = await authenticateRequest(req);
+  if (isSupabaseConfigured() && !auth.authenticated) {
+    const status = auth.forbidden ? 403 : 401;
+    return NextResponse.json({ success: false, error: auth.error || 'Unauthorized' }, { status });
+  }
+
   try {
-    const auth = await authenticateRequest(req);
     const client = auth.client;
 
     const { data, error } = await client
@@ -76,7 +89,7 @@ export async function GET(req: NextRequest, { params }: Props) {
 
 /**
  * POST /api/admin/[resource]
- * Creates or updates a record
+ * Creates or updates a record (Strictly Protected)
  */
 export async function POST(req: NextRequest, { params }: Props) {
   const { resource } = await params;
@@ -87,7 +100,8 @@ export async function POST(req: NextRequest, { params }: Props) {
 
   const auth = await authenticateRequest(req);
   if (isSupabaseConfigured() && !auth.authenticated) {
-    return NextResponse.json({ success: false, error: auth.error || 'Unauthorized' }, { status: 401 });
+    const status = auth.forbidden ? 403 : 401;
+    return NextResponse.json({ success: false, error: auth.error || 'Unauthorized' }, { status });
   }
 
   try {
@@ -106,7 +120,7 @@ export async function POST(req: NextRequest, { params }: Props) {
 
 /**
  * DELETE /api/admin/[resource]?id=...
- * Deletes a record by ID
+ * Deletes a record by ID (Strictly Protected)
  */
 export async function DELETE(req: NextRequest, { params }: Props) {
   const { resource } = await params;
@@ -123,7 +137,8 @@ export async function DELETE(req: NextRequest, { params }: Props) {
 
   const auth = await authenticateRequest(req);
   if (isSupabaseConfigured() && !auth.authenticated) {
-    return NextResponse.json({ success: false, error: auth.error || 'Unauthorized' }, { status: 401 });
+    const status = auth.forbidden ? 403 : 401;
+    return NextResponse.json({ success: false, error: auth.error || 'Unauthorized' }, { status });
   }
 
   try {

@@ -9,6 +9,20 @@ export interface AdminAuthResponse {
 }
 
 /**
+ * Verify if a given user account is authorized as an Admin
+ */
+export function checkIsAdmin(user: User | null): boolean {
+  if (!user) return false;
+  const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL?.trim().toLowerCase();
+  if (adminEmail) {
+    const userEmail = user.email?.toLowerCase();
+    const userRole = user.app_metadata?.role || user.user_metadata?.role;
+    return userEmail === adminEmail || userRole === 'admin';
+  }
+  return true;
+}
+
+/**
  * Sign in an admin using Supabase built-in Auth (email & password)
  */
 export async function signInAdmin(
@@ -32,6 +46,15 @@ export async function signInAdmin(
       return {
         success: false,
         error: error.message,
+      };
+    }
+
+    // Role / Admin Email Verification
+    if (!checkIsAdmin(data.user)) {
+      await supabase.auth.signOut();
+      return {
+        success: false,
+        error: 'Access denied: This account does not have administrator privileges.',
       };
     }
 
@@ -72,7 +95,7 @@ export async function signOutAdmin(): Promise<{ success: boolean; error?: string
 export async function getAdminUser(): Promise<User | null> {
   try {
     const { data, error } = await supabase.auth.getUser();
-    if (error || !data.user) {
+    if (error || !data.user || !checkIsAdmin(data.user)) {
       return null;
     }
     return data.user;
@@ -87,7 +110,7 @@ export async function getAdminUser(): Promise<User | null> {
 export async function getAdminSession(): Promise<Session | null> {
   try {
     const { data, error } = await supabase.auth.getSession();
-    if (error || !data.session) {
+    if (error || !data.session || !checkIsAdmin(data.session.user)) {
       return null;
     }
     return data.session;
@@ -102,6 +125,14 @@ export async function getAdminSession(): Promise<Session | null> {
 export function onAuthStateChange(
   callback: (event: AuthChangeEvent, session: Session | null) => void
 ) {
-  const { data } = supabase.auth.onAuthStateChange(callback);
+  const { data } = supabase.auth.onAuthStateChange((event, session) => {
+    if (session?.user && !checkIsAdmin(session.user)) {
+      // Auto sign out unauthorized accounts
+      supabase.auth.signOut();
+      callback(event, null);
+    } else {
+      callback(event, session);
+    }
+  });
   return data.subscription;
 }

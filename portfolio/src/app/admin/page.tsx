@@ -111,18 +111,26 @@ function AdminDashboardContent() {
   const handleDeleteItem = async (id: string) => {
     if (!confirm('Are you sure you want to delete this item?')) return;
 
-    let res: { success: boolean; error?: string } = { success: false };
-    if (activeTab === 'projects') res = await adminDeleteProject(id);
-    else if (activeTab === 'experiences') res = await adminDeleteExperience(id);
-    else if (activeTab === 'skills') res = await adminDeleteSkill(id);
-    else if (activeTab === 'tools') res = await adminDeleteTool(id);
-    else if (activeTab === 'certifications') res = await adminDeleteCertification(id);
+    try {
+      const headers: Record<string, string> = {};
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`;
+      }
 
-    if (res.success) {
+      const res = await fetch(`/api/admin/${activeTab}?id=${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+        headers,
+      });
+
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        throw new Error(json.error || 'Failed to delete item');
+      }
+
       showToast('success', 'Item deleted successfully');
       loadResourceData(activeTab);
-    } else {
-      showToast('error', res.error || 'Failed to delete item');
+    } catch (err) {
+      showToast('error', err instanceof Error ? err.message : 'Failed to delete item');
     }
   };
 
