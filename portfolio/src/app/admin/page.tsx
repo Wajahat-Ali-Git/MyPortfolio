@@ -29,11 +29,17 @@ import {
   ExternalLink,
   Mail,
   Link2,
+  ArrowUp,
+  ArrowDown,
 } from 'lucide-react';
 import Link from 'next/link';
+import { supabase } from '@/lib/supabase';
 import { useAdminAuth } from './AdminAuthContext';
 import ItemFormModal, { AdminResourceType } from './components/ItemFormModal';
-import type { SectionVisibilityInput } from '@/lib/admin/actions';
+import {
+  type SectionVisibilityInput,
+  type ManageableResource,
+} from '@/lib/admin/actions';
 
 type TabType =
   | 'section_visibility'
@@ -271,14 +277,21 @@ function AdminDashboardContent() {
     }
   }, [isLoading, isAuthenticated, router]);
 
+  const getAuthToken = useCallback(async (): Promise<string | null> => {
+    if (session?.access_token) return session.access_token;
+    const { data } = await supabase.auth.getSession();
+    return data.session?.access_token || null;
+  }, [session?.access_token]);
+
   const loadResourceData = useCallback(async (resource: TabType) => {
     if (resource === 'section_visibility') return;
     setIsFetching(true);
     setFetchError('');
     try {
       const headers: Record<string, string> = {};
-      if (session?.access_token) {
-        headers['Authorization'] = `Bearer ${session.access_token}`;
+      const token = await getAuthToken();
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
       }
 
       const res = await fetch(`/api/admin/${resource}`, { headers });
@@ -299,7 +312,7 @@ function AdminDashboardContent() {
     } finally {
       setIsFetching(false);
     }
-  }, [session?.access_token]);
+  }, [getAuthToken]);
 
   useEffect(() => {
     if (isAuthenticated && activeTab !== 'section_visibility') {
@@ -324,10 +337,15 @@ function AdminDashboardContent() {
 
   const handleSaveItem = async (formData: any): Promise<boolean> => {
     try {
-      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-      if (session?.access_token) {
-        headers['Authorization'] = `Bearer ${session.access_token}`;
+      const token = await getAuthToken();
+      if (!token) {
+        throw new Error('Unauthorized: No active session found. Please log in again.');
       }
+
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      };
 
       const res = await fetch(`/api/admin/${activeTab}`, {
         method: 'POST',
@@ -353,10 +371,14 @@ function AdminDashboardContent() {
     if (!confirm('Are you sure you want to delete this item?')) return;
 
     try {
-      const headers: Record<string, string> = {};
-      if (session?.access_token) {
-        headers['Authorization'] = `Bearer ${session.access_token}`;
+      const token = await getAuthToken();
+      if (!token) {
+        throw new Error('Unauthorized: No active session found. Please log in again.');
       }
+
+      const headers: Record<string, string> = {
+        'Authorization': `Bearer ${token}`,
+      };
 
       const res = await fetch(`/api/admin/${activeTab}?id=${encodeURIComponent(id)}`, {
         method: 'DELETE',
@@ -372,6 +394,86 @@ function AdminDashboardContent() {
       loadResourceData(activeTab);
     } catch (err) {
       showToast('error', err instanceof Error ? err.message : 'Failed to delete item');
+    }
+  };
+
+  const handleToggleVisibility = async (item: any) => {
+    if (!item.id) return;
+    const currentVis = item.is_visible ?? true;
+    const newVis = !currentVis;
+
+    const token = await getAuthToken();
+    if (!token) {
+      showToast('error', 'Unauthorized: No active session found. Please log in.');
+      return;
+    }
+
+    // Optimistic UI update
+    setItems((prev) =>
+      prev.map((i) => (i.id === item.id ? { ...i, is_visible: newVis } : i))
+    );
+
+    try {
+      const res = await fetch(`/api/admin/${activeTab}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ id: item.id, is_visible: newVis }),
+      });
+
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        throw new Error(json.error || 'Failed to update visibility');
+      }
+      showToast('success', `Item is now ${newVis ? 'visible' : 'hidden'}`);
+    } catch (err) {
+      showToast('error', err instanceof Error ? err.message : 'Failed to update visibility');
+      // Revert optimistic update
+      setItems((prev) =>
+        prev.map((i) => (i.id === item.id ? { ...i, is_visible: currentVis } : i))
+      );
+    }
+  };
+
+  const handleUpdateOrder = async (item: any, delta: number) => {
+    if (!item.id) return;
+    const currentOrder = item.display_order ?? 0;
+    const newOrder = Math.max(0, currentOrder + delta);
+
+    if (newOrder === currentOrder && delta < 0) return;
+
+    const token = await getAuthToken();
+    if (!token) {
+      showToast('error', 'Unauthorized: No active session found. Please log in.');
+      return;
+    }
+
+    // Optimistic UI update
+    setItems((prev) => {
+      const updated = prev.map((i) => (i.id === item.id ? { ...i, display_order: newOrder } : i));
+      return updated.sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0));
+    });
+
+    try {
+      const res = await fetch(`/api/admin/${activeTab}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ id: item.id, display_order: newOrder }),
+      });
+
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        throw new Error(json.error || 'Failed to update position');
+      }
+      showToast('success', `Order updated to ${newOrder}`);
+    } catch (err) {
+      showToast('error', err instanceof Error ? err.message : 'Failed to update position');
+      loadResourceData(activeTab);
     }
   };
 
@@ -652,7 +754,8 @@ function AdminDashboardContent() {
                       <tr>
                         <th className="p-4">Title / Name</th>
                         <th className="p-4">Details & Tags</th>
-                        <th className="p-4">Status / Meta</th>
+                        {activeTab !== 'contact_messages' && <th className="p-4">Order</th>}
+                        <th className="p-4">Visibility / Status</th>
                         <th className="p-4 text-right">Actions</th>
                       </tr>
                     </thead>
@@ -684,19 +787,66 @@ function AdminDashboardContent() {
                               </div>
                             )}
                           </td>
+                          
+                          {/* Order / Reordering controls */}
+                          {activeTab !== 'contact_messages' && (
+                            <td className="p-4">
+                              <div className="flex items-center gap-1">
+                                <button
+                                  onClick={() => handleUpdateOrder(item, -1)}
+                                  className="p-1 rounded bg-white/5 hover:bg-cyan-500/20 hover:text-cyan-400 border border-white/10 transition-colors"
+                                  title="Move Up (Decrease order value)"
+                                >
+                                  <ArrowUp className="w-3 h-3" />
+                                </button>
+                                <span className="w-8 text-center px-1 py-0.5 rounded bg-black/40 border border-white/10 font-mono text-[11px] text-cyan-300 font-bold">
+                                  {item.display_order ?? 0}
+                                </span>
+                                <button
+                                  onClick={() => handleUpdateOrder(item, 1)}
+                                  className="p-1 rounded bg-white/5 hover:bg-cyan-500/20 hover:text-cyan-400 border border-white/10 transition-colors"
+                                  title="Move Down (Increase order value)"
+                                >
+                                  <ArrowDown className="w-3 h-3" />
+                                </button>
+                              </div>
+                            </td>
+                          )}
+
+                          {/* Visibility / Proficiency status */}
                           <td className="p-4 font-mono text-[11px] text-gray-400">
                             {item.proficiency !== undefined && item.proficiency !== null && (
-                              <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-2 mb-1.5">
                                 <div className="w-16 h-1.5 rounded-full bg-white/10 overflow-hidden">
                                   <div className="h-full bg-cyan-400 rounded-full" style={{ width: `${item.proficiency}%` }} />
                                 </div>
                                 <span>{item.proficiency}%</span>
                               </div>
                             )}
-                            {item.is_visible !== undefined && (
-                              <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] ${item.is_visible ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
-                                {item.is_visible ? 'Visible' : 'Hidden'}
-                              </span>
+                            {activeTab !== 'contact_messages' ? (
+                              <button
+                                onClick={() => handleToggleVisibility(item)}
+                                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-medium transition-all ${
+                                  item.is_visible ?? true
+                                    ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/25'
+                                    : 'bg-red-500/15 text-red-400 border border-red-500/30 hover:bg-red-500/25'
+                                }`}
+                                title={item.is_visible ?? true ? 'Click to Hide item' : 'Click to Show item'}
+                              >
+                                {item.is_visible ?? true ? (
+                                  <>
+                                    <Eye className="w-3 h-3 text-emerald-400" />
+                                    <span>Visible</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <EyeOff className="w-3 h-3 text-red-400" />
+                                    <span>Hidden</span>
+                                  </>
+                                )}
+                              </button>
+                            ) : (
+                              <span className="text-[10px] text-gray-400 font-sans">{item.created_at ? new Date(item.created_at).toLocaleDateString() : '-'}</span>
                             )}
                           </td>
                           <td className="p-4 text-right">

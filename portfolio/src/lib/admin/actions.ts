@@ -400,3 +400,57 @@ export async function adminUpdateSectionVisibility(
     return { success: false, error: err instanceof Error ? err.message : 'Failed to update section visibility' };
   }
 }
+
+// =============================================================================
+// 8. QUICK TOGGLE VISIBILITY & ORDER UPDATE ACTIONS
+// =============================================================================
+
+export type ManageableResource = 'projects' | 'experiences' | 'skills' | 'tools' | 'certifications' | 'languages';
+
+const RESOURCE_TABLE_MAP: Record<ManageableResource, string> = {
+  projects: 'projects',
+  experiences: 'experiences',
+  skills: 'skills',
+  tools: 'tools',
+  certifications: 'certifications',
+  languages: 'spoken_languages',
+};
+
+export async function adminToggleItemVisibility(
+  resource: ManageableResource,
+  id: string,
+  is_visible: boolean
+): Promise<AdminActionResult> {
+  const table = RESOURCE_TABLE_MAP[resource];
+  if (!table) return { success: false, error: 'Invalid resource type' };
+
+  try {
+    const client = await getAdminClient();
+    const { error } = await client.from(table).update({ is_visible }).eq('id', id);
+    if (error) throw error;
+    return { success: true };
+  } catch (err) {
+    console.error(`adminToggleItemVisibility (${resource}) error:`, err);
+    return { success: false, error: err instanceof Error ? err.message : 'Failed to update visibility' };
+  }
+}
+
+export async function adminUpdateItemOrder(
+  resource: ManageableResource,
+  id: string,
+  display_order: number
+): Promise<AdminActionResult> {
+  const table = RESOURCE_TABLE_MAP[resource];
+  if (!table) return { success: false, error: 'Invalid resource type' };
+
+  try {
+    const client = await getAdminClient();
+    const { error } = await client.from(table).update({ display_order }).eq('id', id);
+    if (error) throw error;
+    return { success: true };
+  } catch (err) {
+    console.error(`adminUpdateItemOrder (${resource}) error:`, err);
+    return { success: false, error: err instanceof Error ? err.message : 'Failed to update position' };
+  }
+}
+

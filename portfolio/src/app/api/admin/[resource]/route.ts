@@ -78,7 +78,9 @@ async function authenticateRequest(req: NextRequest): Promise<
  * Fetches all records of a given resource for admin display (Strictly Protected)
  */
 export async function GET(req: NextRequest, { params }: Props) {
-  const { resource } = await params;
+  let { resource } = await params;
+
+  if (resource === 'languages') resource = 'spoken_languages';
 
   if (!ALLOWED_RESOURCES.includes(resource)) {
     return NextResponse.json({ error: `Invalid resource: ${resource}` }, { status: 400 });
@@ -93,10 +95,16 @@ export async function GET(req: NextRequest, { params }: Props) {
   try {
     const client = auth.client;
 
-    const { data, error } = await client
-      .from(resource)
-      .select('*')
-      .order('created_at', { ascending: false });
+    let query = client.from(resource).select('*');
+    
+    // Sort by display_order if applicable, else created_at
+    if (['projects', 'experiences', 'skills', 'tools', 'certifications', 'spoken_languages'].includes(resource)) {
+      query = query.order('display_order', { ascending: true }).order('created_at', { ascending: false });
+    } else {
+      query = query.order('created_at', { ascending: false });
+    }
+
+    const { data, error } = await query;
 
     if (error) throw error;
     return NextResponse.json({ success: true, data });
@@ -113,7 +121,8 @@ export async function GET(req: NextRequest, { params }: Props) {
  * Creates or updates a record (Strictly Protected)
  */
 export async function POST(req: NextRequest, { params }: Props) {
-  const { resource } = await params;
+  let { resource } = await params;
+  if (resource === 'languages') resource = 'spoken_languages';
 
   if (!ALLOWED_RESOURCES.includes(resource)) {
     return NextResponse.json({ error: `Invalid resource: ${resource}` }, { status: 400 });
@@ -127,11 +136,33 @@ export async function POST(req: NextRequest, { params }: Props) {
 
   try {
     const body = await req.json();
-    const { data, error } = await auth.client.from(resource).upsert([body]).select();
 
-    if (error) throw error;
-    return NextResponse.json({ success: true, data });
+    let result;
+    if (body && typeof body === 'object' && body.id) {
+      const { id, ...updateFields } = body;
+      result = await auth.client
+        .from(resource)
+        .update(updateFields)
+        .eq('id', id)
+        .select();
+    } else {
+      result = await auth.client
+        .from(resource)
+        .insert([body])
+        .select();
+    }
+
+    if (result.error) {
+      console.error(`Database operation error on '${resource}':`, result.error);
+      return NextResponse.json(
+        { success: false, error: result.error.message || 'Database save failed' },
+        { status: 400 }
+      );
+    }
+
+    return NextResponse.json({ success: true, data: result.data });
   } catch (err) {
+    console.error(`POST /api/admin/${resource} error:`, err);
     return NextResponse.json(
       { success: false, error: err instanceof Error ? err.message : 'Database save failed' },
       { status: 500 }
@@ -144,7 +175,8 @@ export async function POST(req: NextRequest, { params }: Props) {
  * Deletes a record by ID (Strictly Protected)
  */
 export async function DELETE(req: NextRequest, { params }: Props) {
-  const { resource } = await params;
+  let { resource } = await params;
+  if (resource === 'languages') resource = 'spoken_languages';
   const { searchParams } = new URL(req.url);
   const id = searchParams.get('id');
 
