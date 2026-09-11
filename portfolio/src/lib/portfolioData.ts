@@ -244,16 +244,78 @@ export async function fetchCertifications(): Promise<DynamicCertification[]> {
   }
 }
 
+// ─── Section Visibility ───────────────────────────────────────────────────────
+
+export interface SectionVisibility {
+  projects: boolean;
+  github: boolean;
+  experience: boolean;
+  skills: boolean;
+  certifications: boolean;
+  languages: boolean;
+}
+
+const DEFAULT_VISIBILITY: SectionVisibility = {
+  projects: true,
+  github: true,
+  experience: true,
+  skills: true,
+  certifications: true,
+  languages: true,
+};
+
+/**
+ * Fetch section visibility settings from the site_settings table.
+ * Falls back to all-visible if Supabase is unavailable or the table is empty.
+ */
+export async function fetchSectionVisibility(): Promise<SectionVisibility> {
+  try {
+    const { data, error } = await supabase
+      .from('site_settings')
+      .select('key, value')
+      .in('key', [
+        'section_projects_visible',
+        'section_github_visible',
+        'section_experience_visible',
+        'section_skills_visible',
+        'section_certifications_visible',
+        'section_languages_visible',
+      ]);
+
+    if (error || !data || data.length === 0) {
+      return DEFAULT_VISIBILITY;
+    }
+
+    const map: Record<string, string> = {};
+    for (const row of data) {
+      map[row.key] = row.value;
+    }
+
+    return {
+      projects:      map['section_projects_visible']      !== 'false',
+      github:        map['section_github_visible']        !== 'false',
+      experience:    map['section_experience_visible']    !== 'false',
+      skills:        map['section_skills_visible']        !== 'false',
+      certifications:map['section_certifications_visible']!== 'false',
+      languages:     map['section_languages_visible']     !== 'false',
+    };
+  } catch (err) {
+    console.warn('Failed to fetch section visibility from Supabase, using fallback:', err);
+    return DEFAULT_VISIBILITY;
+  }
+}
+
 /**
  * Fetch all dynamic portfolio items concurrently
  */
 export async function fetchAllPortfolioData() {
-  const [projects, experiences, skills, tools, certifications] = await Promise.all([
+  const [projects, experiences, skills, tools, certifications, sectionVisibility] = await Promise.all([
     fetchProjects(),
     fetchExperiences(),
     fetchSkills(),
     fetchTools(),
     fetchCertifications(),
+    fetchSectionVisibility(),
   ]);
 
   return {
@@ -263,5 +325,6 @@ export async function fetchAllPortfolioData() {
     tools,
     certifications,
     languages: FALLBACK_LANGUAGES,
+    sectionVisibility,
   };
 }

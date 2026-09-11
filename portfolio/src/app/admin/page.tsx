@@ -22,6 +22,10 @@ import {
   AlertTriangle,
   User as UserIcon,
   Sparkles,
+  Eye,
+  EyeOff,
+  LayoutDashboard,
+  Save,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useAdminAuth } from './AdminAuthContext';
@@ -38,8 +42,10 @@ import {
   adminDeleteCertification,
   adminUpdatePersonalInfo,
 } from '@/lib/admin/actions';
+import type { SectionVisibilityInput } from '@/lib/admin/actions';
 
 type TabType =
+  | 'section_visibility'
   | 'projects'
   | 'experiences'
   | 'skills'
@@ -48,29 +54,237 @@ type TabType =
   | 'personal_info'
   | 'contact_messages';
 
+// ─── Section Visibility Panel ─────────────────────────────────────────────────
+
+const SECTION_META: { key: keyof SectionVisibilityInput; label: string; description: string; icon: React.ReactNode }[] = [
+  { key: 'projects',       label: 'Projects',       description: 'Portfolio project cards grid',          icon: <FolderGit2 className="w-4 h-4" /> },
+  { key: 'github',         label: 'GitHub Activity', description: 'Recent GitHub repos & activity feed',  icon: <Globe className="w-4 h-4" /> },
+  { key: 'experience',     label: 'Experience',      description: 'Work history timeline',                icon: <Briefcase className="w-4 h-4" /> },
+  { key: 'skills',         label: 'Skills & Tools',  description: 'Skill bars and developer tools grid',  icon: <Wrench className="w-4 h-4" /> },
+  { key: 'certifications', label: 'Certifications',  description: 'Certification cards',                  icon: <Award className="w-4 h-4" /> },
+  { key: 'languages',      label: 'Languages',       description: 'Spoken languages section',             icon: <Globe className="w-4 h-4" /> },
+];
+
+function SectionVisibilityPanel({
+  session,
+  showToast,
+}: {
+  session: { access_token?: string } | null;
+  showToast: (type: 'success' | 'error', message: string) => void;
+}) {
+  const [visibility, setVisibility] = useState<SectionVisibilityInput>({
+    projects: true,
+    github: true,
+    experience: true,
+    skills: true,
+    certifications: true,
+    languages: true,
+  });
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Load current settings via the admin API
+  useEffect(() => {
+    async function load() {
+      setIsLoading(true);
+      try {
+        const headers: Record<string, string> = {};
+        if (session?.access_token) {
+          headers['Authorization'] = `Bearer ${session.access_token}`;
+        }
+        const res = await fetch('/api/admin/site_settings', { headers });
+        const json = await res.json();
+
+        if (res.ok && json.success && Array.isArray(json.data)) {
+          const map: Record<string, string> = {};
+          for (const row of json.data as { key: string; value: string }[]) {
+            map[row.key] = row.value;
+          }
+          setVisibility({
+            projects:       map['section_projects_visible']       !== 'false',
+            github:         map['section_github_visible']         !== 'false',
+            experience:     map['section_experience_visible']     !== 'false',
+            skills:         map['section_skills_visible']         !== 'false',
+            certifications: map['section_certifications_visible'] !== 'false',
+            languages:      map['section_languages_visible']      !== 'false',
+          });
+        }
+      } catch {
+        // keep defaults
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    load();
+  }, [session?.access_token]);
+
+  const toggle = (key: keyof SectionVisibilityInput) => {
+    setVisibility((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const save = async () => {
+    setIsSaving(true);
+    try {
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`;
+      }
+
+      // Upsert all 6 visibility rows via the admin API route
+      const rows = [
+        { key: 'section_projects_visible',       value: String(visibility.projects) },
+        { key: 'section_github_visible',         value: String(visibility.github) },
+        { key: 'section_experience_visible',     value: String(visibility.experience) },
+        { key: 'section_skills_visible',         value: String(visibility.skills) },
+        { key: 'section_certifications_visible', value: String(visibility.certifications) },
+        { key: 'section_languages_visible',      value: String(visibility.languages) },
+      ];
+
+      // POST each row individually (API route does upsert)
+      const results = await Promise.all(
+        rows.map((row) =>
+          fetch('/api/admin/site_settings', {
+            method: 'POST',
+            headers,
+            body: JSON.stringify(row),
+          }).then((r) => r.json())
+        )
+      );
+
+      const failed = results.find((r) => !r.success);
+      if (failed) throw new Error(failed.error || 'Failed to save one or more settings');
+
+      showToast('success', 'Section visibility saved — changes are live on the public site.');
+    } catch (err) {
+      showToast('error', err instanceof Error ? err.message : 'Failed to save visibility settings');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const visibleCount = Object.values(visibility).filter(Boolean).length;
+
+  if (isLoading) {
+    return (
+      <div className="p-16 text-center text-gray-400">
+        <div className="w-8 h-8 border-4 border-cyan-400/30 border-t-cyan-400 rounded-full animate-spin mx-auto mb-3" />
+        <p className="font-mono text-xs">Loading settings…</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-6">
+      {/* Header card */}
+      <div className="bg-[#121226]/70 rounded-2xl border border-white/10 p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-base font-semibold text-white flex items-center gap-2">
+            <LayoutDashboard className="w-4 h-4 text-cyan-400" />
+            Section Visibility
+          </h2>
+          <p className="text-xs text-gray-400 mt-1">
+            Toggle which sections are shown to visitors on the public portfolio.
+            Currently <span className="text-cyan-300 font-semibold">{visibleCount}/{SECTION_META.length}</span> sections visible.
+          </p>
+        </div>
+        <button
+          onClick={save}
+          disabled={isSaving}
+          className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500/20 to-purple-500/20 border border-cyan-500/40 text-cyan-300 text-xs font-semibold hover:from-cyan-500/30 hover:to-purple-500/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-cyan-500/10"
+        >
+          {isSaving ? (
+            <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+          ) : (
+            <Save className="w-3.5 h-3.5" />
+          )}
+          {isSaving ? 'Saving…' : 'Save Changes'}
+        </button>
+      </div>
+
+      {/* Toggle cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {SECTION_META.map((section) => {
+          const isVisible = visibility[section.key];
+          return (
+            <motion.div
+              key={section.key}
+              layout
+              className={`relative rounded-2xl border p-5 cursor-pointer transition-all duration-200 select-none ${
+                isVisible
+                  ? 'bg-cyan-500/5 border-cyan-500/30 shadow-lg shadow-cyan-500/5'
+                  : 'bg-[#121226]/60 border-white/10 opacity-70'
+              }`}
+              onClick={() => toggle(section.key)}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              {/* Status badge */}
+              <div className={`absolute top-3 right-3 flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold border ${
+                isVisible
+                  ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+                  : 'bg-red-500/10 border-red-500/30 text-red-400'
+              }`}>
+                {isVisible ? <Eye className="w-2.5 h-2.5" /> : <EyeOff className="w-2.5 h-2.5" />}
+                {isVisible ? 'Visible' : 'Hidden'}
+              </div>
+
+              {/* Icon + label */}
+              <div className={`w-9 h-9 rounded-xl flex items-center justify-center mb-3 ${
+                isVisible
+                  ? 'bg-cyan-500/15 border border-cyan-500/30 text-cyan-400'
+                  : 'bg-white/5 border border-white/10 text-gray-500'
+              }`}>
+                {section.icon}
+              </div>
+              <p className={`text-sm font-semibold mb-1 ${isVisible ? 'text-white' : 'text-gray-500'}`}>
+                {section.label}
+              </p>
+              <p className="text-[11px] text-gray-500 leading-relaxed">{section.description}</p>
+
+              {/* Toggle switch */}
+              <div className="mt-4 flex items-center gap-2">
+                <div className={`relative w-9 h-5 rounded-full transition-colors duration-200 ${
+                  isVisible ? 'bg-cyan-500' : 'bg-white/10'
+                }`}>
+                  <motion.div
+                    className="absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-md"
+                    animate={{ left: isVisible ? '18px' : '2px' }}
+                    transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                  />
+                </div>
+                <span className={`text-[11px] font-medium ${isVisible ? 'text-cyan-300' : 'text-gray-500'}`}>
+                  {isVisible ? 'Shown to visitors' : 'Hidden from visitors'}
+                </span>
+              </div>
+            </motion.div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ─── Main Dashboard ────────────────────────────────────────────────────────────
+
 function AdminDashboardContent() {
   const router = useRouter();
   const { user, isAuthenticated, isLoading, logout, session } = useAdminAuth();
 
-  const [activeTab, setActiveTab] = useState<TabType>('projects');
+  const [activeTab, setActiveTab] = useState<TabType>('section_visibility');
   const [items, setItems] = useState<any[]>([]);
   const [isFetching, setIsFetching] = useState(false);
   const [fetchError, setFetchError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
-  // Redirect to login if not authenticated. isLoading is already false here
-  // because layout.tsx's AdminSessionGate blocks rendering until the session
-  // check completes — so this redirect fires immediately on mount when there
-  // is no valid session, with no content flash.
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       router.replace('/admin/login');
     }
   }, [isLoading, isAuthenticated, router]);
 
-  // Fetch resource data for active tab
   const loadResourceData = useCallback(async (resource: TabType) => {
+    if (resource === 'section_visibility') return;
     setIsFetching(true);
     setFetchError('');
     try {
@@ -100,7 +314,7 @@ function AdminDashboardContent() {
   }, [session?.access_token]);
 
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated && activeTab !== 'section_visibility') {
       loadResourceData(activeTab);
     }
   }, [isAuthenticated, activeTab, loadResourceData]);
@@ -136,20 +350,19 @@ function AdminDashboardContent() {
     }
   };
 
-  // Layout gate already blocked rendering while isLoading was true.
-  // This guard covers the edge case where the session expires mid-session.
   if (!isAuthenticated) {
     return null;
   }
 
   const tabs: { id: TabType; label: string; icon: React.ReactNode }[] = [
-    { id: 'projects', label: 'Projects', icon: <FolderGit2 className="w-4 h-4" /> },
-    { id: 'experiences', label: 'Experiences', icon: <Briefcase className="w-4 h-4" /> },
-    { id: 'skills', label: 'Skills', icon: <Sparkles className="w-4 h-4" /> },
-    { id: 'tools', label: 'Tools', icon: <Wrench className="w-4 h-4" /> },
-    { id: 'certifications', label: 'Certifications', icon: <Award className="w-4 h-4" /> },
-    { id: 'personal_info', label: 'Personal Info', icon: <UserCheck className="w-4 h-4" /> },
-    { id: 'contact_messages', label: 'Contact Messages', icon: <MessageSquare className="w-4 h-4" /> },
+    { id: 'section_visibility', label: 'Visibility',       icon: <Eye className="w-4 h-4" /> },
+    { id: 'projects',           label: 'Projects',         icon: <FolderGit2 className="w-4 h-4" /> },
+    { id: 'experiences',        label: 'Experiences',      icon: <Briefcase className="w-4 h-4" /> },
+    { id: 'skills',             label: 'Skills',           icon: <Sparkles className="w-4 h-4" /> },
+    { id: 'tools',              label: 'Tools',            icon: <Wrench className="w-4 h-4" /> },
+    { id: 'certifications',     label: 'Certifications',   icon: <Award className="w-4 h-4" /> },
+    { id: 'personal_info',      label: 'Personal Info',    icon: <UserCheck className="w-4 h-4" /> },
+    { id: 'contact_messages',   label: 'Messages',         icon: <MessageSquare className="w-4 h-4" /> },
   ];
 
   const filteredItems = items.filter((item) => {
@@ -257,98 +470,105 @@ function AdminDashboardContent() {
           ))}
         </div>
 
-        {/* Action Header */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder={`Search ${activeTab.replace('_', ' ')}...`}
-              className="w-full bg-[#121226]/80 border border-white/10 rounded-xl pl-10 pr-4 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/80"
-            />
-          </div>
-
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => loadResourceData(activeTab)}
-              disabled={isFetching}
-              className="p-2 rounded-xl bg-[#121226]/80 border border-white/10 text-gray-300 hover:text-white hover:border-white/20 transition-all text-xs flex items-center gap-1.5"
-              title="Refresh Data"
-            >
-              <RefreshCw className={`w-4 h-4 ${isFetching ? 'animate-spin text-cyan-400' : ''}`} />
-              <span className="hidden sm:inline">Refresh</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Content Table / Grid */}
-        {fetchError ? (
-          <div className="p-8 rounded-2xl bg-red-500/10 border border-red-500/30 text-center">
-            <AlertTriangle className="w-8 h-8 text-red-400 mx-auto mb-2" />
-            <p className="text-red-300 font-semibold">{fetchError}</p>
-            <button
-              onClick={() => loadResourceData(activeTab)}
-              className="mt-4 px-4 py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/40 rounded-xl text-xs text-red-200"
-            >
-              Try Again
-            </button>
-          </div>
-        ) : isFetching ? (
-          <div className="p-16 text-center text-gray-400">
-            <div className="w-8 h-8 border-4 border-cyan-400/30 border-t-cyan-400 rounded-full animate-spin mx-auto mb-3" />
-            <p className="font-mono text-xs">Loading {activeTab.replace('_', ' ')}...</p>
-          </div>
-        ) : filteredItems.length === 0 ? (
-          <div className="p-16 rounded-2xl bg-[#121226]/50 border border-white/5 text-center text-gray-400">
-            <p className="text-sm font-medium">No records found for {activeTab.replace('_', ' ')}</p>
-            <p className="text-xs text-gray-500 mt-1">Data from database will appear here when added.</p>
-          </div>
+        {/* Section Visibility tab */}
+        {activeTab === 'section_visibility' ? (
+          <SectionVisibilityPanel session={session} showToast={showToast} />
         ) : (
-          <div className="bg-[#121226]/70 backdrop-blur-md rounded-2xl border border-white/10 overflow-hidden shadow-2xl">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs text-gray-300">
-                <thead className="bg-black/30 border-b border-white/10 text-gray-400 font-mono uppercase text-[10px]">
-                  <tr>
-                    <th className="p-4">Title / Name</th>
-                    <th className="p-4">Details</th>
-                    <th className="p-4">Created At</th>
-                    <th className="p-4 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/5">
-                  {filteredItems.map((item) => (
-                    <tr key={item.id || item.slug || Math.random()} className="hover:bg-white/[0.02] transition-colors">
-                      <td className="p-4 font-medium text-white">
-                        <div>
-                          {item.title || item.name || item.full_name || item.company_name || 'Untitled'}
-                        </div>
-                        {item.slug && <div className="text-[10px] text-gray-500 font-mono">{item.slug}</div>}
-                      </td>
-                      <td className="p-4 text-gray-400 max-w-md truncate">
-                        {item.description || item.role || item.category || item.email || item.message || '-'}
-                      </td>
-                      <td className="p-4 font-mono text-[11px] text-gray-500">
-                        {item.created_at ? new Date(item.created_at).toLocaleDateString() : '-'}
-                      </td>
-                      <td className="p-4 text-right">
-                        {activeTab !== 'contact_messages' && activeTab !== 'personal_info' && (
-                          <button
-                            onClick={() => handleDeleteItem(item.id)}
-                            className="p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 transition-colors"
-                            title="Delete"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+          <>
+            {/* Action Header — only for data tabs */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+              <div className="relative flex-1 max-w-md">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder={`Search ${activeTab.replace('_', ' ')}...`}
+                  className="w-full bg-[#121226]/80 border border-white/10 rounded-xl pl-10 pr-4 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/80"
+                />
+              </div>
+
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => loadResourceData(activeTab)}
+                  disabled={isFetching}
+                  className="p-2 rounded-xl bg-[#121226]/80 border border-white/10 text-gray-300 hover:text-white hover:border-white/20 transition-all text-xs flex items-center gap-1.5"
+                  title="Refresh Data"
+                >
+                  <RefreshCw className={`w-4 h-4 ${isFetching ? 'animate-spin text-cyan-400' : ''}`} />
+                  <span className="hidden sm:inline">Refresh</span>
+                </button>
+              </div>
             </div>
-          </div>
+
+            {/* Content Table / Grid */}
+            {fetchError ? (
+              <div className="p-8 rounded-2xl bg-red-500/10 border border-red-500/30 text-center">
+                <AlertTriangle className="w-8 h-8 text-red-400 mx-auto mb-2" />
+                <p className="text-red-300 font-semibold">{fetchError}</p>
+                <button
+                  onClick={() => loadResourceData(activeTab)}
+                  className="mt-4 px-4 py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/40 rounded-xl text-xs text-red-200"
+                >
+                  Try Again
+                </button>
+              </div>
+            ) : isFetching ? (
+              <div className="p-16 text-center text-gray-400">
+                <div className="w-8 h-8 border-4 border-cyan-400/30 border-t-cyan-400 rounded-full animate-spin mx-auto mb-3" />
+                <p className="font-mono text-xs">Loading {activeTab.replace('_', ' ')}...</p>
+              </div>
+            ) : filteredItems.length === 0 ? (
+              <div className="p-16 rounded-2xl bg-[#121226]/50 border border-white/5 text-center text-gray-400">
+                <p className="text-sm font-medium">No records found for {activeTab.replace('_', ' ')}</p>
+                <p className="text-xs text-gray-500 mt-1">Data from database will appear here when added.</p>
+              </div>
+            ) : (
+              <div className="bg-[#121226]/70 backdrop-blur-md rounded-2xl border border-white/10 overflow-hidden shadow-2xl">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs text-gray-300">
+                    <thead className="bg-black/30 border-b border-white/10 text-gray-400 font-mono uppercase text-[10px]">
+                      <tr>
+                        <th className="p-4">Title / Name</th>
+                        <th className="p-4">Details</th>
+                        <th className="p-4">Created At</th>
+                        <th className="p-4 text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/5">
+                      {filteredItems.map((item) => (
+                        <tr key={item.id || item.slug || Math.random()} className="hover:bg-white/[0.02] transition-colors">
+                          <td className="p-4 font-medium text-white">
+                            <div>
+                              {item.title || item.name || item.full_name || item.company_name || 'Untitled'}
+                            </div>
+                            {item.slug && <div className="text-[10px] text-gray-500 font-mono">{item.slug}</div>}
+                          </td>
+                          <td className="p-4 text-gray-400 max-w-md truncate">
+                            {item.description || item.role || item.category || item.email || item.message || '-'}
+                          </td>
+                          <td className="p-4 font-mono text-[11px] text-gray-500">
+                            {item.created_at ? new Date(item.created_at).toLocaleDateString() : '-'}
+                          </td>
+                          <td className="p-4 text-right">
+                            {activeTab !== 'contact_messages' && activeTab !== 'personal_info' && (
+                              <button
+                                onClick={() => handleDeleteItem(item.id)}
+                                className="p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 transition-colors"
+                                title="Delete"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </main>
     </div>

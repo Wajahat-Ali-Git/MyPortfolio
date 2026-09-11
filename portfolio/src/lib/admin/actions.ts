@@ -304,3 +304,47 @@ export async function adminUpdatePersonalInfo(
     return { success: false, error: err instanceof Error ? err.message : 'Failed to update personal info' };
   }
 }
+
+// =============================================================================
+// 7. SECTION VISIBILITY ADMIN ACTION
+// =============================================================================
+
+export interface SectionVisibilityInput {
+  projects: boolean;
+  github: boolean;
+  experience: boolean;
+  skills: boolean;
+  certifications: boolean;
+  languages: boolean;
+}
+
+/**
+ * Upsert section visibility settings into site_settings.
+ * Each section maps to a row: key = 'section_<name>_visible', value = 'true'|'false'.
+ */
+export async function adminUpdateSectionVisibility(
+  input: SectionVisibilityInput
+): Promise<AdminActionResult> {
+  try {
+    const client = await getAdminClient();
+
+    const rows = [
+      { key: 'section_projects_visible',       value: String(input.projects) },
+      { key: 'section_github_visible',         value: String(input.github) },
+      { key: 'section_experience_visible',     value: String(input.experience) },
+      { key: 'section_skills_visible',         value: String(input.skills) },
+      { key: 'section_certifications_visible', value: String(input.certifications) },
+      { key: 'section_languages_visible',      value: String(input.languages) },
+    ].map((r) => ({ ...r, updated_at: new Date().toISOString() }));
+
+    const { error } = await client
+      .from('site_settings')
+      .upsert(rows, { onConflict: 'key' });
+
+    if (error) throw error;
+    return { success: true };
+  } catch (err) {
+    console.error('adminUpdateSectionVisibility error:', err);
+    return { success: false, error: err instanceof Error ? err.message : 'Failed to update section visibility' };
+  }
+}

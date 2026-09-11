@@ -12,6 +12,7 @@ const ALLOWED_RESOURCES = [
   'spoken_languages',
   'personal_info',
   'contact_messages',
+  'site_settings',
 ];
 
 type Props = {

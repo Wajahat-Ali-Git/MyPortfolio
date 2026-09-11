@@ -9,7 +9,7 @@ import Link from "next/link";
 import WorkflowAnimation from "./components/WorkflowAnimation";
 import GitHubRepos from "./components/GitHubRepos";
 import { TRANSLATIONS, PROJECTS, dotColorStyles, colorStyles, scaleUp, slideInLeft, slideInRight, itemVariants, containerVariants, LANG_OPTIONS, NAV_LINKS, LANGUAGES, TOOLS, SKILLS, CERTIFICATIONS, WORK_HISTORY } from "../constants/contants";
-import { fetchAllPortfolioData, type DynamicProject, type DynamicExperience, type DynamicSkill, type DynamicCertification } from "../lib/portfolioData";
+import { fetchAllPortfolioData, type DynamicProject, type DynamicExperience, type DynamicSkill, type DynamicCertification, type SectionVisibility } from "../lib/portfolioData";
 import type { Language } from "../types/types";
 
 
@@ -171,12 +171,20 @@ const MOBILE_NAV_ICONS: Record<string, NavIconType> = {
   certifications: Award,
 };
 
-function MobileBottomNav({ t, isRTL }: { t: typeof TRANSLATIONS["en"]; isRTL: boolean }) {
+function MobileBottomNav({ t, isRTL, sectionVisibility }: { t: typeof TRANSLATIONS["en"]; isRTL: boolean; sectionVisibility?: SectionVisibility }) {
   const [activeSection, setActiveSection] = useState<string>("home");
+
+  const visibleNavLinks = NAV_LINKS.filter((link) => {
+    if (link.labelKey === "home") return true;
+    if (sectionVisibility && link.labelKey in sectionVisibility) {
+      return sectionVisibility[link.labelKey as keyof SectionVisibility] !== false;
+    }
+    return true;
+  });
 
   useEffect(() => {
     // Use IntersectionObserver for accurate section detection
-    const sectionIds = NAV_LINKS.map((l) => l.href.slice(1));
+    const sectionIds = visibleNavLinks.map((l) => l.href.slice(1));
     const observers: IntersectionObserver[] = [];
     const visibilityMap: Record<string, number> = {};
 
@@ -187,7 +195,7 @@ function MobileBottomNav({ t, isRTL }: { t: typeof TRANSLATIONS["en"]; isRTL: bo
       for (const id of sectionIds) {
         if ((visibilityMap[id] ?? 0) > bestRatio) {
           bestRatio = visibilityMap[id] ?? 0;
-          best = NAV_LINKS.find((l) => l.href.slice(1) === id)?.labelKey ?? best;
+          best = visibleNavLinks.find((l) => l.href.slice(1) === id)?.labelKey ?? best;
         }
       }
       setActiveSection(best);
@@ -208,7 +216,7 @@ function MobileBottomNav({ t, isRTL }: { t: typeof TRANSLATIONS["en"]; isRTL: bo
     });
 
     return () => observers.forEach((obs) => obs.disconnect());
-  }, []);
+  }, [visibleNavLinks]);
 
   return (
     <motion.nav
@@ -227,7 +235,7 @@ function MobileBottomNav({ t, isRTL }: { t: typeof TRANSLATIONS["en"]; isRTL: bo
           padding: "6px 4px",
         }}
       >
-        {NAV_LINKS.map((link) => {
+        {visibleNavLinks.map((link) => {
           const Icon = MOBILE_NAV_ICONS[link.labelKey] || Code2;
           const isActive = activeSection === link.labelKey;
           const label = t.nav[link.labelKey as keyof typeof t.nav];
@@ -324,12 +332,21 @@ export default function Home() {
     skills: DynamicSkill[];
     tools: string[];
     certifications: DynamicCertification[];
+    sectionVisibility: SectionVisibility;
   }>({
     projects: PROJECTS,
     experiences: WORK_HISTORY,
     skills: SKILLS,
     tools: TOOLS,
     certifications: CERTIFICATIONS,
+    sectionVisibility: {
+      projects: true,
+      github: true,
+      experience: true,
+      skills: true,
+      certifications: true,
+      languages: true,
+    },
   });
 
   useEffect(() => {
@@ -418,7 +435,13 @@ export default function Home() {
             <span className="text-lg font-bold tracking-tight text-gradient">Wajahat</span>
           </a>
           <nav className="hidden md:flex md:items-center md:justify-center md:gap-2 lg:absolute lg:left-1/2 lg:transform lg:-translate-x-1/2 items-center justify-center gap-2 bg-white/5 border border-white/10 rounded-full px-4 py-2 glass shadow-lg">
-            {NAV_LINKS.map((link) => (
+            {NAV_LINKS.filter((link) => {
+              if (link.labelKey === "home") return true;
+              if (portfolioData.sectionVisibility && link.labelKey in portfolioData.sectionVisibility) {
+                return portfolioData.sectionVisibility[link.labelKey as keyof SectionVisibility] !== false;
+              }
+              return true;
+            }).map((link) => (
               <a
                 key={link.href}
                 href={link.href}
@@ -465,7 +488,7 @@ export default function Home() {
       </motion.header>
 
       {/* Enhanced Mobile bottom navbar with icons and active states */}
-      <MobileBottomNav t={t} isRTL={isRTL} />
+      <MobileBottomNav t={t} isRTL={isRTL} sectionVisibility={portfolioData.sectionVisibility} />
 
       {/* ─── Ambient Background ─── */}
       <div className="fixed inset-0 pointer-events-none z-0">
@@ -610,7 +633,7 @@ export default function Home() {
         {/* ═══════════════════════════════════════════
             PROJECTS SECTION
         ═══════════════════════════════════════════ */}
-        <section id="projects" className="container mx-auto px-6 py-20">
+        {portfolioData.sectionVisibility.projects && <section id="projects" className="container mx-auto px-6 py-20">
           <SectionHeading icon={Code2} title={t.projects.title} color="purple" isRTL={isRTL} />
 
           <motion.div
@@ -633,15 +656,16 @@ export default function Home() {
                   rel="noopener noreferrer"
                   variants={itemVariants}
                   whileHover={{ y: -6 }}
-                  className={`glass-card card-glow shimmer-effect p-8 flex flex-col h-full group cursor-pointer ${project.featured ? "md:col-span-2" : ""
-                    }`}
+                  className={`glass-card card-glow shimmer-effect p-8 flex flex-col h-full group cursor-pointer ${
+                    project.featured ? "md:col-span-2 border-purple-500/30 bg-purple-500/10 dark:bg-purple-900/20" : ""
+                  }`}
                 >
                   <div className="flex justify-between items-start mb-5">
                     <div className="flex items-center gap-3">
                       <div className={`w-3 h-3 rounded-full ${dotColorStyles[project.color] || "bg-purple-400/80"}`} />
-                      <h3 className="text-xl font-bold tracking-tight">{project.title}</h3>
+                      <h3 className="text-xl font-bold tracking-tight text-[var(--foreground)] dark:text-white">{project.title}</h3>
                       {project.featured && (
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 font-medium">
+                        <span className="text-xs px-2.5 py-0.5 rounded-full bg-purple-500/20 text-purple-700 dark:text-purple-300 font-semibold border border-purple-500/30">
                           {t.projects.fyp}
                         </span>
                       )}
@@ -649,7 +673,7 @@ export default function Home() {
                     <ExternalLink className="w-4 h-4 text-[var(--muted-foreground)] group-hover:text-[var(--foreground)] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
                   </div>
 
-                  <p className="text-[var(--muted-foreground)] flex-grow mb-6 leading-relaxed">
+                  <p className="text-[var(--foreground)]/80 dark:text-gray-300 flex-grow mb-6 leading-relaxed">
                     {desc}
                   </p>
 
@@ -657,7 +681,7 @@ export default function Home() {
                     {project.tech.map((tech) => (
                       <span
                         key={tech}
-                        className="px-3 py-1 text-xs font-mono font-medium rounded-full bg-white/10 border border-white/10 text-[var(--muted-foreground)]"
+                        className="px-3 py-1 text-xs font-mono font-medium rounded-full bg-white/10 dark:bg-white/10 border border-black/10 dark:border-white/10 text-[var(--foreground)] dark:text-gray-200"
                       >
                         {tech}
                       </span>
@@ -668,19 +692,19 @@ export default function Home() {
             })}
           </motion.div>
 
-        </section>
+        </section>}
 
         {/* ═══════════════════════════════════════════
             RECENT CODE ACTIVITY SECTION
         ═══════════════════════════════════════════ */}
-        <GitHubRepos selectedLang={selectedLang} t={t} isRTL={isRTL} />
+        {portfolioData.sectionVisibility.github && <GitHubRepos selectedLang={selectedLang} t={t} isRTL={isRTL} />}
 
         <SectionDivider />
 
         {/* ═══════════════════════════════════════════
             EXPERIENCE SECTION
         ═══════════════════════════════════════════ */}
-        <a href="/experience"><section id="experience" className="container mx-auto px-6 py-20" >
+        {portfolioData.sectionVisibility.experience && <section id="experience" className="container mx-auto px-6 py-20">
           <SectionHeading icon={Briefcase} title={t.experience.title} color="blue" isRTL={isRTL} />
 
           <motion.div
@@ -736,14 +760,14 @@ export default function Home() {
               );
             })}
           </motion.div>
-        </section></a>
+        </section>}
 
         <SectionDivider />
 
         {/* ═══════════════════════════════════════════
             SKILLS & TOOLS SECTION
         ═══════════════════════════════════════════ */}
-        <section id="skills" className="container mx-auto px-6 py-20">
+        {portfolioData.sectionVisibility.skills && <section id="skills" className="container mx-auto px-6 py-20">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
             {/* Skills */}
             <div>
@@ -781,14 +805,14 @@ export default function Home() {
               </motion.div>
             </div>
           </div>
-        </section>
+        </section>}
 
         <SectionDivider />
 
         {/* ═══════════════════════════════════════════
             CERTIFICATIONS SECTION
         ═══════════════════════════════════════════ */}
-        <section id="certifications" className="container mx-auto px-6 py-20">
+        {portfolioData.sectionVisibility.certifications && <section id="certifications" className="container mx-auto px-6 py-20">
           <SectionHeading icon={Award} title={t.certifications.title} color="yellow" isRTL={isRTL} />
 
           <motion.div
@@ -827,14 +851,14 @@ export default function Home() {
               );
             })}
           </motion.div>
-        </section>
+        </section>}
 
         <SectionDivider />
 
         {/* ═══════════════════════════════════════════
             LANGUAGES SECTION
         ═══════════════════════════════════════════ */}
-        <section id="languages" className="container mx-auto px-6 py-20">
+        {portfolioData.sectionVisibility.languages && <section id="languages" className="container mx-auto px-6 py-20">
           <SectionHeading icon={Globe2} title={t.languages.title} color="teal" isRTL={isRTL} />
 
           <motion.div
@@ -857,7 +881,7 @@ export default function Home() {
               </motion.div>
             ))}
           </motion.div>
-        </section>
+        </section>}
 
         {/* ─── Footer ─── */}
         <footer className="container mx-auto px-6 py-12 mt-10">
