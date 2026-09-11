@@ -86,22 +86,33 @@ function validateUUID(req, res, next) {
  * Checks X-API-Key header
  */
 function requireApiKey(req, res, next) {
+  const configuredKey = process.env.API_KEY;
+
+  // Fail closed: if API_KEY is not set or is empty, deny all requests.
+  // This prevents accidental open access if the env var is missing in production.
+  if (!configuredKey) {
+    return res.status(503).json({
+      success: false,
+      error: 'Service unavailable: API_KEY is not configured on the server'
+    });
+  }
+
   const apiKey = req.headers['x-api-key'];
-  
+
   if (!apiKey) {
     return res.status(401).json({
       success: false,
       error: 'Unauthorized: Missing API key'
     });
   }
-  
-  if (apiKey !== process.env.API_KEY) {
+
+  if (apiKey !== configuredKey) {
     return res.status(401).json({
       success: false,
       error: 'Unauthorized: Invalid API key'
     });
   }
-  
+
   next();
 }
 
