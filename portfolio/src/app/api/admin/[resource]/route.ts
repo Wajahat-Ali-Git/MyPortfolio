@@ -138,7 +138,14 @@ export async function POST(req: NextRequest, { params }: Props) {
     const body = await req.json();
 
     let result;
-    if (body && typeof body === 'object' && body.id) {
+
+    // site_settings uses `key` as PK (not UUID `id`) — always upsert by key
+    if (resource === 'site_settings') {
+      result = await auth.client
+        .from('site_settings')
+        .upsert([{ ...body, updated_at: new Date().toISOString() }], { onConflict: 'key' })
+        .select();
+    } else if (body && typeof body === 'object' && body.id) {
       const { id, ...updateFields } = body;
       result = await auth.client
         .from(resource)
