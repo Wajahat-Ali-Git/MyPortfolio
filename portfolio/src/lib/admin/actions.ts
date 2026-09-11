@@ -8,6 +8,7 @@ import type {
   AdminToolInput,
   AdminCertificationInput,
   AdminPersonalInfoInput,
+  AdminLanguageInput,
   AdminActionResult,
 } from './types';
 
@@ -284,8 +285,14 @@ export async function adminUpdatePersonalInfo(
       role: input.role,
       bio: input.bio || null,
       email: input.email || null,
+      phone: input.phone || null,
+      location: input.location || null,
       github_url: input.github_url || null,
       linkedin_url: input.linkedin_url || null,
+      twitter_url: input.twitter_url || null,
+      portfolio_url: input.portfolio_url || null,
+      profile_image_url: input.profile_image_url || null,
+      resume_url: input.resume_url || null,
       availability_status: input.availability_status || null,
       is_active: true,
       ...(input.id ? { id: input.id } : {}),
@@ -302,6 +309,51 @@ export async function adminUpdatePersonalInfo(
   } catch (err) {
     console.error('adminUpdatePersonalInfo error:', err);
     return { success: false, error: err instanceof Error ? err.message : 'Failed to update personal info' };
+  }
+}
+
+// =============================================================================
+// 7. SPOKEN LANGUAGES ADMIN ACTIONS
+// =============================================================================
+
+export async function adminUpsertLanguage(
+  input: AdminLanguageInput
+): Promise<AdminActionResult> {
+  try {
+    const client = await getAdminClient();
+    const payload = {
+      language_code: input.language_code,
+      language_name: input.language_name,
+      proficiency: input.proficiency,
+      flag_emoji: input.flag_emoji || null,
+      display_order: input.display_order ?? 0,
+      is_visible: input.is_visible ?? true,
+      ...(input.id ? { id: input.id } : {}),
+    };
+
+    const { data, error } = await client
+      .from('spoken_languages')
+      .upsert([payload], { onConflict: 'language_code' })
+      .select()
+      .single();
+
+    if (error) throw error;
+    return { success: true, data };
+  } catch (err) {
+    console.error('adminUpsertLanguage error:', err);
+    return { success: false, error: err instanceof Error ? err.message : 'Failed to save spoken language' };
+  }
+}
+
+export async function adminDeleteLanguage(id: string): Promise<AdminActionResult> {
+  try {
+    const client = await getAdminClient();
+    const { error } = await client.from('spoken_languages').delete().eq('id', id);
+    if (error) throw error;
+    return { success: true };
+  } catch (err) {
+    console.error('adminDeleteLanguage error:', err);
+    return { success: false, error: err instanceof Error ? err.message : 'Failed to delete spoken language' };
   }
 }
 

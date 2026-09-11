@@ -62,9 +62,25 @@ export interface AdminPersonalInfoInput {
   role: string;
   bio?: string;
   email?: string;
+  phone?: string;
+  location?: string;
   github_url?: string;
   linkedin_url?: string;
+  twitter_url?: string;
+  portfolio_url?: string;
+  profile_image_url?: string;
+  resume_url?: string;
   availability_status?: string;
+}
+
+export interface AdminLanguageInput {
+  id?: string;
+  language_code: string;
+  language_name: string;
+  proficiency: 'native' | 'fluent' | 'intermediate' | 'basic' | 'understand';
+  flag_emoji?: string;
+  display_order?: number;
+  is_visible?: boolean;
 }
 
 export interface AdminActionResult<T = unknown> {
@@ -72,3 +88,4 @@ export interface AdminActionResult<T = unknown> {
   data?: T;
   error?: string;
 }
+
