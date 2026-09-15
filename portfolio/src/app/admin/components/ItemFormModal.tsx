@@ -788,6 +788,39 @@ export default function ItemFormModal({
                     {errors.credential_url && <p className="text-[11px] text-red-400 mt-1">{errors.credential_url}</p>}
                   </div>
                 </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+                  <div>
+                    <label className="text-xs font-semibold text-gray-300">Issue Date</label>
+                    <input
+                      type="date"
+                      value={formData.issue_date || ''}
+                      onChange={(e) => handleChange('issue_date', e.target.value)}
+                      className="w-full mt-1 bg-[#0a0a16] border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-cyan-500/80"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-semibold text-gray-300">Expiry Date</label>
+                    <input
+                      type="date"
+                      value={formData.expiry_date || ''}
+                      onChange={(e) => handleChange('expiry_date', e.target.value)}
+                      className="w-full mt-1 bg-[#0a0a16] border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-cyan-500/80"
+                    />
+                  </div>
+                </div>
+
+                <div className="mt-4">
+                  <label className="text-xs font-semibold text-gray-300">Credential ID</label>
+                  <input
+                    type="text"
+                    value={formData.credential_id || ''}
+                    onChange={(e) => handleChange('credential_id', e.target.value)}
+                    placeholder="e.g. UC-123456"
+                    className="w-full mt-1 bg-[#0a0a16] border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-cyan-500/80"
+                  />
+                </div>
               </>
             )}
 

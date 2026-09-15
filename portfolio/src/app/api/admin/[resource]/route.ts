@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { supabase, isSupabaseConfigured, createAuthenticatedClient } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
@@ -138,7 +139,14 @@ export async function POST(req: NextRequest, { params }: Props) {
     const body = await req.json();
 
     let result;
-    if (body && typeof body === 'object' && body.id) {
+
+    // site_settings uses `key` as PK (not UUID `id`) — always upsert by key
+    if (resource === 'site_settings') {
+      result = await auth.client
+        .from('site_settings')
+        .upsert([{ ...body, updated_at: new Date().toISOString() }], { onConflict: 'key' })
+        .select();
+    } else if (body && typeof body === 'object' && body.id) {
       const { id, ...updateFields } = body;
       result = await auth.client
         .from(resource)
@@ -160,6 +168,7 @@ export async function POST(req: NextRequest, { params }: Props) {
       );
     }
 
+    revalidatePath('/');
     return NextResponse.json({ success: true, data: result.data });
   } catch (err) {
     console.error(`POST /api/admin/${resource} error:`, err);
@@ -197,6 +206,7 @@ export async function DELETE(req: NextRequest, { params }: Props) {
   try {
     const { error } = await auth.client.from(resource).delete().eq('id', id);
     if (error) throw error;
+    revalidatePath('/');
     return NextResponse.json({ success: true, message: `Deleted ${id} from ${resource}` });
   } catch (err) {
     return NextResponse.json(

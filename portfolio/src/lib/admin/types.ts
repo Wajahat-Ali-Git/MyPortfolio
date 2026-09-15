@@ -42,6 +42,7 @@ export interface AdminToolInput {
   id?: string;
   name: string;
   category?: 'editor' | 'database' | 'api' | 'automation' | 'design' | 'other';
+  website_url?: string;
   display_order?: number;
   is_visible?: boolean;
 }
@@ -51,6 +52,9 @@ export interface AdminCertificationInput {
   title: string;
   provider: string;
   certificate_type?: 'online' | 'internship' | 'degree' | 'other';
+  issue_date?: string;
+  expiry_date?: string;
+  credential_id?: string;
   credential_url?: string;
   display_order?: number;
   is_visible?: boolean;

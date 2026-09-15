@@ -14,11 +14,12 @@ The portfolio features a multi-language support system, dynamic theme toggle, an
 │                    Next.js Frontend (Vercel)                │
 │   • App Router (React 19 + Turbopack)                       │
 │   • Multi-language Support & Framer Motion Animations        │
-│   • Server Actions for secure data mutations                │
+│   • Server Actions & API Routes for secure data mutations   │
+│   • Admin Dashboard with Session-based Auth                 │
 └──────────────┬───────────────────────────────┬──────────────┘
                │                               │
-       Direct Queries                    Server Action
- (Public reads via anon key)        (Contact Form Submissions)
+       Direct Queries                    Server Actions & API
+ (Public reads via anon key)        (Admin mutations & Contact)
                │                               │
                ▼                               ▼
 ┌─────────────────────────────────────────────────────────────┐
@@ -148,6 +149,8 @@ GITHUB_TOKEN=your-github-token-here
 
 ## 🛠️ Main Features
 
+- **Admin Dashboard**: Secure, session-authenticated admin panel to toggle content visibility, edit content, and manually reorder items (`display_order`). Uses targeted partial updates to respect strict database constraints.
+- **GitHub API Resilience**: Optimized API polling with concurrent request limits, `Authorization` headers, and static fallbacks to prevent rate-limit errors.
 - **Direct Supabase Integration**: Contact submissions sent directly through secure Next.js Server Actions with Row Level Security.
 - **Multi-language Support**: Fully translated content (English, Urdu, Hindi, Arabic, French, German) with LTR and RTL support.
 - **Dynamic Theming**: Seamless dark/light mode integration.

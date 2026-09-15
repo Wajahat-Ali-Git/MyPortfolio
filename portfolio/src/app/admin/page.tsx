@@ -270,6 +270,7 @@ function AdminDashboardContent() {
   // Modal controls
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<any | null>(null);
+  const [expandedMessageId, setExpandedMessageId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -437,12 +438,62 @@ function AdminDashboardContent() {
     }
   };
 
+  const handleToggleMessageStatus = async (item: any) => {
+    if (!item.id) return;
+    const newStatus = item.status === 'read' ? 'unread' : 'read';
+
+    const token = await getAuthToken();
+    if (!token) {
+      showToast('error', 'Unauthorized: No active session found. Please log in.');
+      return;
+    }
+
+    // Optimistic update
+    setItems((prev) =>
+      prev.map((i) => (i.id === item.id ? { ...i, status: newStatus } : i))
+    );
+
+    try {
+      const res = await fetch(`/api/admin/${activeTab}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ id: item.id, status: newStatus }),
+      });
+
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        throw new Error(json.error || 'Failed to update status');
+      }
+      showToast('success', `Message marked as ${newStatus}`);
+    } catch (err) {
+      showToast('error', err instanceof Error ? err.message : 'Failed to update status');
+      setItems((prev) =>
+        prev.map((i) => (i.id === item.id ? { ...i, status: item.status } : i))
+      );
+    }
+  };
+
   const handleUpdateOrder = async (item: any, delta: number) => {
     if (!item.id) return;
-    const currentOrder = item.display_order ?? 0;
-    const newOrder = Math.max(0, currentOrder + delta);
+    const currentIndex = items.findIndex((i) => i.id === item.id);
+    if (currentIndex === -1) return;
 
-    if (newOrder === currentOrder && delta < 0) return;
+    const currentOrder = item.display_order ?? 0;
+    
+    // Find adjacent item to swap with
+    let targetItem = null;
+    if (delta > 0 && currentIndex < items.length - 1) {
+      targetItem = items[currentIndex + 1];
+    } else if (delta < 0 && currentIndex > 0) {
+      targetItem = items[currentIndex - 1];
+    }
+    
+    const newOrder = targetItem ? (targetItem.display_order ?? 0) : Math.max(0, currentOrder + delta);
+
+    if (newOrder === currentOrder && !targetItem) return;
 
     const token = await getAuthToken();
     if (!token) {
@@ -452,25 +503,48 @@ function AdminDashboardContent() {
 
     // Optimistic UI update
     setItems((prev) => {
-      const updated = prev.map((i) => (i.id === item.id ? { ...i, display_order: newOrder } : i));
+      const updated = prev.map((i) => {
+        if (i.id === item.id) return { ...i, display_order: newOrder };
+        if (targetItem && i.id === targetItem.id) return { ...i, display_order: currentOrder };
+        return i;
+      });
       return updated.sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0));
     });
 
     try {
-      const res = await fetch(`/api/admin/${activeTab}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({ id: item.id, display_order: newOrder }),
-      });
-
-      const json = await res.json();
-      if (!res.ok || !json.success) {
-        throw new Error(json.error || 'Failed to update position');
+      const promises = [
+        fetch(`/api/admin/${activeTab}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          body: JSON.stringify({ id: item.id, display_order: newOrder }),
+        }).then((r) => r.json()),
+      ];
+      
+      if (targetItem) {
+        promises.push(
+          fetch(`/api/admin/${activeTab}`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`,
+            },
+            body: JSON.stringify({ id: targetItem.id, display_order: currentOrder }),
+          }).then((r) => r.json())
+        );
       }
-      showToast('success', `Order updated to ${newOrder}`);
+
+      const results = await Promise.all(promises);
+      
+      for (const json of results) {
+        if (!json.success) {
+          throw new Error(json.error || 'Failed to update position');
+        }
+      }
+      
+      showToast('success', 'Order updated successfully');
     } catch (err) {
       showToast('error', err instanceof Error ? err.message : 'Failed to update position');
       loadResourceData(activeTab);
@@ -632,7 +706,7 @@ function AdminDashboardContent() {
 
                 {activeTab !== 'contact_messages' && (
                   <button
-                    onClick={handleOpenAddModal}
+                    onClick={activeTab === 'personal_info' && items.length > 0 ? () => handleOpenEditModal(items[0]) : handleOpenAddModal}
                     className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-purple-600 text-white text-xs font-semibold hover:from-cyan-400 hover:to-purple-500 transition-all shadow-lg shadow-cyan-500/20"
                   >
                     <Plus className="w-4 h-4" />
@@ -771,7 +845,9 @@ function AdminDashboardContent() {
                             {item.company_slug && <div className="text-[10px] text-cyan-400 font-mono mt-0.5">{item.company_slug}</div>}
                           </td>
                           <td className="p-4 text-gray-400 max-w-md">
-                            <div className="line-clamp-2">{item.description || item.role || item.provider || item.category || item.email || item.message || '-'}</div>
+                            <div className={`transition-all ${expandedMessageId === item.id ? 'whitespace-pre-wrap' : 'line-clamp-2'}`}>
+                              {item.description || item.role || item.provider || item.category || item.email || item.message || '-'}
+                            </div>
                             
                             {/* Render Tag Badges */}
                             {Array.isArray(item.tech_stack) && item.tech_stack.length > 0 && (
@@ -846,11 +922,20 @@ function AdminDashboardContent() {
                                 )}
                               </button>
                             ) : (
-                              <span className="text-[10px] text-gray-400 font-sans">{item.created_at ? new Date(item.created_at).toLocaleDateString() : '-'}</span>
+                              <div className="flex flex-col gap-1">
+                                <span className={`inline-flex w-max px-2 py-0.5 rounded-full text-[10px] font-medium border ${
+                                  item.status === 'read'
+                                    ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+                                    : 'bg-amber-500/10 border-amber-500/30 text-amber-400'
+                                }`}>
+                                  {item.status === 'read' ? 'Read' : 'Unread'}
+                                </span>
+                                <span className="text-[10px] text-gray-400 font-sans">{item.created_at ? new Date(item.created_at).toLocaleDateString() : '-'}</span>
+                              </div>
                             )}
                           </td>
                           <td className="p-4 text-right">
-                            {activeTab !== 'contact_messages' && (
+                            {activeTab !== 'contact_messages' ? (
                               <div className="flex items-center justify-end gap-2">
                                 <button
                                   onClick={() => handleOpenEditModal(item)}
@@ -858,6 +943,30 @@ function AdminDashboardContent() {
                                   title="Edit"
                                 >
                                   <Edit className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteItem(item.id)}
+                                  className="p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 transition-colors"
+                                  title="Delete"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="flex items-center justify-end gap-2">
+                                <button
+                                  onClick={() => setExpandedMessageId(expandedMessageId === item.id ? null : item.id)}
+                                  className="p-1.5 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 transition-colors"
+                                  title={expandedMessageId === item.id ? "Collapse" : "Expand"}
+                                >
+                                  {expandedMessageId === item.id ? <ArrowUp className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                                </button>
+                                <button
+                                  onClick={() => handleToggleMessageStatus(item)}
+                                  className={`p-1.5 rounded-lg border transition-colors ${item.status === 'read' ? 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border-amber-500/30'}`}
+                                  title={item.status === 'read' ? "Mark as unread" : "Mark as read"}
+                                >
+                                  <CheckCircle className="w-3.5 h-3.5" />
                                 </button>
                                 <button
                                   onClick={() => handleDeleteItem(item.id)}

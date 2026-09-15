@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ExternalLink, GitBranch, Clock, Code2, Star, GitFork, LayoutGrid, List } from "lucide-react";
+import { ExternalLink, GitBranch, Clock, Code2, Star, GitFork, LayoutGrid, List, AlertCircle, RefreshCw } from "lucide-react";
 import { FaGithub } from "react-icons/fa";
 import { SectionHeading } from "./SectionHeading";
 import { itemVariants, containerVariants } from "../components/shared";
@@ -55,144 +55,52 @@ const languageColors: Record<string, string> = {
   Dart: "bg-teal-500",
 };
 
-const FALLBACK_REPOS: Repo[] = [
-  {
-    id: 1,
-    name: "MyPortfolio",
-    description: "Modern, high-performance portfolio website built with Next.js 16, TypeScript, Supabase, and Framer Motion.",
-    html_url: "https://github.com/Wajahat-Ali-Git/MyPortfolio",
-    language: "TypeScript",
-    stargazers_count: 5,
-    forks_count: 1,
-    updated_at: new Date().toISOString(),
-    visibility: "public",
-    fork: false,
-    lastCommitMessage: "feat: full CMS content management with CRUD forms & live reordering",
-    lastCommitTime: new Date().toISOString(),
-    lastCommitSha: "a1b2c3d",
-  },
-  {
-    id: 2,
-    name: "fullstack-dashboard",
-    description: "Full-stack analytics dashboard with real-time updates and interactive charts.",
-    html_url: "https://github.com/Wajahat-Ali-Git",
-    language: "TypeScript",
-    stargazers_count: 3,
-    forks_count: 0,
-    updated_at: new Date().toISOString(),
-    visibility: "public",
-    fork: false,
-    lastCommitMessage: "refactor: optimize data fetching and server actions",
-    lastCommitTime: new Date(Date.now() - 86400000).toISOString(),
-    lastCommitSha: "e4f5g6h",
-  },
-  {
-    id: 3,
-    name: "ai-agent-suite",
-    description: "Suite of AI agent utilities and automation tools powered by LLMs.",
-    html_url: "https://github.com/Wajahat-Ali-Git",
-    language: "Python",
-    stargazers_count: 8,
-    forks_count: 2,
-    updated_at: new Date().toISOString(),
-    visibility: "public",
-    fork: false,
-    lastCommitMessage: "feat: add autonomous tool execution pipeline",
-    lastCommitTime: new Date(Date.now() - 172800000).toISOString(),
-    lastCommitSha: "7h8i9j0",
-  },
-];
-
-export default function GitHubRepos({ 
-  username = GITHUB_USERNAME, 
-  selectedLang, 
-  t, 
-  isRTL 
+export default function GitHubRepos({
+  username = GITHUB_USERNAME,
+  selectedLang,
+  t,
+  isRTL,
 }: GitHubReposProps) {
   const [repos, setRepos] = useState<Repo[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [rateLimited, setRateLimited] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>("card");
 
-  useEffect(() => {
-    async function fetchReposWithCommits() {
-      try {
-        setLoading(true);
-        setError(null);
+  const fetchRepos = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      setRateLimited(false);
 
-        const headers: HeadersInit = {
-          Accept: "application/vnd.github.v3+json",
-          ...(process.env.NEXT_PUBLIC_GITHUB_TOKEN
-            ? { Authorization: `token ${process.env.NEXT_PUBLIC_GITHUB_TOKEN}` }
-            : {}),
-        };
+      // Use the server-side proxy — avoids CORS issues, uses private GITHUB_TOKEN,
+      // and properly handles Next.js server-side caching.
+      const res = await fetch('/api/github', { cache: 'no-store' });
+      const json = await res.json();
 
-        // Fetch recent public repos (sorted by recent push date, top 12)
-        const reposResponse = await fetch(
-          `https://api.github.com/users/${username}/repos?sort=pushed&per_page=12&type=public`,
-          { headers, next: { revalidate: 600 } }
-        );
-        
-        if (!reposResponse.ok) {
-          if (reposResponse.status === 403) {
-            console.warn("GitHub API rate limit reached (403). Using static fallback repos.");
-            setRepos(FALLBACK_REPOS);
-            return;
-          }
-          throw new Error(`GitHub API error: ${reposResponse.status}`);
-        }
-
-        const reposData: Repo[] = await reposResponse.json();
-
-        // Filter out forks & take top 6 repos FIRST before fetching commit info
-        const topRepos = reposData
-          .filter((repo) => !repo.fork && (repo.visibility === "public" || repo.visibility === undefined))
-          .slice(0, 6);
-
-        // Fetch last commit for top 6 repos only (greatly reduces API call count)
-        const reposWithCommits = await Promise.all(
-          topRepos.map(async (repo) => {
-            try {
-              const commitsResponse = await fetch(
-                `https://api.github.com/repos/${username}/${repo.name}/commits?per_page=1`,
-                { headers, next: { revalidate: 600 } }
-              );
-
-              if (commitsResponse.ok) {
-                const commits = await commitsResponse.json();
-                if (commits && commits.length > 0) {
-                  const lastCommit = commits[0];
-                  return {
-                    ...repo,
-                    lastCommitMessage: lastCommit.commit.message.split('\n')[0],
-                    lastCommitTime: lastCommit.commit.author.date,
-                    lastCommitSha: lastCommit.sha.substring(0, 7),
-                  };
-                }
-              }
-            } catch (err) {
-              console.warn(`Failed to fetch commits for ${repo.name}:`, err);
-            }
-            // Fallback commit info from repo update date if commit API call fails
-            return {
-              ...repo,
-              lastCommitMessage: repo.description || "Updated repository",
-              lastCommitTime: repo.updated_at,
-              lastCommitSha: "latest",
-            };
-          })
-        );
-
-        setRepos(reposWithCommits);
-      } catch (err) {
-        console.warn("Could not fetch live GitHub repos, falling back to cached list:", err);
-        setRepos(FALLBACK_REPOS);
-      } finally {
-        setLoading(false);
+      if (res.status === 429 || json.rateLimited) {
+        setRateLimited(true);
+        setRepos([]);
+        return;
       }
-    }
 
-    fetchReposWithCommits();
+      if (!res.ok || !json.success) {
+        throw new Error(json.error || `GitHub API error: ${res.status}`);
+      }
+
+      setRepos(json.data as Repo[]);
+    } catch (err) {
+      console.error("GitHub repos fetch error:", err);
+      setError(err instanceof Error ? err.message : "Failed to load repositories");
+      setRepos([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchRepos();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [username]);
 
   function getTimeAgo(dateString: string): string {
@@ -247,18 +155,64 @@ export default function GitHubRepos({
     );
   }
 
+  if (rateLimited) {
+    return (
+      <section id="github" className="container mx-auto px-6 py-20">
+        <SectionHeading
+          icon={FaGithub}
+          title={t.github?.title || "Recent Code Activity"}
+          color="purple"
+          isRTL={isRTL}
+        />
+        <div className="glass-card p-10 text-center flex flex-col items-center gap-4">
+          <AlertCircle className="w-10 h-10 text-amber-400" />
+          <div>
+            <p className="text-amber-300 font-semibold text-base mb-1">GitHub API Rate Limit Reached</p>
+            <p className="text-sm text-muted-foreground max-w-md mx-auto">
+              The GitHub API rate limit has been hit. Add a{" "}
+              <code className="text-xs bg-white/10 px-1.5 py-0.5 rounded">GITHUB_TOKEN</code>{" "}
+              to <code className="text-xs bg-white/10 px-1.5 py-0.5 rounded">.env.local</code> to increase the limit.
+            </p>
+          </div>
+          <button
+            onClick={fetchRepos}
+            className="inline-flex items-center gap-2 px-5 py-2 rounded-full glass hover:bg-white/10 transition-all text-sm font-medium"
+          >
+            <RefreshCw className="w-4 h-4" /> Try Again
+          </button>
+          <a
+            href={`https://github.com/${username}?tab=repositories`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 text-sm text-purple-400 hover:text-purple-300 transition-colors"
+          >
+            <FaGithub className="w-4 h-4" /> View on GitHub
+            <ExternalLink className="w-3 h-3" />
+          </a>
+        </div>
+      </section>
+    );
+  }
+
   if (error) {
     return (
       <section id="github" className="container mx-auto px-6 py-20">
-        <SectionHeading 
-          icon={FaGithub} 
-          title={t.github?.title || "Recent Code Activity"} 
-          color="purple" 
-          isRTL={isRTL} 
+        <SectionHeading
+          icon={FaGithub}
+          title={t.github?.title || "Recent Code Activity"}
+          color="purple"
+          isRTL={isRTL}
         />
-        <div className="glass-card p-8 text-center">
-          <p className="text-red-400">{t.github?.error || "Failed to load repositories"}</p>
-          <p className="text-sm text-muted-foreground mt-2">{error}</p>
+        <div className="glass-card p-8 text-center flex flex-col items-center gap-3">
+          <AlertCircle className="w-8 h-8 text-red-400" />
+          <p className="text-red-400 font-semibold">{t.github?.error || "Failed to load repositories"}</p>
+          <p className="text-sm text-muted-foreground">{error}</p>
+          <button
+            onClick={fetchRepos}
+            className="inline-flex items-center gap-2 px-5 py-2 rounded-full glass hover:bg-white/10 transition-all text-sm font-medium mt-2"
+          >
+            <RefreshCw className="w-4 h-4" /> Retry
+          </button>
         </div>
       </section>
     );

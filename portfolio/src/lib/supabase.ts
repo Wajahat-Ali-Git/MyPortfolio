@@ -13,8 +13,15 @@ export const isSupabaseConfigured = () => {
   );
 };
 
+// Always fetch fresh rows so admin edits appear immediately on the public site
+const noStoreFetch: typeof fetch = (input, init) =>
+  fetch(input, { ...init, cache: 'no-store' });
+
 // Create Supabase client with auth session persistence enabled
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  global: {
+    fetch: noStoreFetch,
+  },
   auth: {
     persistSession: true,
     autoRefreshToken: true,
