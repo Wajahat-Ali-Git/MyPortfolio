@@ -50,21 +50,45 @@ export interface DynamicCertification {
   credentialUrl?: string;
 }
 
+function formatMonthYear(iso: string): string {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return iso;
+  return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+}
 
+function formatDateRange(startDate?: string | null, endDate?: string | null, isCurrent?: boolean): string {
+  if (!startDate) return isCurrent ? 'Present' : '';
+  const start = formatMonthYear(startDate);
+  if (isCurrent) return `${start} – Present`;
+  if (endDate) return `${start} – ${formatMonthYear(endDate)}`;
+  return start;
+}
 
 /**
- * Fetch all visible projects from Supabase with instant fallback to constants
+ * Fetch all visible projects from Supabase with fallback to constants.
+ * Falls back ONLY when Supabase is not configured.
  */
 export async function fetchProjects(): Promise<DynamicProject[]> {
+  if (!isSupabaseConfigured()) {
+    return FALLBACK_PROJECTS;
+  }
+
   try {
     const { data, error } = await supabase
       .from('projects')
       .select('*')
       .eq('is_visible', true)
-      .order('display_order', { ascending: true });
+      .order('display_order', { ascending: true })
+      .order('id', { ascending: true })
+      .limit(100);
 
-    if (error || !data || data.length === 0) {
+    if (error) {
+      console.error('fetchProjects Supabase error:', error.message);
       return FALLBACK_PROJECTS;
+    }
+
+    if (!data || data.length === 0) {
+      return [];
     }
 
     return data.map((item) => {
@@ -79,18 +103,9 @@ export async function fetchProjects(): Promise<DynamicProject[]> {
         }
       }
 
-      // Map slug to translation descKey if standard, or use raw description
-      const knownDescKeys: Record<string, string> = {
-        carsage: 'carsage_desc',
-        blogdrf: 'blogdrf_desc',
-        'opensea-project': 'opensea_desc',
-        'chat-app': 'chatapp_desc',
-      };
-
       return {
         id: item.id,
         title: item.title,
-        descKey: knownDescKeys[item.slug] || undefined,
         description: item.description || item.description_en,
         tech: techArray,
         link: item.github_url || item.live_url || '#',
@@ -100,76 +115,74 @@ export async function fetchProjects(): Promise<DynamicProject[]> {
       };
     });
   } catch (err) {
-    console.warn('Failed to fetch projects from Supabase, using fallback:', err);
+    console.error('fetchProjects unexpected error:', err);
     return FALLBACK_PROJECTS;
   }
 }
 
 /**
- * Fetch all visible work experiences from Supabase with instant fallback
+ * Fetch all visible work experiences from Supabase with fallback.
  */
 export async function fetchExperiences(): Promise<DynamicExperience[]> {
+  if (!isSupabaseConfigured()) {
+    return FALLBACK_WORK_HISTORY;
+  }
+
   try {
     const { data, error } = await supabase
       .from('experiences')
       .select('*')
       .eq('is_visible', true)
-      .order('display_order', { ascending: true });
+      .order('display_order', { ascending: true })
+      .limit(100);
 
-    if (error || !data || data.length === 0) {
+    if (error) {
+      console.error('fetchExperiences Supabase error:', error.message);
       return FALLBACK_WORK_HISTORY;
     }
 
-    const knownKeys: Record<string, { companyKey: string; roleKey: string; durationKey: string; descKey: string }> = {
-      'cmit-internship': {
-        companyKey: 'cmit_company',
-        roleKey: 'cmit_role',
-        durationKey: 'cmit_duration',
-        descKey: 'cmit_desc',
-      },
-      devflovv: {
-        companyKey: 'devflovv_company',
-        roleKey: 'devflovv_role',
-        durationKey: 'devflovv_duration',
-        descKey: 'devflovv_desc',
-      },
-    };
+    if (!data || data.length === 0) {
+      return [];
+    }
 
-    return data.map((item) => {
-      const mapped = knownKeys[item.company_slug];
-      return {
-        id: item.id,
-        companyKey: mapped?.companyKey,
-        companyName: item.company_name,
-        roleKey: mapped?.roleKey,
-        role: item.role,
-        durationKey: mapped?.durationKey,
-        duration: item.is_current ? 'Present' : undefined,
-        descKey: mapped?.descKey,
-        description: item.description,
-        achievements: Array.isArray(item.achievements) ? item.achievements : [],
-        techStack: Array.isArray(item.tech_stack) ? item.tech_stack : [],
-      };
-    });
+    return data.map((item) => ({
+      id: item.id,
+      companyName: item.company_name,
+      role: item.role,
+      duration: formatDateRange(item.start_date, item.end_date, item.is_current),
+      description: item.description,
+      achievements: Array.isArray(item.achievements) ? item.achievements : [],
+      techStack: Array.isArray(item.tech_stack) ? item.tech_stack : [],
+    }));
   } catch (err) {
-    console.warn('Failed to fetch experiences from Supabase, using fallback:', err);
+    console.error('fetchExperiences unexpected error:', err);
     return FALLBACK_WORK_HISTORY;
   }
 }
 
 /**
- * Fetch technical skills from Supabase with instant fallback
+ * Fetch technical skills from Supabase with fallback.
  */
 export async function fetchSkills(): Promise<DynamicSkill[]> {
+  if (!isSupabaseConfigured()) {
+    return FALLBACK_SKILLS;
+  }
+
   try {
     const { data, error } = await supabase
       .from('skills')
       .select('*')
       .eq('is_visible', true)
-      .order('display_order', { ascending: true });
+      .order('display_order', { ascending: true })
+      .limit(100);
 
-    if (error || !data || data.length === 0) {
+    if (error) {
+      console.error('fetchSkills Supabase error:', error.message);
       return FALLBACK_SKILLS;
+    }
+
+    if (!data || data.length === 0) {
+      return [];
     }
 
     return data.map((item) => ({
@@ -179,58 +192,77 @@ export async function fetchSkills(): Promise<DynamicSkill[]> {
       category: item.category,
     }));
   } catch (err) {
-    console.warn('Failed to fetch skills from Supabase, using fallback:', err);
+    console.error('fetchSkills unexpected error:', err);
     return FALLBACK_SKILLS;
   }
 }
 
 /**
- * Fetch developer tools from Supabase with instant fallback
+ * Fetch developer tools from Supabase with fallback.
  */
 export async function fetchTools(): Promise<string[]> {
+  if (!isSupabaseConfigured()) {
+    return FALLBACK_TOOLS;
+  }
+
   try {
     const { data, error } = await supabase
       .from('tools')
       .select('name')
       .eq('is_visible', true)
-      .order('display_order', { ascending: true });
+      .order('display_order', { ascending: true })
+      .limit(100);
 
-    if (error || !data || data.length === 0) {
+    if (error) {
+      console.error('fetchTools Supabase error:', error.message);
       return FALLBACK_TOOLS;
+    }
+
+    if (!data || data.length === 0) {
+      return [];
     }
 
     return data.map((item) => item.name);
   } catch (err) {
-    console.warn('Failed to fetch tools from Supabase, using fallback:', err);
+    console.error('fetchTools unexpected error:', err);
     return FALLBACK_TOOLS;
   }
 }
 
 /**
- * Fetch certifications from Supabase with instant fallback
+ * Fetch certifications from Supabase with fallback.
  */
 export async function fetchCertifications(): Promise<DynamicCertification[]> {
+  if (!isSupabaseConfigured()) {
+    return FALLBACK_CERTIFICATIONS;
+  }
+
   try {
     const { data, error } = await supabase
       .from('certifications')
       .select('*')
       .eq('is_visible', true)
-      .order('display_order', { ascending: true });
+      .order('display_order', { ascending: true })
+      .limit(100);
 
-    if (error || !data || data.length === 0) {
+    if (error) {
+      console.error('fetchCertifications Supabase error:', error.message);
       return FALLBACK_CERTIFICATIONS;
     }
 
-    return data.map((item, index) => ({
+    if (!data || data.length === 0) {
+      return [];
+    }
+
+    return data.map((item) => ({
       id: item.id,
-      titleKey: index < 5 ? (`cert${index + 1}` as const) : undefined,
       title: item.title,
       provider: item.provider,
       typeKey: item.certificate_type || 'online',
       credentialUrl: item.credential_url || undefined,
     }));
   } catch (err) {
-    console.warn('Failed to fetch certifications from Supabase, using fallback:', err);
+    console.error('fetchCertifications unexpected error:', err);
     return FALLBACK_CERTIFICATIONS;
   }
 }
@@ -261,23 +293,38 @@ export interface DynamicPersonalInfo {
 }
 
 /**
- * Fetch spoken languages from Supabase with fallback to constants
+ * Fetch spoken languages from Supabase with fallback to constants.
  */
 export async function fetchSpokenLanguages(): Promise<DynamicLanguage[]> {
+  if (!isSupabaseConfigured()) {
+    return FALLBACK_LANGUAGES.map((l) => ({
+      code: l.nameKey,
+      name: l.nameKey === 'english' ? 'English' : l.nameKey === 'urdu' ? 'Urdu' : 'Hindi / Punjabi',
+      proficiency: l.proficiencyKey,
+      flag: l.flag,
+    }));
+  }
+
   try {
     const { data, error } = await supabase
       .from('spoken_languages')
       .select('*')
       .eq('is_visible', true)
-      .order('display_order', { ascending: true });
+      .order('display_order', { ascending: true })
+      .limit(50);
 
-    if (error || !data || data.length === 0) {
+    if (error) {
+      console.error('fetchSpokenLanguages Supabase error:', error.message);
       return FALLBACK_LANGUAGES.map((l) => ({
         code: l.nameKey,
         name: l.nameKey === 'english' ? 'English' : l.nameKey === 'urdu' ? 'Urdu' : 'Hindi / Punjabi',
         proficiency: l.proficiencyKey,
         flag: l.flag,
       }));
+    }
+
+    if (!data || data.length === 0) {
+      return [];
     }
 
     return data.map((item) => ({
@@ -288,7 +335,7 @@ export async function fetchSpokenLanguages(): Promise<DynamicLanguage[]> {
       flag: item.flag_emoji || undefined,
     }));
   } catch (err) {
-    console.warn('Failed to fetch spoken languages from Supabase, using fallback:', err);
+    console.error('fetchSpokenLanguages unexpected error:', err);
     return FALLBACK_LANGUAGES.map((l) => ({
       code: l.nameKey,
       name: l.nameKey === 'english' ? 'English' : l.nameKey === 'urdu' ? 'Urdu' : 'Hindi / Punjabi',
@@ -299,9 +346,13 @@ export async function fetchSpokenLanguages(): Promise<DynamicLanguage[]> {
 }
 
 /**
- * Fetch personal info / hero details from Supabase
+ * Fetch personal info / hero details from Supabase.
  */
 export async function fetchPersonalInfo(): Promise<DynamicPersonalInfo | null> {
+  if (!isSupabaseConfigured()) {
+    return null;
+  }
+
   try {
     const { data, error } = await supabase
       .from('personal_info')
@@ -311,7 +362,12 @@ export async function fetchPersonalInfo(): Promise<DynamicPersonalInfo | null> {
       .limit(1)
       .maybeSingle();
 
-    if (error || !data) {
+    if (error) {
+      console.error('fetchPersonalInfo Supabase error:', error.message);
+      return null;
+    }
+
+    if (!data) {
       return null;
     }
 
@@ -332,7 +388,7 @@ export async function fetchPersonalInfo(): Promise<DynamicPersonalInfo | null> {
       resumeUrl: data.resume_url || '',
     };
   } catch (err) {
-    console.warn('Failed to fetch personal info from Supabase:', err);
+    console.error('fetchPersonalInfo unexpected error:', err);
     return null;
   }
 }
@@ -362,6 +418,10 @@ const DEFAULT_VISIBILITY: SectionVisibility = {
  * Falls back to all-visible if Supabase is unavailable or the table is empty.
  */
 export async function fetchSectionVisibility(): Promise<SectionVisibility> {
+  if (!isSupabaseConfigured()) {
+    return DEFAULT_VISIBILITY;
+  }
+
   try {
     const { data, error } = await supabase
       .from('site_settings')
@@ -375,7 +435,12 @@ export async function fetchSectionVisibility(): Promise<SectionVisibility> {
         'section_languages_visible',
       ]);
 
-    if (error || !data || data.length === 0) {
+    if (error) {
+      console.error('fetchSectionVisibility Supabase error:', error.message);
+      return DEFAULT_VISIBILITY;
+    }
+
+    if (!data || data.length === 0) {
       return DEFAULT_VISIBILITY;
     }
 
@@ -385,33 +450,34 @@ export async function fetchSectionVisibility(): Promise<SectionVisibility> {
     }
 
     return {
-      projects:      map['section_projects_visible']      !== 'false',
-      github:        map['section_github_visible']        !== 'false',
-      experience:    map['section_experience_visible']    !== 'false',
-      skills:        map['section_skills_visible']        !== 'false',
-      certifications:map['section_certifications_visible']!== 'false',
-      languages:     map['section_languages_visible']     !== 'false',
+      projects:       map['section_projects_visible']       !== 'false',
+      github:         map['section_github_visible']         !== 'false',
+      experience:     map['section_experience_visible']     !== 'false',
+      skills:         map['section_skills_visible']         !== 'false',
+      certifications: map['section_certifications_visible'] !== 'false',
+      languages:      map['section_languages_visible']      !== 'false',
     };
   } catch (err) {
-    console.warn('Failed to fetch section visibility from Supabase, using fallback:', err);
+    console.error('fetchSectionVisibility unexpected error:', err);
     return DEFAULT_VISIBILITY;
   }
 }
 
 /**
- * Fetch all dynamic portfolio items concurrently
+ * Fetch all dynamic portfolio items concurrently.
  */
 export async function fetchAllPortfolioData() {
-  const [projects, experiences, skills, tools, certifications, languages, personalInfo, sectionVisibility] = await Promise.all([
-    fetchProjects(),
-    fetchExperiences(),
-    fetchSkills(),
-    fetchTools(),
-    fetchCertifications(),
-    fetchSpokenLanguages(),
-    fetchPersonalInfo(),
-    fetchSectionVisibility(),
-  ]);
+  const [projects, experiences, skills, tools, certifications, languages, personalInfo, sectionVisibility] =
+    await Promise.all([
+      fetchProjects(),
+      fetchExperiences(),
+      fetchSkills(),
+      fetchTools(),
+      fetchCertifications(),
+      fetchSpokenLanguages(),
+      fetchPersonalInfo(),
+      fetchSectionVisibility(),
+    ]);
 
   return {
     projects,
@@ -424,4 +490,3 @@ export async function fetchAllPortfolioData() {
     sectionVisibility,
   };
 }
-

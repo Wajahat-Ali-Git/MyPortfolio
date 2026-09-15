@@ -8,8 +8,8 @@ import { FaGithub, FaLinkedin } from "react-icons/fa";
 import Link from "next/link";
 import WorkflowAnimation from "./components/WorkflowAnimation";
 import GitHubRepos from "./components/GitHubRepos";
-import { TRANSLATIONS, PROJECTS, dotColorStyles, colorStyles, scaleUp, slideInLeft, slideInRight, itemVariants, containerVariants, LANG_OPTIONS, NAV_LINKS, LANGUAGES, TOOLS, SKILLS, CERTIFICATIONS, WORK_HISTORY } from "../constants/contants";
-import { fetchAllPortfolioData, type DynamicProject, type DynamicExperience, type DynamicSkill, type DynamicCertification, type SectionVisibility } from "../lib/portfolioData";
+import { TRANSLATIONS, dotColorStyles, colorStyles, scaleUp, slideInLeft, slideInRight, itemVariants, containerVariants, LANG_OPTIONS, NAV_LINKS } from "../constants/contants";
+import { fetchAllPortfolioData, type DynamicProject, type DynamicExperience, type DynamicSkill, type DynamicCertification, type DynamicLanguage, type DynamicPersonalInfo, type SectionVisibility } from "../lib/portfolioData";
 import type { Language } from "../types/types";
 
 
@@ -326,19 +326,24 @@ export default function Home() {
   });
 
   const [mounted, setMounted] = useState(false);
+  const [isDataLoading, setIsDataLoading] = useState(true);
   const [portfolioData, setPortfolioData] = useState<{
     projects: DynamicProject[];
     experiences: DynamicExperience[];
     skills: DynamicSkill[];
     tools: string[];
     certifications: DynamicCertification[];
+    languages: DynamicLanguage[];
+    personalInfo: DynamicPersonalInfo | null;
     sectionVisibility: SectionVisibility;
   }>({
-    projects: PROJECTS,
-    experiences: WORK_HISTORY,
-    skills: SKILLS,
-    tools: TOOLS,
-    certifications: CERTIFICATIONS,
+    projects: [],
+    experiences: [],
+    skills: [],
+    tools: [],
+    certifications: [],
+    languages: [],
+    personalInfo: null,
     sectionVisibility: {
       projects: true,
       github: true,
@@ -349,12 +354,30 @@ export default function Home() {
     },
   });
 
+  // Load (or re-load) all portfolio data from Supabase
+  const loadPortfolioData = () => {
+    setIsDataLoading(true);
+    fetchAllPortfolioData()
+      .then((data) => {
+        if (data) setPortfolioData(data);
+      })
+      .catch((err) => console.error("fetchAllPortfolioData error:", err))
+      .finally(() => setIsDataLoading(false));
+  };
+
   useEffect(() => {
-    fetchAllPortfolioData().then((data) => {
-      if (data) {
-        setPortfolioData(data);
+    // Initial load
+    loadPortfolioData();
+
+    // Re-fetch whenever the user returns to this tab (e.g. after making admin edits)
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        loadPortfolioData();
       }
-    });
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -385,6 +408,17 @@ export default function Home() {
 
   const t = TRANSLATIONS[selectedLang];
   const isRTL = t.dir === "rtl";
+  const personalInfo = portfolioData.personalInfo;
+  const heroNameParts = (personalInfo?.fullName || "").trim().split(/\s+/).filter(Boolean);
+  const heroTitle1 = heroNameParts[0] || t.hero.title1;
+  const heroTitle2 = heroNameParts.slice(1).join(" ") || (heroNameParts.length ? "" : t.hero.title2);
+  const heroRole = personalInfo?.role || t.hero.role;
+  const heroBio = personalInfo?.bio || t.hero.bio;
+  const heroStatus = personalInfo?.availabilityStatus || t.hero.status;
+  const githubUrl = personalInfo?.githubUrl || "https://github.com/Wajahat-Ali-Git";
+  const linkedinUrl = personalInfo?.linkedinUrl || "https://www.linkedin.com/in/wajahat-ali-b098b4243";
+  const emailHref = personalInfo?.email ? `mailto:${personalInfo.email}` : "mailto:your-email@example.com";
+  const profileImage = personalInfo?.profileImageUrl || "https://github.com/Wajahat-Ali-Git.png";
 
   useEffect(() => {
     if (mounted) {
@@ -475,7 +509,7 @@ export default function Home() {
               </button>
             )}
             <a
-              href="https://github.com/Wajahat-Ali-Git"
+              href={githubUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="hidden md:flex items-center gap-2 px-4 py-2 rounded-full glass text-sm font-medium hover:bg-white/10 transition-all"
@@ -519,21 +553,25 @@ export default function Home() {
                 <motion.div variants={itemVariants} className={`space-y-5 ${isRTL ? "text-right lg:text-right" : "text-center lg:text-left"}`}>
                   <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass text-sm text-[var(--muted-foreground)] w-fit mx-auto lg:mx-0">
                     <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                    {t.hero.status}
+                    {heroStatus}
                   </div>
                   <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold tracking-tight leading-[0.95]">
-                    <span className="text-gradient">{t.hero.title1}</span>
-                    <br />
-                    <span className="text-[var(--foreground)]">{t.hero.title2}</span>
+                    <span className="text-gradient">{heroTitle1}</span>
+                    {heroTitle2 ? (
+                      <>
+                        <br />
+                        <span className="text-[var(--foreground)]">{heroTitle2}</span>
+                      </>
+                    ) : null}
                   </h1>
                   <p className="text-xl md:text-2xl text-[var(--muted-foreground)] font-medium flex items-center gap-3 justify-center lg:justify-start">
                     <Terminal className="w-5 h-5 text-indigo-400" />
-                    {t.hero.role}
+                    {heroRole}
                   </p>
                 </motion.div>
 
                 <motion.p variants={itemVariants} className="text-lg text-[var(--muted-foreground)] max-w-xl mx-auto lg:mx-0 leading-relaxed">
-                  {t.hero.bio}
+                  {heroBio}
                 </motion.p>
 
                 <motion.div variants={itemVariants} className="flex flex-col sm:flex-row items-center gap-4 justify-center lg:justify-start pt-2">
@@ -546,9 +584,9 @@ export default function Home() {
                   </a>
                   <div className="flex items-center gap-3">
                     {[
-                      { href: "https://github.com/Wajahat-Ali-Git", icon: FaGithub, label: "GitHub" },
-                      { href: "https://www.linkedin.com/in/wajahat-ali-b098b4243", icon: FaLinkedin, label: "LinkedIn" },
-                      { href: "mailto:your-email@example.com", icon: Mail, label: "Email" },
+                      { href: githubUrl, icon: FaGithub, label: "GitHub" },
+                      { href: linkedinUrl, icon: FaLinkedin, label: "LinkedIn" },
+                      { href: emailHref, icon: Mail, label: "Email" },
                     ].map((social) => (
                       <a
                         key={social.label}
@@ -589,8 +627,8 @@ export default function Home() {
                     {/* Image container */}
                     <div className="relative w-full h-full rounded-full overflow-hidden border-2 border-white/10 shadow-2xl">
                       <Image
-                        src="https://github.com/Wajahat-Ali-Git.png"
-                        alt="Wajahat Ali"
+                        src={profileImage}
+                        alt={personalInfo?.fullName || "Wajahat Ali"}
                         width={400}
                         height={400}
                         className="w-full h-full object-cover"
@@ -644,9 +682,10 @@ export default function Home() {
             className="grid grid-cols-1 md:grid-cols-2 gap-6"
           >
             {portfolioData.projects.map((project) => {
-              const desc = (project.descKey && t.projects[project.descKey as keyof typeof t.projects])
+              const translatedDesc = project.descKey
                 ? t.projects[project.descKey as keyof typeof t.projects]
-                : (project.description || "");
+                : undefined;
+              const desc = project.description || translatedDesc || "";
 
               return (
                 <motion.a
@@ -718,18 +757,18 @@ export default function Home() {
             <div className="absolute left-8 top-0 bottom-0 w-px bg-gradient-to-b from-blue-500/50 via-blue-500/20 to-transparent hidden md:block" />
 
             {portfolioData.experiences.map((work, idx) => {
-              const roleText = (work.roleKey && t.experience[work.roleKey as keyof typeof t.experience])
-                ? t.experience[work.roleKey as keyof typeof t.experience]
-                : (work.role || "");
-              const companyText = (work.companyKey && t.experience[work.companyKey as keyof typeof t.experience])
-                ? t.experience[work.companyKey as keyof typeof t.experience]
-                : (work.companyName || "");
-              const durationText = (work.durationKey && t.experience[work.durationKey as keyof typeof t.experience])
-                ? t.experience[work.durationKey as keyof typeof t.experience]
-                : (work.duration || "");
-              const descText = (work.descKey && t.experience[work.descKey as keyof typeof t.experience])
-                ? t.experience[work.descKey as keyof typeof t.experience]
-                : (work.description || "");
+              const roleText = work.role
+                || (work.roleKey ? t.experience[work.roleKey as keyof typeof t.experience] : "")
+                || "";
+              const companyText = work.companyName
+                || (work.companyKey ? t.experience[work.companyKey as keyof typeof t.experience] : "")
+                || "";
+              const durationText = work.duration
+                || (work.durationKey ? t.experience[work.durationKey as keyof typeof t.experience] : "")
+                || "";
+              const descText = work.description
+                || (work.descKey ? t.experience[work.descKey as keyof typeof t.experience] : "")
+                || "";
 
               return (
                 <motion.div
@@ -823,9 +862,10 @@ export default function Home() {
             className="grid grid-cols-1 md:grid-cols-2 gap-5"
           >
             {portfolioData.certifications.map((cert, idx) => {
-              const titleText = (cert.titleKey && t.certifications[cert.titleKey as keyof typeof t.certifications])
+              const translatedTitle = cert.titleKey
                 ? t.certifications[cert.titleKey as keyof typeof t.certifications]
-                : (cert.title || "");
+                : undefined;
+              const titleText = cert.title || translatedTitle || "";
               const typeText = (cert.typeKey && t.certifications[cert.typeKey as keyof typeof t.certifications])
                 ? t.certifications[cert.typeKey as keyof typeof t.certifications]
                 : (cert.typeKey || "Online");
@@ -868,20 +908,25 @@ export default function Home() {
             viewport={{ once: true, margin: "-80px" }}
             className="grid grid-cols-1 md:grid-cols-3 gap-6"
           >
-            {LANGUAGES.map((lang) => (
+            {portfolioData.languages.map((lang, idx) => (
               <motion.div
-                key={lang.nameKey}
+                key={lang.id || lang.code || idx}
                 variants={scaleUp}
                 whileHover={{ scale: 1.05, y: -4 }}
                 className="glass-card card-glow p-8 text-center"
               >
                 <span className="text-4xl mb-4 block">{lang.flag}</span>
-                <h3 className="text-xl font-bold mb-1">{t.languages[lang.nameKey]}</h3>
-                <p className="text-sm text-[var(--muted-foreground)] capitalize">{t.languages[lang.proficiencyKey]}</p>
+                <h3 className="text-xl font-bold mb-1">
+                  {lang.name || (t.languages as Record<string, string>)[lang.code]}
+                </h3>
+                <p className="text-sm text-[var(--muted-foreground)] capitalize">
+                  {(t.languages as Record<string, string>)[lang.proficiency] || lang.proficiency}
+                </p>
               </motion.div>
             ))}
           </motion.div>
         </section>}
+
 
         {/* ─── Footer ─── */}
         <footer className="container mx-auto px-6 py-12 mt-10">
@@ -892,9 +937,9 @@ export default function Home() {
             </p>
             <div className="flex items-center gap-4">
               {[
-                { href: "https://github.com/Wajahat-Ali-Git", icon: FaGithub },
-                { href: "https://www.linkedin.com/in/wajahat-ali-b098b4243", icon: FaLinkedin },
-                { href: "mailto:your-email@example.com", icon: Mail },
+                { href: githubUrl, icon: FaGithub },
+                { href: linkedinUrl, icon: FaLinkedin },
+                { href: emailHref, icon: Mail },
               ].map((s, i) => (
                 <a
                   key={i}

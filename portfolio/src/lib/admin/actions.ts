@@ -1,5 +1,6 @@
 'use server';
 
+import { revalidatePath } from 'next/cache';
 import { supabase, isSupabaseConfigured, createAuthenticatedClient } from '@/lib/supabase';
 import type {
   AdminProjectInput,
@@ -38,6 +39,10 @@ async function getAdminClient() {
   return createAuthenticatedClient(data.session.access_token);
 }
 
+function revalidatePublicSite() {
+  revalidatePath('/');
+}
+
 // =============================================================================
 // 1. PROJECTS ADMIN ACTIONS
 // =============================================================================
@@ -68,6 +73,7 @@ export async function adminUpsertProject(
       .single();
 
     if (error) throw error;
+    revalidatePublicSite();
     return { success: true, data };
   } catch (err) {
     console.error('adminUpsertProject error:', err);
@@ -80,6 +86,7 @@ export async function adminDeleteProject(id: string): Promise<AdminActionResult>
     const client = await getAdminClient();
     const { error } = await client.from('projects').delete().eq('id', id);
     if (error) throw error;
+    revalidatePublicSite();
     return { success: true };
   } catch (err) {
     console.error('adminDeleteProject error:', err);
@@ -119,6 +126,7 @@ export async function adminUpsertExperience(
       .single();
 
     if (error) throw error;
+    revalidatePublicSite();
     return { success: true, data };
   } catch (err) {
     console.error('adminUpsertExperience error:', err);
@@ -131,6 +139,7 @@ export async function adminDeleteExperience(id: string): Promise<AdminActionResu
     const client = await getAdminClient();
     const { error } = await client.from('experiences').delete().eq('id', id);
     if (error) throw error;
+    revalidatePublicSite();
     return { success: true };
   } catch (err) {
     console.error('adminDeleteExperience error:', err);
@@ -164,6 +173,7 @@ export async function adminUpsertSkill(
       .single();
 
     if (error) throw error;
+    revalidatePublicSite();
     return { success: true, data };
   } catch (err) {
     console.error('adminUpsertSkill error:', err);
@@ -176,6 +186,7 @@ export async function adminDeleteSkill(id: string): Promise<AdminActionResult> {
     const client = await getAdminClient();
     const { error } = await client.from('skills').delete().eq('id', id);
     if (error) throw error;
+    revalidatePublicSite();
     return { success: true };
   } catch (err) {
     console.error('adminDeleteSkill error:', err);
@@ -207,6 +218,7 @@ export async function adminUpsertTool(
       .single();
 
     if (error) throw error;
+    revalidatePublicSite();
     return { success: true, data };
   } catch (err) {
     console.error('adminUpsertTool error:', err);
@@ -219,6 +231,7 @@ export async function adminDeleteTool(id: string): Promise<AdminActionResult> {
     const client = await getAdminClient();
     const { error } = await client.from('tools').delete().eq('id', id);
     if (error) throw error;
+    revalidatePublicSite();
     return { success: true };
   } catch (err) {
     console.error('adminDeleteTool error:', err);
@@ -252,6 +265,7 @@ export async function adminUpsertCertification(
       .single();
 
     if (error) throw error;
+    revalidatePublicSite();
     return { success: true, data };
   } catch (err) {
     console.error('adminUpsertCertification error:', err);
@@ -264,6 +278,7 @@ export async function adminDeleteCertification(id: string): Promise<AdminActionR
     const client = await getAdminClient();
     const { error } = await client.from('certifications').delete().eq('id', id);
     if (error) throw error;
+    revalidatePublicSite();
     return { success: true };
   } catch (err) {
     console.error('adminDeleteCertification error:', err);
@@ -305,6 +320,7 @@ export async function adminUpdatePersonalInfo(
       .single();
 
     if (error) throw error;
+    revalidatePublicSite();
     return { success: true, data };
   } catch (err) {
     console.error('adminUpdatePersonalInfo error:', err);
@@ -338,6 +354,7 @@ export async function adminUpsertLanguage(
       .single();
 
     if (error) throw error;
+    revalidatePublicSite();
     return { success: true, data };
   } catch (err) {
     console.error('adminUpsertLanguage error:', err);
@@ -350,6 +367,7 @@ export async function adminDeleteLanguage(id: string): Promise<AdminActionResult
     const client = await getAdminClient();
     const { error } = await client.from('spoken_languages').delete().eq('id', id);
     if (error) throw error;
+    revalidatePublicSite();
     return { success: true };
   } catch (err) {
     console.error('adminDeleteLanguage error:', err);
@@ -394,6 +412,7 @@ export async function adminUpdateSectionVisibility(
       .upsert(rows, { onConflict: 'key' });
 
     if (error) throw error;
+    revalidatePublicSite();
     return { success: true };
   } catch (err) {
     console.error('adminUpdateSectionVisibility error:', err);
@@ -428,6 +447,7 @@ export async function adminToggleItemVisibility(
     const client = await getAdminClient();
     const { error } = await client.from(table).update({ is_visible }).eq('id', id);
     if (error) throw error;
+    revalidatePublicSite();
     return { success: true };
   } catch (err) {
     console.error(`adminToggleItemVisibility (${resource}) error:`, err);
@@ -447,6 +467,7 @@ export async function adminUpdateItemOrder(
     const client = await getAdminClient();
     const { error } = await client.from(table).update({ display_order }).eq('id', id);
     if (error) throw error;
+    revalidatePublicSite();
     return { success: true };
   } catch (err) {
     console.error(`adminUpdateItemOrder (${resource}) error:`, err);

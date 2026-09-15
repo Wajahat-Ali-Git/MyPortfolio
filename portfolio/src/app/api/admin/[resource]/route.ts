@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { supabase, isSupabaseConfigured, createAuthenticatedClient } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
@@ -167,6 +168,7 @@ export async function POST(req: NextRequest, { params }: Props) {
       );
     }
 
+    revalidatePath('/');
     return NextResponse.json({ success: true, data: result.data });
   } catch (err) {
     console.error(`POST /api/admin/${resource} error:`, err);
@@ -204,6 +206,7 @@ export async function DELETE(req: NextRequest, { params }: Props) {
   try {
     const { error } = await auth.client.from(resource).delete().eq('id', id);
     if (error) throw error;
+    revalidatePath('/');
     return NextResponse.json({ success: true, message: `Deleted ${id} from ${resource}` });
   } catch (err) {
     return NextResponse.json(
