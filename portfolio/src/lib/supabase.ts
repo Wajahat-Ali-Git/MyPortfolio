@@ -1,12 +1,48 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Supabase configuration
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+// Supabase configuration with safe build-time fallbacks
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-anon-key';
 
-// Create Supabase client
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Helper to check if real Supabase credentials are provided
+export const isSupabaseConfigured = () => {
+  return (
+    !!process.env.NEXT_PUBLIC_SUPABASE_URL &&
+    process.env.NEXT_PUBLIC_SUPABASE_URL !== 'https://placeholder.supabase.co' &&
+    !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  );
+};
 
+// Always fetch fresh rows so admin edits appear immediately on the public site
+const noStoreFetch: typeof fetch = (input, init) =>
+  fetch(input, { ...init, cache: 'no-store' });
+
+// Create Supabase client with auth session persistence enabled
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  global: {
+    fetch: noStoreFetch,
+  },
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true,
+  },
+});
+
+// Helper to create an authenticated Supabase client for a specific access token
+export const createAuthenticatedClient = (accessToken: string) => {
+  return createClient(supabaseUrl, supabaseAnonKey, {
+    global: {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    },
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+    },
+  });
+};
 
 // Type definitions for contact message
 export interface ContactMessage {

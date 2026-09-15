@@ -222,14 +222,30 @@ export default function GitHubActivity() {
     setLoading(true);
     setError(null);
     try {
+      const headers: HeadersInit = {
+        Accept: "application/vnd.github.v3+json",
+        ...(process.env.NEXT_PUBLIC_GITHUB_TOKEN
+          ? { Authorization: `token ${process.env.NEXT_PUBLIC_GITHUB_TOKEN}` }
+          : {}),
+      };
+
       const res = await fetch(
         "https://api.github.com/users/Wajahat-Ali-Git/events/public?per_page=30",
         {
-          headers: { Accept: "application/vnd.github.v3+json" },
+          headers,
           next: { revalidate: 300 }, // cache for 5 min
         }
       );
-      if (!res.ok) throw new Error(`GitHub API returned ${res.status}`);
+      
+      if (!res.ok) {
+        if (res.status === 403) {
+          console.warn("GitHub API rate limit reached (403) on events.");
+          setError("GitHub API rate limit reached. Activity will refresh automatically soon.");
+          return;
+        }
+        throw new Error(`GitHub API returned ${res.status}`);
+      }
+
       const data: GitHubEvent[] = await res.json();
 
       const parsed = data
@@ -239,8 +255,8 @@ export default function GitHubActivity() {
 
       setEvents(parsed);
     } catch (err) {
-      setError("Unable to load GitHub activity");
-      console.error(err);
+      console.warn("Unable to load GitHub activity:", err);
+      setError("Unable to load GitHub activity at this time");
     } finally {
       setLoading(false);
     }

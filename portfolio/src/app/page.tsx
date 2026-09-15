@@ -8,7 +8,8 @@ import { FaGithub, FaLinkedin } from "react-icons/fa";
 import Link from "next/link";
 import WorkflowAnimation from "./components/WorkflowAnimation";
 import GitHubRepos from "./components/GitHubRepos";
-import { TRANSLATIONS, PROJECTS, dotColorStyles, colorStyles, scaleUp, slideInLeft, slideInRight, itemVariants, containerVariants, LANG_OPTIONS, NAV_LINKS, LANGUAGES, TOOLS, SKILLS, CERTIFICATIONS, WORK_HISTORY } from "../constants/contants";
+import { TRANSLATIONS, dotColorStyles, colorStyles, scaleUp, slideInLeft, slideInRight, itemVariants, containerVariants, LANG_OPTIONS, NAV_LINKS } from "../constants/contants";
+import { fetchAllPortfolioData, type DynamicProject, type DynamicExperience, type DynamicSkill, type DynamicCertification, type DynamicLanguage, type DynamicPersonalInfo, type SectionVisibility } from "../lib/portfolioData";
 import type { Language } from "../types/types";
 
 
@@ -170,12 +171,20 @@ const MOBILE_NAV_ICONS: Record<string, NavIconType> = {
   certifications: Award,
 };
 
-function MobileBottomNav({ t, isRTL }: { t: typeof TRANSLATIONS["en"]; isRTL: boolean }) {
+function MobileBottomNav({ t, isRTL, sectionVisibility }: { t: typeof TRANSLATIONS["en"]; isRTL: boolean; sectionVisibility?: SectionVisibility }) {
   const [activeSection, setActiveSection] = useState<string>("home");
+
+  const visibleNavLinks = NAV_LINKS.filter((link) => {
+    if (link.labelKey === "home") return true;
+    if (sectionVisibility && link.labelKey in sectionVisibility) {
+      return sectionVisibility[link.labelKey as keyof SectionVisibility] !== false;
+    }
+    return true;
+  });
 
   useEffect(() => {
     // Use IntersectionObserver for accurate section detection
-    const sectionIds = NAV_LINKS.map((l) => l.href.slice(1));
+    const sectionIds = visibleNavLinks.map((l) => l.href.slice(1));
     const observers: IntersectionObserver[] = [];
     const visibilityMap: Record<string, number> = {};
 
@@ -186,7 +195,7 @@ function MobileBottomNav({ t, isRTL }: { t: typeof TRANSLATIONS["en"]; isRTL: bo
       for (const id of sectionIds) {
         if ((visibilityMap[id] ?? 0) > bestRatio) {
           bestRatio = visibilityMap[id] ?? 0;
-          best = NAV_LINKS.find((l) => l.href.slice(1) === id)?.labelKey ?? best;
+          best = visibleNavLinks.find((l) => l.href.slice(1) === id)?.labelKey ?? best;
         }
       }
       setActiveSection(best);
@@ -207,7 +216,7 @@ function MobileBottomNav({ t, isRTL }: { t: typeof TRANSLATIONS["en"]; isRTL: bo
     });
 
     return () => observers.forEach((obs) => obs.disconnect());
-  }, []);
+  }, [visibleNavLinks]);
 
   return (
     <motion.nav
@@ -226,7 +235,7 @@ function MobileBottomNav({ t, isRTL }: { t: typeof TRANSLATIONS["en"]; isRTL: bo
           padding: "6px 4px",
         }}
       >
-        {NAV_LINKS.map((link) => {
+        {visibleNavLinks.map((link) => {
           const Icon = MOBILE_NAV_ICONS[link.labelKey] || Code2;
           const isActive = activeSection === link.labelKey;
           const label = t.nav[link.labelKey as keyof typeof t.nav];
@@ -317,6 +326,59 @@ export default function Home() {
   });
 
   const [mounted, setMounted] = useState(false);
+  const [isDataLoading, setIsDataLoading] = useState(true);
+  const [portfolioData, setPortfolioData] = useState<{
+    projects: DynamicProject[];
+    experiences: DynamicExperience[];
+    skills: DynamicSkill[];
+    tools: string[];
+    certifications: DynamicCertification[];
+    languages: DynamicLanguage[];
+    personalInfo: DynamicPersonalInfo | null;
+    sectionVisibility: SectionVisibility;
+  }>({
+    projects: [],
+    experiences: [],
+    skills: [],
+    tools: [],
+    certifications: [],
+    languages: [],
+    personalInfo: null,
+    sectionVisibility: {
+      projects: true,
+      github: true,
+      experience: true,
+      skills: true,
+      certifications: true,
+      languages: true,
+    },
+  });
+
+  // Load (or re-load) all portfolio data from Supabase
+  const loadPortfolioData = () => {
+    setIsDataLoading(true);
+    fetchAllPortfolioData()
+      .then((data) => {
+        if (data) setPortfolioData(data);
+      })
+      .catch((err) => console.error("fetchAllPortfolioData error:", err))
+      .finally(() => setIsDataLoading(false));
+  };
+
+  useEffect(() => {
+    // Initial load
+    loadPortfolioData();
+
+    // Re-fetch whenever the user returns to this tab (e.g. after making admin edits)
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        loadPortfolioData();
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     setMounted(true);
@@ -346,6 +408,17 @@ export default function Home() {
 
   const t = TRANSLATIONS[selectedLang];
   const isRTL = t.dir === "rtl";
+  const personalInfo = portfolioData.personalInfo;
+  const heroNameParts = (personalInfo?.fullName || "").trim().split(/\s+/).filter(Boolean);
+  const heroTitle1 = heroNameParts[0] || t.hero.title1;
+  const heroTitle2 = heroNameParts.slice(1).join(" ") || (heroNameParts.length ? "" : t.hero.title2);
+  const heroRole = personalInfo?.role || t.hero.role;
+  const heroBio = personalInfo?.bio || t.hero.bio;
+  const heroStatus = personalInfo?.availabilityStatus || t.hero.status;
+  const githubUrl = personalInfo?.githubUrl || "https://github.com/Wajahat-Ali-Git";
+  const linkedinUrl = personalInfo?.linkedinUrl || "https://www.linkedin.com/in/wajahat-ali-b098b4243";
+  const emailHref = personalInfo?.email ? `mailto:${personalInfo.email}` : "mailto:your-email@example.com";
+  const profileImage = personalInfo?.profileImageUrl || "https://github.com/Wajahat-Ali-Git.png";
 
   useEffect(() => {
     if (mounted) {
@@ -396,7 +469,13 @@ export default function Home() {
             <span className="text-lg font-bold tracking-tight text-gradient">Wajahat</span>
           </a>
           <nav className="hidden md:flex md:items-center md:justify-center md:gap-2 lg:absolute lg:left-1/2 lg:transform lg:-translate-x-1/2 items-center justify-center gap-2 bg-white/5 border border-white/10 rounded-full px-4 py-2 glass shadow-lg">
-            {NAV_LINKS.map((link) => (
+            {NAV_LINKS.filter((link) => {
+              if (link.labelKey === "home") return true;
+              if (portfolioData.sectionVisibility && link.labelKey in portfolioData.sectionVisibility) {
+                return portfolioData.sectionVisibility[link.labelKey as keyof SectionVisibility] !== false;
+              }
+              return true;
+            }).map((link) => (
               <a
                 key={link.href}
                 href={link.href}
@@ -430,7 +509,7 @@ export default function Home() {
               </button>
             )}
             <a
-              href="https://github.com/Wajahat-Ali-Git"
+              href={githubUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="hidden md:flex items-center gap-2 px-4 py-2 rounded-full glass text-sm font-medium hover:bg-white/10 transition-all"
@@ -443,7 +522,7 @@ export default function Home() {
       </motion.header>
 
       {/* Enhanced Mobile bottom navbar with icons and active states */}
-      <MobileBottomNav t={t} isRTL={isRTL} />
+      <MobileBottomNav t={t} isRTL={isRTL} sectionVisibility={portfolioData.sectionVisibility} />
 
       {/* ─── Ambient Background ─── */}
       <div className="fixed inset-0 pointer-events-none z-0">
@@ -474,21 +553,25 @@ export default function Home() {
                 <motion.div variants={itemVariants} className={`space-y-5 ${isRTL ? "text-right lg:text-right" : "text-center lg:text-left"}`}>
                   <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass text-sm text-[var(--muted-foreground)] w-fit mx-auto lg:mx-0">
                     <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                    {t.hero.status}
+                    {heroStatus}
                   </div>
                   <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold tracking-tight leading-[0.95]">
-                    <span className="text-gradient">{t.hero.title1}</span>
-                    <br />
-                    <span className="text-[var(--foreground)]">{t.hero.title2}</span>
+                    <span className="text-gradient">{heroTitle1}</span>
+                    {heroTitle2 ? (
+                      <>
+                        <br />
+                        <span className="text-[var(--foreground)]">{heroTitle2}</span>
+                      </>
+                    ) : null}
                   </h1>
                   <p className="text-xl md:text-2xl text-[var(--muted-foreground)] font-medium flex items-center gap-3 justify-center lg:justify-start">
                     <Terminal className="w-5 h-5 text-indigo-400" />
-                    {t.hero.role}
+                    {heroRole}
                   </p>
                 </motion.div>
 
                 <motion.p variants={itemVariants} className="text-lg text-[var(--muted-foreground)] max-w-xl mx-auto lg:mx-0 leading-relaxed">
-                  {t.hero.bio}
+                  {heroBio}
                 </motion.p>
 
                 <motion.div variants={itemVariants} className="flex flex-col sm:flex-row items-center gap-4 justify-center lg:justify-start pt-2">
@@ -501,9 +584,9 @@ export default function Home() {
                   </a>
                   <div className="flex items-center gap-3">
                     {[
-                      { href: "https://github.com/Wajahat-Ali-Git", icon: FaGithub, label: "GitHub" },
-                      { href: "https://www.linkedin.com/in/wajahat-ali-b098b4243", icon: FaLinkedin, label: "LinkedIn" },
-                      { href: "mailto:your-email@example.com", icon: Mail, label: "Email" },
+                      { href: githubUrl, icon: FaGithub, label: "GitHub" },
+                      { href: linkedinUrl, icon: FaLinkedin, label: "LinkedIn" },
+                      { href: emailHref, icon: Mail, label: "Email" },
                     ].map((social) => (
                       <a
                         key={social.label}
@@ -544,8 +627,8 @@ export default function Home() {
                     {/* Image container */}
                     <div className="relative w-full h-full rounded-full overflow-hidden border-2 border-white/10 shadow-2xl">
                       <Image
-                        src="https://github.com/Wajahat-Ali-Git.png"
-                        alt="Wajahat Ali"
+                        src={profileImage}
+                        alt={personalInfo?.fullName || "Wajahat Ali"}
                         width={400}
                         height={400}
                         className="w-full h-full object-cover"
@@ -588,7 +671,7 @@ export default function Home() {
         {/* ═══════════════════════════════════════════
             PROJECTS SECTION
         ═══════════════════════════════════════════ */}
-        <section id="projects" className="container mx-auto px-6 py-20">
+        {portfolioData.sectionVisibility.projects && <section id="projects" className="container mx-auto px-6 py-20">
           <SectionHeading icon={Code2} title={t.projects.title} color="purple" isRTL={isRTL} />
 
           <motion.div
@@ -598,61 +681,69 @@ export default function Home() {
             viewport={{ once: true, margin: "-80px" }}
             className="grid grid-cols-1 md:grid-cols-2 gap-6"
           >
-            {PROJECTS.map((project) => (
-              <motion.a
-                key={project.title}
-                href={project.link}
-                target="_blank"
-                rel="noopener noreferrer"
-                variants={itemVariants}
-                whileHover={{ y: -6 }}
-                className={`glass-card card-glow shimmer-effect p-8 flex flex-col h-full group cursor-pointer ${project.featured ? "md:col-span-2" : ""
+            {portfolioData.projects.map((project) => {
+              const translatedDesc = project.descKey
+                ? t.projects[project.descKey as keyof typeof t.projects]
+                : undefined;
+              const desc = project.description || translatedDesc || "";
+
+              return (
+                <motion.a
+                  key={project.id || project.title}
+                  href={project.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  variants={itemVariants}
+                  whileHover={{ y: -6 }}
+                  className={`glass-card card-glow shimmer-effect p-8 flex flex-col h-full group cursor-pointer ${
+                    project.featured ? "md:col-span-2 border-purple-500/30 bg-purple-500/10 dark:bg-purple-900/20" : ""
                   }`}
-              >
-                <div className="flex justify-between items-start mb-5">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-3 h-3 rounded-full ${dotColorStyles[project.color] || "bg-purple-400/80"}`} />
-                    <h3 className="text-xl font-bold tracking-tight">{project.title}</h3>
-                    {project.featured && (
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 font-medium">
-                        {t.projects.fyp}
-                      </span>
-                    )}
+                >
+                  <div className="flex justify-between items-start mb-5">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-3 h-3 rounded-full ${dotColorStyles[project.color] || "bg-purple-400/80"}`} />
+                      <h3 className="text-xl font-bold tracking-tight text-[var(--foreground)] dark:text-white">{project.title}</h3>
+                      {project.featured && (
+                        <span className="text-xs px-2.5 py-0.5 rounded-full bg-purple-500/20 text-purple-700 dark:text-purple-300 font-semibold border border-purple-500/30">
+                          {t.projects.fyp}
+                        </span>
+                      )}
+                    </div>
+                    <ExternalLink className="w-4 h-4 text-[var(--muted-foreground)] group-hover:text-[var(--foreground)] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
                   </div>
-                  <ExternalLink className="w-4 h-4 text-[var(--muted-foreground)] group-hover:text-[var(--foreground)] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
-                </div>
 
-                <p className="text-[var(--muted-foreground)] flex-grow mb-6 leading-relaxed">
-                  {t.projects[project.descKey]}
-                </p>
+                  <p className="text-[var(--foreground)]/80 dark:text-gray-300 flex-grow mb-6 leading-relaxed">
+                    {desc}
+                  </p>
 
-                <div className="flex flex-wrap gap-2 mt-auto">
-                  {project.tech.map((tech) => (
-                    <span
-                      key={tech}
-                      className="px-3 py-1 text-xs font-mono font-medium rounded-full bg-white/10 border border-white/10 text-[var(--muted-foreground)]"
-                    >
-                      {tech}
-                    </span>
-                  ))}
-                </div>
-              </motion.a>
-            ))}
+                  <div className="flex flex-wrap gap-2 mt-auto">
+                    {project.tech.map((tech) => (
+                      <span
+                        key={tech}
+                        className="px-3 py-1 text-xs font-mono font-medium rounded-full bg-white/10 dark:bg-white/10 border border-black/10 dark:border-white/10 text-[var(--foreground)] dark:text-gray-200"
+                      >
+                        {tech}
+                      </span>
+                    ))}
+                  </div>
+                </motion.a>
+              );
+            })}
           </motion.div>
 
-        </section>
+        </section>}
 
         {/* ═══════════════════════════════════════════
             RECENT CODE ACTIVITY SECTION
         ═══════════════════════════════════════════ */}
-        <GitHubRepos selectedLang={selectedLang} t={t} isRTL={isRTL} />
+        {portfolioData.sectionVisibility.github && <GitHubRepos selectedLang={selectedLang} t={t} isRTL={isRTL} />}
 
         <SectionDivider />
 
         {/* ═══════════════════════════════════════════
             EXPERIENCE SECTION
         ═══════════════════════════════════════════ */}
-        <a href="/experience"><section id="experience" className="container mx-auto px-6 py-20" >
+        {portfolioData.sectionVisibility.experience && <section id="experience" className="container mx-auto px-6 py-20">
           <SectionHeading icon={Briefcase} title={t.experience.title} color="blue" isRTL={isRTL} />
 
           <motion.div
@@ -665,47 +756,64 @@ export default function Home() {
             {/* Timeline line */}
             <div className="absolute left-8 top-0 bottom-0 w-px bg-gradient-to-b from-blue-500/50 via-blue-500/20 to-transparent hidden md:block" />
 
-            {WORK_HISTORY.map((work, idx) => (
-              <motion.div
-                key={idx}
-                variants={slideInLeft}
-                className="relative md:pl-20 mb-8"
-              >
-                {/* Timeline dot */}
-                <div className="absolute left-[26px] top-8 w-5 h-5 rounded-full border-2 border-blue-500 bg-[var(--background)] hidden md:flex items-center justify-center">
-                  <div className="w-2 h-2 rounded-full bg-blue-400" />
-                </div>
+            {portfolioData.experiences.map((work, idx) => {
+              const roleText = work.role
+                || (work.roleKey ? t.experience[work.roleKey as keyof typeof t.experience] : "")
+                || "";
+              const companyText = work.companyName
+                || (work.companyKey ? t.experience[work.companyKey as keyof typeof t.experience] : "")
+                || "";
+              const durationText = work.duration
+                || (work.durationKey ? t.experience[work.durationKey as keyof typeof t.experience] : "")
+                || "";
+              const descText = work.description
+                || (work.descKey ? t.experience[work.descKey as keyof typeof t.experience] : "")
+                || "";
 
-                <div className="glass-card card-glow p-8">
-                  <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-3">
-                    <div>
-                      <h3 className="text-2xl font-bold">{t.experience[work.roleKey]}</h3>
-                      <p className="text-[var(--muted-foreground)] text-lg">{t.experience[work.companyKey]}</p>
-                    </div>
-                    <span className="px-4 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-sm font-medium whitespace-nowrap">
-                      {t.experience[work.durationKey]}
-                    </span>
+              return (
+                <motion.div
+                  key={work.id || idx}
+                  variants={slideInLeft}
+                  className="relative md:pl-20 mb-8"
+                >
+                  {/* Timeline dot */}
+                  <div className="absolute left-[26px] top-8 w-5 h-5 rounded-full border-2 border-blue-500 bg-[var(--background)] hidden md:flex items-center justify-center">
+                    <div className="w-2 h-2 rounded-full bg-blue-400" />
                   </div>
-                  <p className="text-[var(--muted-foreground)] leading-relaxed">{t.experience[work.descKey]}</p>
-                </div>
-              </motion.div>
-            ))}
+
+                  <div className="glass-card card-glow p-8">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-3">
+                      <div>
+                        <h3 className="text-2xl font-bold">{roleText}</h3>
+                        <p className="text-[var(--muted-foreground)] text-lg">{companyText}</p>
+                      </div>
+                      {durationText && (
+                        <span className="px-4 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-sm font-medium whitespace-nowrap">
+                          {durationText}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[var(--muted-foreground)] leading-relaxed">{descText}</p>
+                  </div>
+                </motion.div>
+              );
+            })}
           </motion.div>
-        </section></a>
+        </section>}
 
         <SectionDivider />
 
         {/* ═══════════════════════════════════════════
             SKILLS & TOOLS SECTION
         ═══════════════════════════════════════════ */}
-        <section id="skills" className="container mx-auto px-6 py-20">
+        {portfolioData.sectionVisibility.skills && <section id="skills" className="container mx-auto px-6 py-20">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
             {/* Skills */}
             <div>
               <SectionHeading icon={Code} title={t.skills.title} color="green" isRTL={isRTL} />
               <div className="space-y-5">
-                {SKILLS.map((skill, idx) => (
-                  <SkillBar key={skill.name} name={skill.name} level={skill.level} delay={idx * 0.1} />
+                {portfolioData.skills.map((skill, idx) => (
+                  <SkillBar key={skill.id || skill.name} name={skill.name} level={skill.level} delay={idx * 0.1} />
                 ))}
               </div>
             </div>
@@ -720,7 +828,7 @@ export default function Home() {
                 viewport={{ once: true, margin: "-80px" }}
                 className="grid grid-cols-2 gap-3"
               >
-                {TOOLS.map((tool) => (
+                {portfolioData.tools.map((tool) => (
                   <motion.div
                     key={tool}
                     variants={itemVariants}
@@ -736,14 +844,14 @@ export default function Home() {
               </motion.div>
             </div>
           </div>
-        </section>
+        </section>}
 
         <SectionDivider />
 
         {/* ═══════════════════════════════════════════
             CERTIFICATIONS SECTION
         ═══════════════════════════════════════════ */}
-        <section id="certifications" className="container mx-auto px-6 py-20">
+        {portfolioData.sectionVisibility.certifications && <section id="certifications" className="container mx-auto px-6 py-20">
           <SectionHeading icon={Award} title={t.certifications.title} color="yellow" isRTL={isRTL} />
 
           <motion.div
@@ -753,34 +861,44 @@ export default function Home() {
             viewport={{ once: true, margin: "-80px" }}
             className="grid grid-cols-1 md:grid-cols-2 gap-5"
           >
-            {CERTIFICATIONS.map((cert, idx) => (
-              <motion.div
-                key={idx}
-                variants={itemVariants}
-                whileHover={{ scale: 1.02 }}
-                className="glass-card card-glow p-6 flex items-start gap-4"
-              >
-                <div className="p-2 rounded-lg bg-yellow-500/10 border border-yellow-500/20 flex-shrink-0 mt-0.5">
-                  <Award className="w-5 h-5 text-yellow-400" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-[var(--foreground)] mb-1">{t.certifications[cert.titleKey]}</h3>
-                  <p className="text-sm text-[var(--muted-foreground)]">
-                    {t.certifications.by} {cert.provider}
-                    <span className="ml-2 px-2 py-0.5 rounded-full bg-white/5 text-xs">{t.certifications[cert.typeKey]}</span>
-                  </p>
-                </div>
-              </motion.div>
-            ))}
+            {portfolioData.certifications.map((cert, idx) => {
+              const translatedTitle = cert.titleKey
+                ? t.certifications[cert.titleKey as keyof typeof t.certifications]
+                : undefined;
+              const titleText = cert.title || translatedTitle || "";
+              const typeText = (cert.typeKey && t.certifications[cert.typeKey as keyof typeof t.certifications])
+                ? t.certifications[cert.typeKey as keyof typeof t.certifications]
+                : (cert.typeKey || "Online");
+
+              return (
+                <motion.div
+                  key={cert.id || idx}
+                  variants={itemVariants}
+                  whileHover={{ scale: 1.02 }}
+                  className="glass-card card-glow p-6 flex items-start gap-4"
+                >
+                  <div className="p-2 rounded-lg bg-yellow-500/10 border border-yellow-500/20 flex-shrink-0 mt-0.5">
+                    <Award className="w-5 h-5 text-yellow-400" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-[var(--foreground)] mb-1">{titleText}</h3>
+                    <p className="text-sm text-[var(--muted-foreground)]">
+                      {t.certifications.by} {cert.provider}
+                      <span className="ml-2 px-2 py-0.5 rounded-full bg-white/5 text-xs">{typeText}</span>
+                    </p>
+                  </div>
+                </motion.div>
+              );
+            })}
           </motion.div>
-        </section>
+        </section>}
 
         <SectionDivider />
 
         {/* ═══════════════════════════════════════════
             LANGUAGES SECTION
         ═══════════════════════════════════════════ */}
-        <section id="languages" className="container mx-auto px-6 py-20">
+        {portfolioData.sectionVisibility.languages && <section id="languages" className="container mx-auto px-6 py-20">
           <SectionHeading icon={Globe2} title={t.languages.title} color="teal" isRTL={isRTL} />
 
           <motion.div
@@ -790,20 +908,25 @@ export default function Home() {
             viewport={{ once: true, margin: "-80px" }}
             className="grid grid-cols-1 md:grid-cols-3 gap-6"
           >
-            {LANGUAGES.map((lang) => (
+            {portfolioData.languages.map((lang, idx) => (
               <motion.div
-                key={lang.nameKey}
+                key={lang.id || lang.code || idx}
                 variants={scaleUp}
                 whileHover={{ scale: 1.05, y: -4 }}
                 className="glass-card card-glow p-8 text-center"
               >
                 <span className="text-4xl mb-4 block">{lang.flag}</span>
-                <h3 className="text-xl font-bold mb-1">{t.languages[lang.nameKey]}</h3>
-                <p className="text-sm text-[var(--muted-foreground)] capitalize">{t.languages[lang.proficiencyKey]}</p>
+                <h3 className="text-xl font-bold mb-1">
+                  {lang.name || (t.languages as Record<string, string>)[lang.code]}
+                </h3>
+                <p className="text-sm text-[var(--muted-foreground)] capitalize">
+                  {(t.languages as Record<string, string>)[lang.proficiency] || lang.proficiency}
+                </p>
               </motion.div>
             ))}
           </motion.div>
-        </section>
+        </section>}
+
 
         {/* ─── Footer ─── */}
         <footer className="container mx-auto px-6 py-12 mt-10">
@@ -814,9 +937,9 @@ export default function Home() {
             </p>
             <div className="flex items-center gap-4">
               {[
-                { href: "https://github.com/Wajahat-Ali-Git", icon: FaGithub },
-                { href: "https://www.linkedin.com/in/wajahat-ali-b098b4243", icon: FaLinkedin },
-                { href: "mailto:your-email@example.com", icon: Mail },
+                { href: githubUrl, icon: FaGithub },
+                { href: linkedinUrl, icon: FaLinkedin },
+                { href: emailHref, icon: Mail },
               ].map((s, i) => (
                 <a
                   key={i}

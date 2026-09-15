@@ -72,10 +72,7 @@ portfolio/
 Create `.env.local`:
 
 ```env
-# Backend API
-NEXT_PUBLIC_API_URL=http://localhost:5000
-
-# Supabase (if using)
+# Supabase
 NEXT_PUBLIC_SUPABASE_URL=https://xxx.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=xxx
 
