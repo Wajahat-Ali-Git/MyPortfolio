@@ -50,13 +50,14 @@ async function authenticateRequest(req: NextRequest): Promise<
     return { authenticated: false, client: supabase, error: 'Unauthorized: Invalid or expired token' };
   }
 
-  // Admin email or role restriction — always enforced (see checkIsAdmin in auth.ts).
+  // Admin email or app_metadata role restriction — always enforced.
+  // Note: user_metadata is intentionally not used because it can be modified by the client.
   const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL?.trim().toLowerCase();
   const userEmail = data.user.email?.toLowerCase();
-  const userRole = data.user.app_metadata?.role || data.user.user_metadata?.role;
+  const userRole = data.user.app_metadata?.role;
 
-  // If NEXT_PUBLIC_ADMIN_EMAIL is set, user must match it or carry role=admin.
-  // If it is NOT set, fall back to role check only — access is denied without an explicit role.
+  // If NEXT_PUBLIC_ADMIN_EMAIL is set, user must match it or carry role=admin in app_metadata.
+  // If it is NOT set, fall back to app_metadata role check only — access is denied without an explicit role.
   const isAdmin =
     (adminEmail && (userEmail === adminEmail || userRole === 'admin')) ||
     (!adminEmail && userRole === 'admin');
