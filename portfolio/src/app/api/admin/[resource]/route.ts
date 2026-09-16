@@ -102,7 +102,7 @@ export async function GET(req: NextRequest, { params }: Props) {
     // Sort by display_order if applicable, else created_at
     if (['projects', 'experiences', 'skills', 'tools', 'certifications', 'spoken_languages'].includes(resource)) {
       query = query.order('display_order', { ascending: true }).order('created_at', { ascending: false });
-    } else {
+    } else if (resource !== 'site_settings') {
       query = query.order('created_at', { ascending: false });
     }
 
