@@ -19,7 +19,6 @@ export interface AdminAuthResponse {
  */
 export function checkIsAdmin(user: User | null): boolean {
   if (!user) {
-    console.log('[checkIsAdmin] No user provided');
     return false;
   }
 
@@ -27,24 +26,15 @@ export function checkIsAdmin(user: User | null): boolean {
   const userRole = user.app_metadata?.role;
   const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL?.trim().toLowerCase();
 
-  console.log('[checkIsAdmin] Debug:', {
-    userEmail: user.email,
-    userRole,
-    adminEmail: adminEmail || '(not set)',
-    appMetadata: user.app_metadata,
-  });
-
   if (adminEmail) {
     const userEmail = user.email?.toLowerCase();
     const isAdmin = userEmail === adminEmail || userRole === 'admin';
-    console.log('[checkIsAdmin] Admin email is set, result:', isAdmin);
     return isAdmin;
   }
 
   // No admin email configured — require an explicit role claim in app_metadata
   // to prevent any regular authenticated Supabase user from accessing admin.
   const isAdmin = userRole === 'admin';
-  console.log('[checkIsAdmin] No admin email set, checking app_metadata role only, result:', isAdmin);
   return isAdmin;
 }
 

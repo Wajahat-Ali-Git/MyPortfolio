@@ -83,7 +83,6 @@ export async function fetchProjects(): Promise<DynamicProject[]> {
       .limit(100);
 
     if (error) {
-      console.error('fetchProjects Supabase error:', error.message);
       return FALLBACK_PROJECTS;
     }
 
@@ -114,8 +113,7 @@ export async function fetchProjects(): Promise<DynamicProject[]> {
         featured: item.featured ?? false,
       };
     });
-  } catch (err) {
-    console.error('fetchProjects unexpected error:', err);
+  } catch {
     return FALLBACK_PROJECTS;
   }
 }
@@ -137,7 +135,6 @@ export async function fetchExperiences(): Promise<DynamicExperience[]> {
       .limit(100);
 
     if (error) {
-      console.error('fetchExperiences Supabase error:', error.message);
       return FALLBACK_WORK_HISTORY;
     }
 
@@ -154,8 +151,7 @@ export async function fetchExperiences(): Promise<DynamicExperience[]> {
       achievements: Array.isArray(item.achievements) ? item.achievements : [],
       techStack: Array.isArray(item.tech_stack) ? item.tech_stack : [],
     }));
-  } catch (err) {
-    console.error('fetchExperiences unexpected error:', err);
+  } catch {
     return FALLBACK_WORK_HISTORY;
   }
 }
@@ -177,7 +173,6 @@ export async function fetchSkills(): Promise<DynamicSkill[]> {
       .limit(100);
 
     if (error) {
-      console.error('fetchSkills Supabase error:', error.message);
       return FALLBACK_SKILLS;
     }
 
@@ -191,8 +186,7 @@ export async function fetchSkills(): Promise<DynamicSkill[]> {
       level: item.proficiency,
       category: item.category,
     }));
-  } catch (err) {
-    console.error('fetchSkills unexpected error:', err);
+  } catch {
     return FALLBACK_SKILLS;
   }
 }
@@ -214,7 +208,6 @@ export async function fetchTools(): Promise<string[]> {
       .limit(100);
 
     if (error) {
-      console.error('fetchTools Supabase error:', error.message);
       return FALLBACK_TOOLS;
     }
 
@@ -223,8 +216,7 @@ export async function fetchTools(): Promise<string[]> {
     }
 
     return data.map((item) => item.name);
-  } catch (err) {
-    console.error('fetchTools unexpected error:', err);
+  } catch {
     return FALLBACK_TOOLS;
   }
 }
@@ -246,7 +238,6 @@ export async function fetchCertifications(): Promise<DynamicCertification[]> {
       .limit(100);
 
     if (error) {
-      console.error('fetchCertifications Supabase error:', error.message);
       return FALLBACK_CERTIFICATIONS;
     }
 
@@ -261,8 +252,7 @@ export async function fetchCertifications(): Promise<DynamicCertification[]> {
       typeKey: item.certificate_type || 'online',
       credentialUrl: item.credential_url || undefined,
     }));
-  } catch (err) {
-    console.error('fetchCertifications unexpected error:', err);
+  } catch {
     return FALLBACK_CERTIFICATIONS;
   }
 }
@@ -314,7 +304,6 @@ export async function fetchSpokenLanguages(): Promise<DynamicLanguage[]> {
       .limit(50);
 
     if (error) {
-      console.error('fetchSpokenLanguages Supabase error:', error.message);
       return FALLBACK_LANGUAGES.map((l) => ({
         code: l.nameKey,
         name: l.nameKey === 'english' ? 'English' : l.nameKey === 'urdu' ? 'Urdu' : 'Hindi / Punjabi',
@@ -334,8 +323,7 @@ export async function fetchSpokenLanguages(): Promise<DynamicLanguage[]> {
       proficiency: item.proficiency,
       flag: item.flag_emoji || undefined,
     }));
-  } catch (err) {
-    console.error('fetchSpokenLanguages unexpected error:', err);
+  } catch {
     return FALLBACK_LANGUAGES.map((l) => ({
       code: l.nameKey,
       name: l.nameKey === 'english' ? 'English' : l.nameKey === 'urdu' ? 'Urdu' : 'Hindi / Punjabi',
@@ -363,7 +351,6 @@ export async function fetchPersonalInfo(): Promise<DynamicPersonalInfo | null> {
       .maybeSingle();
 
     if (error) {
-      console.error('fetchPersonalInfo Supabase error:', error.message);
       return null;
     }
 
@@ -387,8 +374,7 @@ export async function fetchPersonalInfo(): Promise<DynamicPersonalInfo | null> {
       profileImageUrl: data.profile_image_url || '',
       resumeUrl: data.resume_url || '',
     };
-  } catch (err) {
-    console.error('fetchPersonalInfo unexpected error:', err);
+  } catch {
     return null;
   }
 }
@@ -436,7 +422,6 @@ export async function fetchSectionVisibility(): Promise<SectionVisibility> {
       ]);
 
     if (error) {
-      console.error('fetchSectionVisibility Supabase error:', error.message);
       return DEFAULT_VISIBILITY;
     }
 
@@ -457,8 +442,7 @@ export async function fetchSectionVisibility(): Promise<SectionVisibility> {
       certifications: map['section_certifications_visible'] !== 'false',
       languages:      map['section_languages_visible']      !== 'false',
     };
-  } catch (err) {
-    console.error('fetchSectionVisibility unexpected error:', err);
+  } catch {
     return DEFAULT_VISIBILITY;
   }
 }
