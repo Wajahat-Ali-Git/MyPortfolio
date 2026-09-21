@@ -42,6 +42,35 @@ function isValidUrl(urlStr: string): boolean {
   }
 }
 
+// Predefined flag options for datalist
+const FLAG_OPTIONS = [
+  { name: 'Pakistan', flag: '🇵🇰' },
+  { name: 'United Kingdom', flag: '🇬🇧' },
+  { name: 'United States', flag: '🇺🇸' },
+  { name: 'Saudi Arabia', flag: '🇸🇦' },
+  { name: 'United Arab Emirates', flag: '🇦🇪' },
+  { name: 'India', flag: '🇮🇳' },
+  { name: 'France', flag: '🇫🇷' },
+  { name: 'Germany', flag: '🇩🇪' },
+  { name: 'Spain', flag: '🇪🇸' },
+  { name: 'Italy', flag: '🇮🇹' },
+  { name: 'China', flag: '🇨🇳' },
+  { name: 'Japan', flag: '🇯🇵' },
+  { name: 'South Korea', flag: '🇰🇷' },
+  { name: 'Russia', flag: '🇷🇺' },
+  { name: 'Brazil', flag: '🇧🇷' },
+  { name: 'Canada', flag: '🇨🇦' },
+  { name: 'Australia', flag: '🇦🇺' },
+  { name: 'Turkey', flag: '🇹🇷' },
+  { name: 'Egypt', flag: '🇪🇬' },
+  { name: 'South Africa', flag: '🇿🇦' },
+  { name: 'Mexico', flag: '🇲🇽' },
+  { name: 'Argentina', flag: '🇦🇷' },
+  { name: 'Bangladesh', flag: '🇧🇩' },
+  { name: 'Indonesia', flag: '🇮🇩' },
+  { name: 'Malaysia', flag: '🇲🇾' },
+];
+
 // ─── Tag Chips Input Component ────────────────────────────────────────────────
 function TagChipsInput({
   tags,
@@ -877,11 +906,19 @@ export default function ItemFormModal({
                     <label className="text-xs font-semibold text-gray-300">Flag Emoji</label>
                     <input
                       type="text"
+                      list="flag-options"
                       value={formData.flag_emoji || ''}
                       onChange={(e) => handleChange('flag_emoji', e.target.value)}
                       placeholder="🇬🇧"
                       className="w-full mt-1 bg-[#0a0a16] border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/80"
                     />
+                    <datalist id="flag-options">
+                      {FLAG_OPTIONS.map((opt) => (
+                        <option key={opt.name} value={opt.flag}>
+                          {opt.name} {opt.flag}
+                        </option>
+                      ))}
+                    </datalist>
                   </div>
                 </div>
               </>

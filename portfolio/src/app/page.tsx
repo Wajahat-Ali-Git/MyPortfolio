@@ -915,7 +915,7 @@ export default function Home() {
                 whileHover={{ scale: 1.05, y: -4 }}
                 className="glass-card card-glow p-8 text-center"
               >
-                <span className="text-4xl mb-4 block">{lang.flag}</span>
+                <span className="text-4xl mb-4 block">{lang.flag || '🌐'}</span>
                 <h3 className="text-xl font-bold mb-1">
                   {lang.name || (t.languages as Record<string, string>)[lang.code]}
                 </h3>
