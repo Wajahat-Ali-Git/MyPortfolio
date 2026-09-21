@@ -16,6 +16,8 @@ import {
   Eye,
 } from 'lucide-react';
 
+import { supabase } from '@/lib/supabase';
+
 interface ResumeManagementPanelProps {
   session: { access_token?: string } | null;
   showToast: (type: 'success' | 'error', message: string) => void;
@@ -39,10 +41,15 @@ export default function ResumeManagementPanel({ session, showToast }: ResumeMana
   const replaceInputRef = useRef<HTMLInputElement>(null);
   const dragCounterRef = useRef(0);
 
-  const getAuthHeaders = useCallback(() => {
+  const getAuthHeaders = useCallback(async (): Promise<Record<string, string>> => {
     const headers: Record<string, string> = {};
-    if (session?.access_token) {
-      headers['Authorization'] = `Bearer ${session.access_token}`;
+    let token = session?.access_token;
+    if (!token) {
+      const { data } = await supabase.auth.getSession();
+      token = data.session?.access_token;
+    }
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
     }
     return headers;
   }, [session?.access_token]);
@@ -51,7 +58,8 @@ export default function ResumeManagementPanel({ session, showToast }: ResumeMana
   const fetchResumeStatus = useCallback(async () => {
     setPanelState('loading');
     try {
-      const res = await fetch('/api/admin/resume', { headers: getAuthHeaders() });
+      const headers = await getAuthHeaders();
+      const res = await fetch('/api/admin/resume', { headers });
       const json = await res.json();
       if (res.ok && json.success) {
         const url = json.data?.url || null;
@@ -106,12 +114,13 @@ export default function ResumeManagementPanel({ session, showToast }: ResumeMana
     }, 200);
 
     try {
+      const headers = await getAuthHeaders();
       const formData = new FormData();
       formData.append('file', file);
 
       const res = await fetch('/api/admin/resume', {
         method: 'POST',
-        headers: getAuthHeaders(),
+        headers,
         body: formData,
       });
 
@@ -146,9 +155,10 @@ export default function ResumeManagementPanel({ session, showToast }: ResumeMana
     setPanelState('loading');
 
     try {
+      const headers = await getAuthHeaders();
       const res = await fetch('/api/admin/resume', {
         method: 'DELETE',
-        headers: getAuthHeaders(),
+        headers,
       });
       const json = await res.json();
       if (!res.ok || !json.success) {
