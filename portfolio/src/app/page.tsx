@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useRef, useState, useEffect } from "react";
 import { motion, AnimatePresence, useScroll, useTransform, useInView } from "framer-motion";
-import { Mail, ExternalLink, Code2, Briefcase, Award, Code, Globe2, Wrench, ChevronDown, ArrowUpRight, Terminal } from "lucide-react";
+import { Mail, ExternalLink, Code2, Briefcase, Award, Code, Globe2, Wrench, ChevronDown, ArrowUpRight, Terminal, FileDown } from "lucide-react";
 import { FaGithub, FaLinkedin } from "react-icons/fa";
 import Link from "next/link";
 import WorkflowAnimation from "./components/WorkflowAnimation";
@@ -323,6 +323,7 @@ export default function Home() {
     languages: DynamicLanguage[];
     personalInfo: DynamicPersonalInfo | null;
     sectionVisibility: SectionVisibility;
+    resumeUrl: string | null;
   }>({
     projects: [],
     experiences: [],
@@ -339,6 +340,7 @@ export default function Home() {
       certifications: true,
       languages: true,
     },
+    resumeUrl: null,
   });
 
   // Load (or re-load) all portfolio data from Supabase
@@ -569,6 +571,18 @@ export default function Home() {
                     {t.hero.cta}
                     <ArrowUpRight className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
                   </a>
+                  {portfolioData.resumeUrl && (
+                    <a
+                      href={portfolioData.resumeUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      download="Resume.pdf"
+                      className="group px-6 py-4 rounded-full glass hover:bg-white/10 text-foreground font-semibold border border-white/10 hover:border-indigo-500/40 hover:shadow-[0_0_25px_rgba(99,102,241,0.2)] transition-all duration-300 flex items-center gap-2"
+                    >
+                      <FileDown className="w-4 h-4 text-indigo-400 group-hover:scale-110 transition-transform" />
+                      <span>Download CV</span>
+                    </a>
+                  )}
                   <div className="flex items-center gap-3">
                     {[
                       { href: githubUrl, icon: FaGithub, label: "GitHub" },

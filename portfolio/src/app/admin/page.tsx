@@ -31,11 +31,13 @@ import {
   Link2,
   ArrowUp,
   ArrowDown,
+  FileText,
 } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { useAdminAuth } from './AdminAuthContext';
 import ItemFormModal, { AdminResourceType } from './components/ItemFormModal';
+import ResumeManagementPanel from './components/ResumeManagementPanel';
 import {
   type SectionVisibilityInput,
   type ManageableResource,
@@ -43,6 +45,7 @@ import {
 
 type TabType =
   | 'section_visibility'
+  | 'resume'
   | 'projects'
   | 'experiences'
   | 'skills'
@@ -285,7 +288,7 @@ function AdminDashboardContent() {
   }, [session?.access_token]);
 
   const loadResourceData = useCallback(async (resource: TabType) => {
-    if (resource === 'section_visibility') return;
+    if (resource === 'section_visibility' || resource === 'resume') return;
     setIsFetching(true);
     setFetchError('');
     try {
@@ -557,6 +560,7 @@ function AdminDashboardContent() {
 
   const tabs: { id: TabType; label: string; icon: React.ReactNode }[] = [
     { id: 'section_visibility', label: 'Visibility',       icon: <Eye className="w-4 h-4" /> },
+    { id: 'resume',             label: 'Resume / CV',      icon: <FileText className="w-4 h-4" /> },
     { id: 'projects',           label: 'Projects',         icon: <FolderGit2 className="w-4 h-4" /> },
     { id: 'experiences',        label: 'Experiences',      icon: <Briefcase className="w-4 h-4" /> },
     { id: 'skills',             label: 'Skills',           icon: <Sparkles className="w-4 h-4" /> },
@@ -675,9 +679,11 @@ function AdminDashboardContent() {
           ))}
         </div>
 
-        {/* Section Visibility tab */}
+        {/* Tab Content */}
         {activeTab === 'section_visibility' ? (
           <SectionVisibilityPanel session={session} showToast={showToast} />
+        ) : activeTab === 'resume' ? (
+          <ResumeManagementPanel session={session} showToast={showToast} />
         ) : (
           <>
             {/* Action Header */}

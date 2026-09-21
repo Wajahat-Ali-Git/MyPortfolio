@@ -448,20 +448,56 @@ export async function fetchSectionVisibility(): Promise<SectionVisibility> {
 }
 
 /**
+ * Fetch the active resume/CV public download URL from site_settings.
+ * Returns null if Supabase is unavailable or no resume has been uploaded.
+ */
+export async function fetchResumeUrl(): Promise<string | null> {
+  if (!isSupabaseConfigured()) {
+    return null;
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('site_settings')
+      .select('value')
+      .eq('key', 'resume_file_url')
+      .maybeSingle();
+
+    if (error || !data || !data.value) {
+      return null;
+    }
+
+    return data.value;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Fetch all dynamic portfolio items concurrently.
  */
 export async function fetchAllPortfolioData() {
-  const [projects, experiences, skills, tools, certifications, languages, personalInfo, sectionVisibility] =
-    await Promise.all([
-      fetchProjects(),
-      fetchExperiences(),
-      fetchSkills(),
-      fetchTools(),
-      fetchCertifications(),
-      fetchSpokenLanguages(),
-      fetchPersonalInfo(),
-      fetchSectionVisibility(),
-    ]);
+  const [
+    projects,
+    experiences,
+    skills,
+    tools,
+    certifications,
+    languages,
+    personalInfo,
+    sectionVisibility,
+    resumeUrl,
+  ] = await Promise.all([
+    fetchProjects(),
+    fetchExperiences(),
+    fetchSkills(),
+    fetchTools(),
+    fetchCertifications(),
+    fetchSpokenLanguages(),
+    fetchPersonalInfo(),
+    fetchSectionVisibility(),
+    fetchResumeUrl(),
+  ]);
 
   return {
     projects,
@@ -472,5 +508,6 @@ export async function fetchAllPortfolioData() {
     languages,
     personalInfo,
     sectionVisibility,
+    resumeUrl,
   };
 }
