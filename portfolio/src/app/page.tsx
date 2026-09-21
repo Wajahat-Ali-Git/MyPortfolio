@@ -229,7 +229,7 @@ function MobileBottomNav({ t, isRTL, sectionVisibility }: { t: typeof TRANSLATIO
     >
       {/* Nav pill container — full-width minus 1rem gutter on each side, capped at 400px */}
       <div
-        className="flex items-center justify-around glass rounded-2xl shadow-2xl border border-white/10 backdrop-blur-xl"
+        className="relative flex items-center justify-around glass rounded-2xl shadow-2xl border border-white/10 backdrop-blur-xl"
         style={{
           width: "min(calc(100vw - 2rem), 400px)",
           padding: "6px 4px",
@@ -305,27 +305,14 @@ function MobileBottomNav({ t, isRTL, sectionVisibility }: { t: typeof TRANSLATIO
 /* ─── Main Page ─── */
 
 export default function Home() {
-  const [isDark, setIsDark] = useState<boolean>(() => {
-    try {
-      if (typeof window === "undefined") return false;
-      const stored = localStorage.getItem("theme");
-      return stored === "dark" || document.documentElement.classList.contains("dark");
-    } catch (e) {
-      return false;
-    }
-  });
+  // Always initialize with SSR-safe defaults — the useEffect below reads
+  // localStorage after hydration so the server and client initial renders match.
+  const [isDark, setIsDark] = useState<boolean>(false);
 
-  const [selectedLang, setSelectedLang] = useState<Language>(() => {
-    try {
-      if (typeof window === "undefined") return "en";
-      const stored = localStorage.getItem("language") as Language | null;
-      return stored && (stored in TRANSLATIONS) ? stored : "en";
-    } catch (e) {
-      return "en";
-    }
-  });
+  const [selectedLang, setSelectedLang] = useState<Language>("en");
 
   const [mounted, setMounted] = useState(false);
+  const [projectFilter, setProjectFilter] = useState<string>("All");
   const [isDataLoading, setIsDataLoading] = useState(true);
   const [portfolioData, setPortfolioData] = useState<{
     projects: DynamicProject[];
@@ -361,7 +348,7 @@ export default function Home() {
       .then((data) => {
         if (data) setPortfolioData(data);
       })
-      .catch((err) => console.error("fetchAllPortfolioData error:", err))
+      .catch(() => { /* silently fall through to finally — UI already handles empty state */ })
       .finally(() => setIsDataLoading(false));
   };
 
@@ -671,67 +658,148 @@ export default function Home() {
         {/* ═══════════════════════════════════════════
             PROJECTS SECTION
         ═══════════════════════════════════════════ */}
-        {portfolioData.sectionVisibility.projects && <section id="projects" className="container mx-auto px-6 py-20">
-          <SectionHeading icon={Code2} title={t.projects.title} color="purple" isRTL={isRTL} />
+        {portfolioData.sectionVisibility.projects && (() => {
+          // Derive unique filter tags from loaded project tech arrays
+          const allTechTags = ["All", ...Array.from(
+            new Set(portfolioData.projects.flatMap((p) => p.tech))
+          ).sort()];
 
-          <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-80px" }}
-            className="grid grid-cols-1 md:grid-cols-2 gap-6"
-          >
-            {portfolioData.projects.map((project) => {
-              const translatedDesc = project.descKey
-                ? t.projects[project.descKey as keyof typeof t.projects]
-                : undefined;
-              const desc = project.description || translatedDesc || "";
+          const filteredProjects = projectFilter === "All"
+            ? portfolioData.projects
+            : portfolioData.projects.filter((p) => p.tech.includes(projectFilter));
 
-              return (
-                <motion.a
-                  key={project.id || project.title}
-                  href={project.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  variants={itemVariants}
-                  whileHover={{ y: -6 }}
-                  className={`glass-card card-glow shimmer-effect p-8 flex flex-col h-full group cursor-pointer ${
-                    project.featured ? "md:col-span-2 border-purple-500/30 bg-purple-500/10 dark:bg-purple-900/20" : ""
-                  }`}
-                >
-                  <div className="flex justify-between items-start mb-5">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-3 h-3 rounded-full ${dotColorStyles[project.color] || "bg-purple-400/80"}`} />
-                      <h3 className="text-xl font-bold tracking-tight text-[var(--foreground)] dark:text-white">{project.title}</h3>
-                      {project.featured && (
-                        <span className="text-xs px-2.5 py-0.5 rounded-full bg-purple-500/20 text-purple-700 dark:text-purple-300 font-semibold border border-purple-500/30">
-                          {t.projects.fyp}
-                        </span>
+          return (
+            <section id="projects" className="container mx-auto px-6 py-20">
+              <SectionHeading icon={Code2} title={t.projects.title} color="purple" isRTL={isRTL} />
+
+              {/* ── Filter Bar ── */}
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-60px" }}
+                transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                className="flex flex-wrap gap-2.5 mb-10"
+                role="toolbar"
+                aria-label="Filter projects by technology"
+              >
+                {allTechTags.map((tag) => {
+                  const isActive = projectFilter === tag;
+                  return (
+                    <motion.button
+                      key={tag}
+                      onClick={() => setProjectFilter(tag)}
+                      whileTap={{ scale: 0.93 }}
+                      aria-pressed={isActive}
+                      className={`relative px-4 py-1.5 rounded-full text-xs font-mono font-semibold transition-all duration-200 border focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500/60 ${
+                        isActive
+                          ? "border-purple-500/60 text-purple-300 shadow-[0_0_14px_rgba(168,85,247,0.25)]"
+                          : "border-white/10 text-[var(--muted-foreground)] hover:border-purple-500/40 hover:text-purple-300 bg-white/5 hover:bg-purple-500/10"
+                      }`}
+                    >
+                      {isActive && (
+                        <motion.span
+                          layoutId="projectFilterBg"
+                          className="absolute inset-0 rounded-full bg-purple-500/20"
+                          transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                        />
                       )}
-                    </div>
-                    <ExternalLink className="w-4 h-4 text-[var(--muted-foreground)] group-hover:text-[var(--foreground)] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
-                  </div>
+                      <span className="relative z-10">{tag}</span>
+                    </motion.button>
+                  );
+                })}
+              </motion.div>
 
-                  <p className="text-[var(--foreground)]/80 dark:text-gray-300 flex-grow mb-6 leading-relaxed">
-                    {desc}
-                  </p>
+              {/* ── Projects Grid ── */}
+              <motion.div
+                layout
+                variants={containerVariants}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true, margin: "-80px" }}
+                className="grid grid-cols-1 md:grid-cols-2 gap-6"
+              >
+                <AnimatePresence mode="popLayout">
+                  {filteredProjects.length === 0 ? (
+                    <motion.div
+                      key="no-results"
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      className="col-span-2 flex flex-col items-center justify-center py-20 gap-3 text-[var(--muted-foreground)]"
+                    >
+                      <Code2 className="w-10 h-10 opacity-30" />
+                      <p className="text-sm font-medium opacity-60">No projects match <span className="text-purple-400 font-mono">{projectFilter}</span></p>
+                    </motion.div>
+                  ) : (
+                    filteredProjects.map((project) => {
+                      const translatedDesc = project.descKey
+                        ? t.projects[project.descKey as keyof typeof t.projects]
+                        : undefined;
+                      const desc = project.description || translatedDesc || "";
 
-                  <div className="flex flex-wrap gap-2 mt-auto">
-                    {project.tech.map((tech) => (
-                      <span
-                        key={tech}
-                        className="px-3 py-1 text-xs font-mono font-medium rounded-full bg-white/10 dark:bg-white/10 border border-black/10 dark:border-white/10 text-[var(--foreground)] dark:text-gray-200"
-                      >
-                        {tech}
-                      </span>
-                    ))}
-                  </div>
-                </motion.a>
-              );
-            })}
-          </motion.div>
+                      return (
+                        <motion.a
+                          layout
+                          key={project.id || project.title}
+                          href={project.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          variants={itemVariants}
+                          initial={{ opacity: 0, scale: 0.96, y: 12 }}
+                          animate={{ opacity: 1, scale: 1, y: 0 }}
+                          exit={{ opacity: 0, scale: 0.94, y: -8 }}
+                          whileHover={{ y: -6 }}
+                          transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                          className={`glass-card card-glow shimmer-effect p-8 flex flex-col h-full group cursor-pointer ${
+                            project.featured && projectFilter === "All" ? "md:col-span-2 border-purple-500/30 bg-purple-500/10 dark:bg-purple-900/20" : ""
+                          }`}
+                        >
+                          <div className="flex justify-between items-start mb-5">
+                            <div className="flex items-center gap-3">
+                              <div className={`w-3 h-3 rounded-full ${dotColorStyles[project.color] || "bg-purple-400/80"}`} />
+                              <h3 className="text-xl font-bold tracking-tight text-[var(--foreground)] dark:text-white">{project.title}</h3>
+                              {project.featured && (
+                                <span className="text-xs px-2.5 py-0.5 rounded-full bg-purple-500/20 text-purple-700 dark:text-purple-300 font-semibold border border-purple-500/30">
+                                  {t.projects.fyp}
+                                </span>
+                              )}
+                            </div>
+                            <ExternalLink className="w-4 h-4 text-[var(--muted-foreground)] group-hover:text-[var(--foreground)] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
+                          </div>
 
-        </section>}
+                          <p className="text-[var(--foreground)]/80 dark:text-gray-300 flex-grow mb-6 leading-relaxed">
+                            {desc}
+                          </p>
+
+                          <div className="flex flex-wrap gap-2 mt-auto">
+                            {project.tech.map((tech) => (
+                              <span
+                                key={tech}
+                                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setProjectFilter(tech); }}
+                                role="button"
+                                tabIndex={0}
+                                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setProjectFilter(tech); } }}
+                                aria-label={`Filter by ${tech}`}
+                                className={`px-3 py-1 text-xs font-mono font-medium rounded-full border transition-all duration-150 cursor-pointer ${
+                                  projectFilter === tech
+                                    ? "bg-purple-500/25 border-purple-400/60 text-purple-300"
+                                    : "bg-white/10 dark:bg-white/10 border-black/10 dark:border-white/10 text-[var(--foreground)] dark:text-gray-200 hover:border-purple-400/40 hover:text-purple-300"
+                                }`}
+                              >
+                                {tech}
+                              </span>
+                            ))}
+                          </div>
+                        </motion.a>
+                      );
+                    })
+                  )}
+                </AnimatePresence>
+              </motion.div>
+
+            </section>
+          );
+        })()}
 
         {/* ═══════════════════════════════════════════
             RECENT CODE ACTIVITY SECTION

@@ -90,7 +90,6 @@ export default function GitHubRepos({
 
       setRepos(json.data as Repo[]);
     } catch (err) {
-      console.error("GitHub repos fetch error:", err);
       setError(err instanceof Error ? err.message : "Failed to load repositories");
       setRepos([]);
     } finally {

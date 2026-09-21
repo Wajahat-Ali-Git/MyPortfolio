@@ -239,7 +239,6 @@ export default function GitHubActivity() {
       
       if (!res.ok) {
         if (res.status === 403) {
-          console.warn("GitHub API rate limit reached (403) on events.");
           setError("GitHub API rate limit reached. Activity will refresh automatically soon.");
           return;
         }
@@ -254,8 +253,7 @@ export default function GitHubActivity() {
         .slice(0, 8);
 
       setEvents(parsed);
-    } catch (err) {
-      console.warn("Unable to load GitHub activity:", err);
+    } catch {
       setError("Unable to load GitHub activity at this time");
     } finally {
       setLoading(false);
