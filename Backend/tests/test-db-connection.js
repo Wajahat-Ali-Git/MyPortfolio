@@ -2,14 +2,22 @@
 
 /**
  * Database Connection Test Script
- * Tests both Supabase and PostgreSQL connections
+ * ================================
+ * Tests Supabase and direct PostgreSQL connections, plus the local backend API.
+ *
+ * Usage:
+ *   node tests/test-db-connection.js
+ *
+ * Prerequisites:
+ *   - .env file configured with SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
+ *   - Optional: DATABASE_URL for direct PostgreSQL connection
  */
 
-require('dotenv').config();
+require('dotenv').config({ path: require('path').resolve(__dirname, '../.env') });
 
 async function testSupabase() {
   console.log('\n🔍 Testing Supabase Connection...\n');
-  
+
   if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
     console.log('❌ Supabase credentials not configured');
     return false;
@@ -44,9 +52,9 @@ async function testSupabase() {
 
 async function testPostgreSQL() {
   console.log('\n🔍 Testing PostgreSQL Connection...\n');
-  
+
   if (!process.env.DATABASE_URL) {
-    console.log('❌ DATABASE_URL not configured');
+    console.log('⚠️  DATABASE_URL not configured (optional — only needed for direct pg access)');
     return false;
   }
 
@@ -63,7 +71,7 @@ async function testPostgreSQL() {
     // Try to query the table
     const result = await client.query('SELECT COUNT(*) FROM contact_messages');
     console.log(`   Messages in database: ${result.rows[0].count}`);
-    
+
     client.release();
     await pool.end();
     return true;
@@ -75,7 +83,7 @@ async function testPostgreSQL() {
 
 async function testBackendAPI() {
   console.log('\n🔍 Testing Backend API...\n');
-  
+
   try {
     const http = require('http');
     const port = process.env.PORT || 5000;
@@ -136,7 +144,7 @@ async function main() {
   console.log('\n================================================');
   console.log('  Summary');
   console.log('================================================\n');
-  
+
   console.log('Backend API:    ', apiRunning ? '✅ Running' : '❌ Not Running');
   console.log('Supabase:       ', supabaseOk ? '✅ Connected' : '⚠️  Not Configured');
   console.log('PostgreSQL:     ', postgresOk ? '✅ Connected' : '⚠️  Not Configured');
