@@ -42,12 +42,12 @@ export default function ContactPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 text-white py-20 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 text-white py-12 sm:py-20 px-4">
       <div className="max-w-2xl mx-auto">
-        <h1 className="text-4xl md:text-5xl font-bold mb-6 text-center bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
+        <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6 text-center bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
           Get In Touch
         </h1>
-        <p className="text-gray-400 text-center mb-12">
+        <p className="text-sm sm:text-base text-gray-400 text-center mb-8 sm:mb-12">
           Have a project in mind? Let&apos;s work together to bring your ideas to life.
         </p>
 

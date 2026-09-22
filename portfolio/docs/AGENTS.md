@@ -344,29 +344,58 @@ useEffect(() => {
 ```
 portfolio/
 ├── src/
-│   ├── app/                # App router
-│   │   ├── page.tsx       # Home page
-│   │   ├── layout.tsx     # Root layout
-│   │   ├── contact/       # Contact page
-│   │   └── experience/    # Experience page
+│   ├── app/                        # App Router pages & layouts
+│   │   ├── page.tsx                # Home page
+│   │   ├── layout.tsx              # Root layout
+│   │   ├── globals.css             # Global styles
+│   │   ├── contact/                # Contact form page
+│   │   ├── experience/             # Experience & resume page
+│   │   ├── admin/                  # Admin Dashboard (auth-protected)
+│   │   │   ├── page.tsx            # Main admin panel
+│   │   │   ├── layout.tsx          # Auth guard layout
+│   │   │   ├── AdminAuthContext.tsx # Auth state context
+│   │   │   ├── login/              # Admin login page
+│   │   │   └── components/         # Admin-only UI components
+│   │   │       ├── ItemFormModal.tsx         # Add/edit content modal
+│   │   │       └── ResumeManagementPanel.tsx # Resume upload UI
+│   │   ├── api/                    # Next.js API routes
+│   │   │   ├── admin/[resource]/   # Generic admin CRUD route
+│   │   │   ├── admin/resume/       # Resume upload & delete route
+│   │   │   └── github/             # GitHub activity proxy
+│   │   └── components/             # Shared public-facing components
 │   │
-│   ├── components/        # Reusable components
-│   │   ├── shared.ts     # Shared utilities
-│   │   └── *.tsx         # Component files
+│   ├── lib/                        # Utilities & integrations
+│   │   ├── supabase.ts             # Supabase client (anon key)
+│   │   ├── portfolioData.ts        # Public data-fetching helpers
+│   │   └── admin/                  # Admin-only server-side utilities
+│   │       ├── actions.ts          # Server Actions for admin mutations
+│   │       ├── auth.ts             # Session auth helpers
+│   │       └── types.ts            # Admin TypeScript types
 │   │
-│   ├── lib/              # Utilities
-│   │   └── supabase.ts   # API client
-│   │
-│   ├── types/            # TypeScript types
-│   │   └── types.ts
-│   │
-│   └── constants/        # Constants
-│       └── constants.ts
+│   ├── constants/                  # Translations & static data
+│   └── types/                      # Shared TypeScript type definitions
 │
-├── public/               # Static assets
-├── .env.local           # Local secrets (NOT in git)
-├── .env.local.example   # Template (safe to commit)
-└── next.config.ts       # Next.js config
+├── public/                         # Static assets
+├── docs/                           # Documentation (you are here)
+├── .env.local                      # Local secrets — NOT in git
+├── .env.local.example              # Template — safe to commit
+└── next.config.ts                  # Next.js config
+```
+
+### Server Actions Pattern
+All admin content mutations (create, update, delete, reorder) use **Next.js Server Actions** defined in `src/lib/admin/actions.ts`. These run exclusively on the server using the `SUPABASE_SERVICE_ROLE_KEY`, so admin credentials are never exposed to the browser.
+
+```typescript
+// src/lib/admin/actions.ts
+'use server';
+
+import { createClient } from '@supabase/supabase-js';
+
+// Service role client — server-side only!
+const adminClient = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 ```
 
 ---
@@ -382,9 +411,10 @@ portfolio/
 - [ ] Loading states implemented
 - [ ] Error handling in place
 - [ ] Accessibility attributes added
-- [ ] Tested on mobile/desktop
+- [ ] Tested on mobile/desktop (320px, 768px, 1280px)
 - [ ] No console.logs left behind
 
 ---
 
-**See main [AGENTS.md](../AGENTS.md) for general project rules.**
+**See main [AGENTS.md](../../AGENTS.md) for general project rules.**
+

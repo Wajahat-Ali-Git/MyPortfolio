@@ -70,11 +70,11 @@ const EXPERIENCES = [
 
 export default function ExperiencePage() {
   return (
-    <main className="min-h-screen bg-background text-foreground py-20 px-6 sm:px-12 md:px-24">
+    <main className="min-h-screen bg-background text-foreground py-12 sm:py-20 px-4 sm:px-8 md:px-24">
       <div className="max-w-6xl mx-auto">
         <Link
           href="/"
-          className="inline-flex items-center gap-2 text-muted-foreground hover:text-indigo-400 transition-colors mb-12"
+          className="inline-flex items-center gap-2 text-muted-foreground hover:text-indigo-400 transition-colors mb-8 sm:mb-12 text-sm"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Home
@@ -86,41 +86,41 @@ export default function ExperiencePage() {
           variants={containerVariants}
           initial="hidden"
           animate="visible"
-          className="space-y-16"
+          className="space-y-10 sm:space-y-16"
         >
           {EXPERIENCES.map((exp) => (
             <motion.div
               key={exp.id}
               variants={itemVariants}
-              className="bg-white/5 border border-white/10 rounded-2xl p-8 shadow-xl relative overflow-hidden group"
+              className="bg-white/5 border border-white/10 rounded-2xl p-5 sm:p-8 shadow-xl relative overflow-hidden group"
             >
               {/* Background gradient */}
               <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
               
-              <div className="relative z-10 flex flex-col md:flex-row gap-12">
-                <div className="flex-1 space-y-6">
-                  <h3 className="text-2xl font-bold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
+              <div className="relative z-10 flex flex-col md:flex-row gap-6 sm:gap-12">
+                <div className="flex-1 space-y-5 sm:space-y-6">
+                  <h3 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
                     {exp.title}
                   </h3>
                   
-                  <ul className="space-y-4">
+                  <ul className="space-y-3 sm:space-y-4">
                     {exp.bullets.map((bullet, i) => (
-                      <li key={i} className="flex gap-3 text-white/80 leading-relaxed text-sm md:text-base">
-                        <span className="text-indigo-400 mt-1">•</span>
+                      <li key={i} className="flex gap-2.5 sm:gap-3 text-white/80 leading-relaxed text-xs sm:text-sm md:text-base">
+                        <span className="text-indigo-400 mt-0.5 shrink-0">•</span>
                         <span>{bullet}</span>
                       </li>
                     ))}
                   </ul>
 
-                  <div className="pt-4 space-y-3">
-                    <h4 className="text-sm font-semibold text-white/60 uppercase tracking-wider flex items-center gap-2">
-                      <Terminal className="w-4 h-4" /> Tools & Tech
+                  <div className="pt-2 sm:pt-4 space-y-3">
+                    <h4 className="text-xs sm:text-sm font-semibold text-white/60 uppercase tracking-wider flex items-center gap-2">
+                      <Terminal className="w-4 h-4 text-indigo-400" /> Tools & Tech
                     </h4>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-1.5 sm:gap-2">
                       {exp.stack.map((tech) => (
                         <span
                           key={tech}
-                          className="px-3 py-1 text-xs font-medium bg-white/10 text-white/90 rounded-full border border-white/10 shadow-sm"
+                          className="px-2.5 sm:px-3 py-1 text-xs font-medium bg-white/10 text-white/90 rounded-full border border-white/10 shadow-sm"
                         >
                           {tech}
                         </span>
@@ -129,11 +129,11 @@ export default function ExperiencePage() {
                   </div>
                 </div>
 
-                <div className="md:w-80 space-y-6 shrink-0 bg-black/20 p-6 rounded-xl border border-white/5">
-                  <h4 className="text-sm font-semibold text-white/90 uppercase tracking-wider">
+                <div className="w-full md:w-80 space-y-4 sm:space-y-6 shrink-0 bg-black/20 p-4 sm:p-6 rounded-xl border border-white/5">
+                  <h4 className="text-xs sm:text-sm font-semibold text-white/90 uppercase tracking-wider">
                     Language & Stack Usage
                   </h4>
-                  <div className="space-y-6">
+                  <div className="space-y-4 sm:space-y-6">
                     {exp.languages.map((lang, i) => (
                       <SkillBar
                         key={lang.name}

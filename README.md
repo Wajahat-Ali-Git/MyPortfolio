@@ -3,7 +3,7 @@
 ## Overview
 A modern, responsive, and interactive personal developer portfolio built with **Next.js 16 (App Router)**, **React 19**, **TypeScript**, and **Supabase**. It serves as a digital resume and showcases technical projects, professional experience, skills, certifications, real-time GitHub activity, and a direct Supabase-integrated contact form.
 
-The portfolio features a multi-language support system, dynamic theme toggle, and smooth animations powered by Framer Motion.
+The portfolio features a secure **Admin Dashboard** for managing all content, multi-language support, dynamic theme toggle, and smooth animations powered by Framer Motion.
 
 ---
 
@@ -16,6 +16,7 @@ The portfolio features a multi-language support system, dynamic theme toggle, an
 │   • Multi-language Support & Framer Motion Animations        │
 │   • Server Actions & API Routes for secure data mutations   │
 │   • Admin Dashboard with Session-based Auth                 │
+│   • Resume/CV upload & download management                  │
 └──────────────┬───────────────────────────────┬──────────────┘
                │                               │
        Direct Queries                    Server Actions & API
@@ -25,8 +26,9 @@ The portfolio features a multi-language support system, dynamic theme toggle, an
 ┌─────────────────────────────────────────────────────────────┐
 │                    Supabase Backend (Cloud)                 │
 │   • PostgreSQL Database with Row Level Security (RLS)       │
-│   • `contact_messages` table with anon-insert policies      │
-│   • Database migrations in `Backend/supabase/migrations/`   │
+│   • contact_messages, projects, experiences, skills, etc.   │
+│   • Storage bucket for resume/CV files                      │
+│   • Database migrations in Backend/supabase/migrations/     │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -38,28 +40,51 @@ The portfolio features a multi-language support system, dynamic theme toggle, an
 
 ```text
 MyPortfolio/
-├── portfolio/              # Next.js 16 frontend application
-│   ├── public/             # Static assets (images, icons)
+├── portfolio/                    # Next.js 16 frontend application
+│   ├── public/                   # Static assets (images, icons)
 │   ├── src/
-│   │   ├── app/            # App Router (pages, layout, globals.css)
-│   │   │   ├── contact/    # Contact page + Server Action
-│   │   │   ├── experience/ # Experience & resume route
-│   │   │   └── components/ # Reusable React components
-│   │   ├── constants/      # Data layer (projects, experience, translations)
-│   │   ├── lib/            # Utilities (Supabase client)
-│   │   └── types/          # TypeScript definitions
-│   ├── .env.local.example  # Frontend environment template
-│   ├── next.config.ts      # Next.js configuration
-│   └── package.json        # Frontend dependencies & scripts
+│   │   ├── app/                  # App Router (pages, layout, globals.css)
+│   │   │   ├── page.tsx          # Home page (portfolio showcase)
+│   │   │   ├── layout.tsx        # Root layout
+│   │   │   ├── contact/          # Contact page + Server Action
+│   │   │   ├── experience/       # Experience & resume route
+│   │   │   ├── admin/            # Admin Dashboard (auth-protected)
+│   │   │   │   ├── page.tsx      # Main admin panel
+│   │   │   │   ├── layout.tsx    # Admin layout (auth guard)
+│   │   │   │   ├── login/        # Admin login page
+│   │   │   │   └── components/   # Admin-specific UI components
+│   │   │   ├── api/              # Next.js API routes
+│   │   │   │   ├── admin/        # Admin CRUD API ([resource] + resume)
+│   │   │   │   └── github/       # GitHub activity proxy
+│   │   │   └── components/       # Shared public-facing components
+│   │   ├── lib/                  # Utilities & integrations
+│   │   │   ├── supabase.ts       # Supabase client (public anon)
+│   │   │   ├── portfolioData.ts  # Data-fetching helpers
+│   │   │   └── admin/            # Admin-only utilities
+│   │   │       ├── actions.ts    # Server Actions for admin mutations
+│   │   │       ├── auth.ts       # Session-based auth helpers
+│   │   │       └── types.ts      # Admin TypeScript types
+│   │   ├── constants/            # Static data & translations
+│   │   └── types/                # Shared TypeScript definitions
+│   ├── docs/                     # Frontend documentation
+│   ├── .env.local.example        # Frontend environment template
+│   ├── next.config.ts            # Next.js configuration
+│   └── package.json              # Frontend dependencies & scripts
 │
-├── Backend/                # Supabase configuration & migrations
+├── Backend/                      # Supabase configuration & migrations
 │   ├── supabase/
-│   │   ├── config.toml     # Supabase project configuration
-│   │   └── migrations/     # SQL schema migrations
-│   └── README.md           # Supabase CLI & database guide
+│   │   ├── config.toml           # Supabase CLI project configuration
+│   │   └── migrations/           # SQL schema migrations (applied in order)
+│   ├── tests/                    # Manual test & verification scripts
+│   │   ├── test-db-connection.js # Tests Supabase & PostgreSQL connections
+│   │   ├── test-api-endpoints.js # Smoke-tests backend API endpoints
+│   │   ├── verify-tables.js      # Verifies all DB tables exist
+│   │   └── README.md             # How to run the test scripts
+│   ├── docs/                     # Extended backend documentation
+│   └── README.md                 # Supabase CLI & database guide
 │
-├── AGENTS.md               # AI Agent rules and coding guidelines
-└── README.md               # Root documentation (this file)
+├── AGENTS.md                     # AI Agent rules and coding guidelines
+└── README.md                     # Root documentation (this file)
 ```
 
 ---
@@ -68,7 +93,7 @@ MyPortfolio/
 
 ### 1. Supabase Backend Setup & Migrations
 
-The database migrations and configuration are located in `Backend/supabase/`.
+The database migrations and configuration are in `Backend/supabase/`.
 
 ```bash
 # Install Supabase CLI (if not already installed)
@@ -81,7 +106,7 @@ supabase login
 cd Backend
 supabase link --project-ref <your-project-ref>
 
-# Push migrations to remote Supabase database
+# Push all migrations to remote Supabase database
 supabase db push
 ```
 
@@ -114,13 +139,14 @@ npm install
 
 # Setup environment variables
 cp .env.local.example .env.local
-# Add your NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to .env.local
+# Fill in your NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY,
+# and SUPABASE_SERVICE_ROLE_KEY in .env.local
 
 # Run development server
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) (or http://localhost:3001) in your browser.
+Open [http://localhost:3001](http://localhost:3001) in your browser.
 
 #### Production Build
 ```bash
@@ -133,34 +159,42 @@ npm run start
 
 ## 🔐 Environment Variables
 
-Create `portfolio/.env.local` using the template below:
+Create `portfolio/.env.local` using the provided template:
 
 ```env
-# Supabase Configuration (Required for contact form)
+# ── Supabase (Required) ──────────────────────────────────────────────────────
 # Get from: https://supabase.com/dashboard/project/_/settings/api
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
 
-# GitHub Personal Access Token (Optional - increases GitHub API rate limit)
+# ── Admin Dashboard (Required for admin panel) ───────────────────────────────
+# Service role key — NEVER use NEXT_PUBLIC_ prefix for this!
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key-here
+
+# ── GitHub API (Optional) ────────────────────────────────────────────────────
+# Increases GitHub API rate limit from 60 → 5000 requests/hour
 GITHUB_TOKEN=your-github-token-here
 ```
+
+See [`portfolio/.env.local.example`](./portfolio/.env.local.example) for the full template with comments.
 
 ---
 
 ## 🛠️ Main Features
 
-- **Admin Dashboard**: Secure, session-authenticated admin panel to toggle content visibility, edit content, and manually reorder items (`display_order`). Uses targeted partial updates to respect strict database constraints.
+- **Admin Dashboard**: Secure, session-authenticated admin panel to manage all portfolio content — toggle visibility, edit items, reorder entries (`display_order`), and upload/delete the resume/CV file.
+- **Resume Management**: Dedicated resume section with drag-and-drop PDF upload to Supabase Storage, with a public download CTA on the portfolio.
+- **Project Filtering**: Dynamic tech/framework filter bar on the projects section — auto-generated from project data, with animated transitions.
 - **GitHub API Resilience**: Optimized API polling with concurrent request limits, `Authorization` headers, and static fallbacks to prevent rate-limit errors.
-- **Direct Supabase Integration**: Contact submissions sent directly through secure Next.js Server Actions with Row Level Security.
+- **Direct Supabase Integration**: Contact submissions sent through Next.js Server Actions with Row Level Security.
 - **Multi-language Support**: Fully translated content (English, Urdu, Hindi, Arabic, French, German) with LTR and RTL support.
 - **Dynamic Theming**: Seamless dark/light mode integration.
 - **Real-time GitHub Activity**: Live feed of recent GitHub commits, pull requests, and repository events.
-- **Animated UI**: Smooth scroll animations, staggering elements, and micro-interactions powered by Framer Motion.
-- **Content-Driven**: Easy to update projects, experience, and skills via a centralized constants file.
-- **Responsive Design**: Mobile-first architecture using Tailwind CSS.
+- **Animated UI**: Smooth scroll animations, staggered entry animations, and micro-interactions powered by Framer Motion.
+- **Fully Responsive**: Mobile-first design with optimized layouts for mobile, tablet, and desktop — including the admin panel.
 
 ---
 
 ## 📄 License
 
-MIT License - See LICENSE file for details.
+MIT License — See LICENSE file for details.

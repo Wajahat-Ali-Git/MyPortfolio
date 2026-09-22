@@ -1,13 +1,17 @@
-# Next.js Developer Portfolio
+# Next.js Developer Portfolio — Frontend Documentation
 
 ## Overview
-This is a modern, responsive, and interactive personal developer portfolio built with Next.js, React, and TypeScript. It serves as a digital resume and showcases technical projects, professional experience, skills, certifications, and real-time GitHub activity. The portfolio features a multi-language support system, dark mode toggle, and smooth animations powered by Framer Motion.
+This is a modern, responsive, and interactive personal developer portfolio built with **Next.js 16 (App Router)**, **React 19**, and **TypeScript**, backed by **Supabase** (PostgreSQL + Storage). It serves as a digital resume and showcases technical projects, professional experience, skills, certifications, and real-time GitHub activity.
+
+The portfolio includes a built-in **Admin Dashboard** for managing all content without touching code, multi-language support, dark mode, and smooth animations powered by Framer Motion.
 
 ## Table of Contents
 - [Architecture & Structure](#architecture--structure)
 - [Main Features](#main-features)
 - [Prerequisites & Setup](#prerequisites--setup)
-- [Configuration](#configuration)
+- [Environment Variables](#environment-variables)
+- [Admin Dashboard](#admin-dashboard)
+- [API Routes](#api-routes)
 - [API Integrations (GitHub)](#api-integrations-github)
 - [Adding/Modifying Content](#addingmodifying-content)
 - [Development Guidelines](#development-guidelines)
@@ -20,203 +24,269 @@ This is a modern, responsive, and interactive personal developer portfolio built
 
 ## Architecture & Structure
 
-The project follows a standard Next.js 14+ App Router architecture.
+The project uses the **Next.js 16 App Router** with **Supabase** as the sole backend — there is no separate Express server.
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Next.js Frontend                         │
+│                                                             │
+│   Public Pages         Admin Dashboard                      │
+│   (Server + Client)    (Client, auth-guarded)               │
+│        │                      │                             │
+│        ▼                      ▼                             │
+│   portfolioData.ts      Server Actions (lib/admin/)         │
+│   (anon Supabase)       (service role key, server-only)     │
+└──────────────┬────────────────┬────────────────────────────-┘
+               │                │
+         Public reads     Admin mutations
+         (RLS: anon)      (RLS: authenticated)
+               │                │
+               ▼                ▼
+        ┌──────────────────────────────┐
+        │     Supabase (PostgreSQL)    │
+        │  + Storage (resume files)    │
+        └──────────────────────────────┘
+```
 
 ```text
 portfolio/
-├── public/                 # Static assets (images, icons)
 ├── src/
-│   ├── app/                # Next.js App Router (pages, layout, globals.css)
-│   │   ├── components/     # Reusable React components (GitHubRepos, WorkflowAnimation, etc.)
-│   │   └── experience/     # Additional routes/pages
-│   ├── constants/          # Data layer (projects, experience, skills, translations)
-│   ├── types/              # TypeScript type definitions
-│   └── utils/              # Utility functions and helpers
-├── eslint.config.mjs       # ESLint configuration
-├── next.config.ts          # Next.js configuration
-├── package.json            # Dependencies and scripts
-├── postcss.config.mjs      # PostCSS configuration for Tailwind CSS
-├── tailwind.config.ts      # Tailwind CSS configuration
-└── tsconfig.json           # TypeScript configuration
+│   ├── app/                        # Next.js App Router
+│   │   ├── page.tsx                # Home page
+│   │   ├── layout.tsx              # Root layout
+│   │   ├── globals.css             # Global styles
+│   │   ├── contact/                # Contact form page & Server Action
+│   │   ├── experience/             # Experience & resume page
+│   │   ├── admin/                  # Admin Dashboard (auth-protected)
+│   │   │   ├── page.tsx            # Main admin panel (all sections)
+│   │   │   ├── layout.tsx          # Auth guard layout
+│   │   │   ├── AdminAuthContext.tsx # Auth state context
+│   │   │   ├── login/              # Login page
+│   │   │   └── components/         # Admin-only UI
+│   │   │       ├── ItemFormModal.tsx        # Add/edit content modal
+│   │   │       └── ResumeManagementPanel.tsx # Resume upload/manage
+│   │   ├── api/                    # Next.js API routes
+│   │   │   ├── admin/[resource]/   # Generic admin CRUD handler
+│   │   │   ├── admin/resume/       # Resume file upload & delete
+│   │   │   └── github/             # GitHub activity proxy
+│   │   └── components/             # Shared public components
+│   │       ├── GitHubActivity.tsx
+│   │       ├── GitHubRepos.tsx
+│   │       ├── SectionHeading.tsx
+│   │       ├── SkillBar.tsx
+│   │       └── WorkflowAnimation.tsx
+│   │
+│   ├── lib/                        # Utilities & integrations
+│   │   ├── supabase.ts             # Supabase client (anon key)
+│   │   ├── portfolioData.ts        # Data-fetching helpers
+│   │   └── admin/                  # Admin-only server-side utils
+│   │       ├── actions.ts          # Server Actions for mutations
+│   │       ├── auth.ts             # Session auth helpers
+│   │       └── types.ts            # Admin TypeScript types
+│   │
+│   ├── constants/                  # Translations & static data
+│   └── types/                      # Shared TypeScript types
+│
+├── public/                         # Static assets
+├── docs/                           # This documentation folder
+├── .env.local.example              # Environment variable template
+└── next.config.ts                  # Next.js config
 ```
 
 ---
 
 ## Main Features
 
+- **Admin Dashboard**: Session-authenticated admin panel to create, edit, reorder (`display_order`), and toggle visibility of all portfolio sections. Content is stored in and fetched from Supabase.
+- **Resume Management**: Drag-and-drop PDF upload to Supabase Storage, with the active resume shown as a download CTA on the portfolio.
+- **Project Filtering**: Dynamic tech/framework filter pills on the projects section — auto-generated from project data.
 - **Multi-language Support**: Fully translated content (English, Urdu, Hindi, Arabic, French, German) with LTR and RTL support.
-- **Dynamic Theming**: Seamless dark/light mode integration.
-- **Recent Code Activity**: Live GitHub repositories section showing your 6 most recently committed-to repositories with:
-  - Last commit information (message, SHA, timestamp)
-  - Programming language indicators with GitHub's official color scheme
-  - Star and fork counts
-  - **Dual View Modes**: Toggle between card grid view and compact list view
-  - Sorted by actual commit time (not just repo updates)
-- **Animated UI**: Smooth scroll animations, staggering elements, and micro-interactions powered by Framer Motion.
-- **Content-Driven**: Easy to update projects, experience, and skills via a centralized constants file.
-- **Responsive Design**: Mobile-first architecture using Tailwind CSS, ensuring a perfect layout on any device.
+- **Dynamic Theming**: Seamless dark/light mode toggle.
+- **Recent GitHub Activity**: Live feed of GitHub commits, pull requests, and repository events via the GitHub REST API.
+- **GitHub Repos Section**: Shows 6 most recently committed-to repos with dual view modes (card grid / compact list), commit info, language colours, and star/fork counts.
+- **Animated UI**: Smooth scroll animations, staggered entry animations, and micro-interactions via Framer Motion.
+- **Responsive Design**: Mobile-first architecture — optimized layouts for mobile (320px+), tablet, and desktop, including the admin panel.
+- **Contact Form**: Submissions saved directly to Supabase via a Next.js Server Action.
 
 ---
 
 ## Prerequisites & Setup
 
 ### Prerequisites
-- Node.js (v18.17.0 or higher recommended)
-- npm, yarn, pnpm, or bun
+- Node.js v18.17.0 or higher (v20 LTS recommended)
+- npm (or yarn / pnpm)
+- A Supabase project ([supabase.com](https://supabase.com))
 
 ### Local Development Setup
 
-1. **Clone the repository** (if not already local)
+1. **Install dependencies**
    ```bash
-   git clone <repository-url>
    cd portfolio
+   npm install
    ```
 
-2. **Install dependencies**
+2. **Configure environment variables**
    ```bash
-   npm install
-   # or
-   yarn install
-   # or
-   pnpm install
+   cp .env.local.example .env.local
    ```
+   Then edit `.env.local` and fill in your Supabase credentials (see [Environment Variables](#environment-variables)).
 
 3. **Run the development server**
    ```bash
    npm run dev
    ```
 
-4. **View the application**
-   Open [http://localhost:3000](http://localhost:3000) in your browser. The page will auto-reload as you make edits.
+4. **Open the app**
+   - Portfolio: [http://localhost:3001](http://localhost:3001)
+   - Admin panel: [http://localhost:3001/admin](http://localhost:3001/admin)
 
 ---
 
-## Configuration
+## Environment Variables
 
-### Environment Variables
-Currently, the portfolio operates entirely without private environment variables to simplify hosting and prevent rate-limiting issues for public visitors. 
+| Variable | Required | Description |
+|---|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | ✅ Yes | Your Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | ✅ Yes | Supabase anonymous (public) key |
+| `SUPABASE_SERVICE_ROLE_KEY` | ✅ Yes (admin) | Service role key — server-side only, never `NEXT_PUBLIC_`! |
+| `GITHUB_TOKEN` | Optional | GitHub personal access token — increases rate limit from 60 to 5,000 req/hr |
 
-- **GitHub API**: The application fetches public data directly from the GitHub REST API without requiring a Personal Access Token.
-- **Hardcoded Settings**: Variables like the default theme or GitHub username (`Wajahat-Ali-Git`) are defined in the component logic or constants layer.
+Get your Supabase credentials from:  
+`https://supabase.com/dashboard/project/_/settings/api`
+
+---
+
+## Admin Dashboard
+
+The admin dashboard (`/admin`) provides a full content management interface:
+
+- **Login**: Session-based authentication with your Supabase admin credentials.
+- **Sections managed**: Projects, Experiences, Skills, Tools, Certifications, Spoken Languages, Personal Info, Site Settings.
+- **Actions per item**: Edit, toggle visibility, reorder (drag or arrow buttons), delete.
+- **Resume Management**: Upload a PDF via drag-and-drop or file picker → stored in Supabase Storage → available as a download button on the public portfolio.
+
+All mutations go through **Next.js Server Actions** (`lib/admin/actions.ts`) using the service role key, ensuring they never expose admin credentials to the browser.
+
+---
+
+## API Routes
+
+| Route | Method | Description |
+|---|---|---|
+| `/api/admin/[resource]` | GET, POST, PUT, DELETE | Generic CRUD for all content types |
+| `/api/admin/resume` | POST, DELETE | Upload / delete resume PDF in Supabase Storage |
+| `/api/github` | GET | Proxies GitHub REST API to avoid CORS + add auth |
 
 ---
 
 ## API Integrations (GitHub)
 
-The portfolio includes a `GitHubRepos` component (`src/app/components/GitHubRepos.tsx`) that integrates with the GitHub REST API to fetch recent repository activity.
+The portfolio includes two GitHub integration components:
 
-### Integration Details
-- **Endpoints**: 
-  - `https://api.github.com/users/{username}/repos` - Fetches all public repositories
-  - `https://api.github.com/repos/{username}/{repo}/commits` - Fetches last commit for each repo
-- **Authentication**: No authentication required (fetches public data).
-- **Sorting**: Repositories are sorted by actual last commit time, showing the 6 most recently active projects.
+### `GitHubRepos` (`src/app/components/GitHubRepos.tsx`)
+Fetches the 6 most recently committed-to public repositories.
 
-### Features
-1. **Dual View Modes**: Users can toggle between:
-   - **Card View**: 3-column grid layout with full repo details, commit cards, and metadata
-   - **List View**: Compact horizontal layout for quick scanning
-2. **Commit Information**: Displays commit SHA, message, and relative time ("2 hours ago", "3 days ago", etc.)
-3. **Language Colors**: Programming languages shown with GitHub's official color scheme
-4. **Stats Display**: Shows star counts and fork counts when available
-5. **Responsive Design**: Adapts from 1 column (mobile) to 3 columns (desktop)
+- **Endpoints used:**
+  - `GET /users/{username}/repos` — fetches all public repos
+  - `GET /repos/{username}/{repo}/commits` — gets last commit per repo
+- **Dual view modes:** Card grid ↔ compact list (toggle in top-right)
+- **Loading/error/empty states** handled gracefully
 
-### UI States
-- **Loading State**: Displays 6 skeleton cards with pulse animation
-- **Error State**: Shows error message with details if API fails
-- **Success State**: Renders repositories in selected view mode with smooth animations
-- **Empty State**: Automatically filtered to only show non-forked, active repositories
+### `GitHubActivity` (`src/app/components/GitHubActivity.tsx`)
+Fetches recent public GitHub events (pushes, PRs, issues, releases).
 
-### View Toggle
-- Located in top-right corner of the section
-- Glass morphism design with rounded pill shape
-- Icons: Grid icon for card view, List icon for list view
-- Active state highlighted with purple accent
-- Smooth transition animations when switching modes
+- **Endpoint:** `GET /users/{username}/events/public`
+- Displays event type with icon, repo name, and relative time
+
+Both components use `GITHUB_TOKEN` (if set) to raise the API rate limit.
 
 ---
 
 ## Adding/Modifying Content
 
-All portfolio content is centralized in the `src/constants/contants.ts` file. You do not need to modify React components to update your resume.
+### Via the Admin Dashboard (Recommended)
+The easiest way to manage content. Navigate to `/admin`, log in, and use the UI to add, edit, reorder, or hide items.
 
-### Updating Projects
-To add a new project, append an object to the `PROJECTS` array:
+### Via `src/constants/` (Static/Translation Data)
+For **translations** and **static data** not stored in Supabase, edit `src/constants/contants.ts`:
+
 ```typescript
-{
-  title: "My New Project",
-  descKey: "new_project_desc", // Define this key in the TRANSLATIONS object
-  tech: ["React", "TypeScript", "Tailwind"],
-  link: "https://github.com/your-username/repo",
-  featured: true,
-  color: "teal",
-}
+// Add a new language translation key
+TRANSLATIONS.en.my_new_key = "English text";
+TRANSLATIONS.ur.my_new_key = "اردو متن";
 ```
-
-### Updating Experience & Skills
-- **Experience**: Add new roles to the `WORK_HISTORY` array. Make sure to define the respective string keys in the `TRANSLATIONS` dictionaries.
-- **Skills**: Add or adjust items in the `SKILLS`, `TOOLS`, and `LANGUAGES` arrays.
-- **Certifications**: Add items to the `CERTIFICATIONS` array.
 
 ---
 
 ## Development Guidelines
 
-- **Component Structure**: Keep components modular. Use `src/app/components/` for reusable pieces of the UI (buttons, cards, layout wrappers).
-- **Styling**: Use Tailwind CSS for all styling. Avoid custom CSS files unless strictly necessary (e.g., base global variables in `globals.css`).
-- **Animations**: Use `framer-motion` for complex animations. For standard hover/focus states, prefer Tailwind utility classes (`transition-all duration-300`).
-- **Type Safety**: The project uses TypeScript. Ensure interfaces and types are defined for any new props, API responses, or constant data.
+- **Components**: Keep components modular. Use `src/app/components/` for public reusable pieces; `src/app/admin/components/` for admin-only UI.
+- **Styling**: Use Tailwind CSS v4 for all styling. Avoid custom CSS unless strictly needed (e.g. base variables in `globals.css`).
+- **Animations**: Use `framer-motion` for complex animations. For standard hover/focus states, prefer Tailwind utilities (`transition-all duration-300`).
+- **Type Safety**: Always define TypeScript interfaces for new props, API responses, or data structures.
+- **Server vs Client**: Admin mutations use Server Actions (`'use server'`). Public data fetching uses the Supabase anon client on the server or in `useEffect`.
+
+See [AGENTS.md](./AGENTS.md) for full coding standards and patterns.
 
 ---
 
 ## Testing & Build
 
 ### Linting
-The project uses ESLint to enforce code quality.
 ```bash
 npm run lint
 ```
 
-### Testing Setup
-Currently, there is no automated testing suite (e.g., Jest or Cypress) configured. 
-- *Future Enhancement*: Consider adding Vitest and React Testing Library for component unit testing.
+### Manual Testing Checklist
+
+**Frontend:**
+- Visit all pages: `/`, `/contact`, `/experience`, `/admin`
+- Test contact form with valid and invalid data
+- Test admin CRUD operations (add, edit, delete, reorder, toggle visibility)
+- Test resume upload, download CTA, and delete
+- Verify responsive layouts at 320px, 768px, and 1280px viewport widths
+- Test multi-language toggle
+- Check accessibility (keyboard navigation, screen reader labels)
+
+**Backend connectivity:**
+```bash
+# From Backend/ directory:
+npm run verify-tables    # Verify all DB tables exist
+npm run test-db          # Test Supabase connection
+```
 
 ### Build for Production
-To build the application for production:
 ```bash
-npm run build
-```
-This command compiles the Next.js application into the `.next` folder.
-
-To start the production build locally:
-```bash
-npm run start
+npm run build    # Compiles into .next/
+npm run start    # Starts the production server
 ```
 
 ---
 
 ## Deployment
 
-The application is optimized for deployment on Vercel, the creators of Next.js.
+The application is optimized for deployment on **Vercel**.
 
 ### Deploying to Vercel
 1. Push your code to a GitHub repository.
-2. Log in to [Vercel](https://vercel.com).
-3. Click **Add New** > **Project** and import your repository.
-4. Vercel will automatically detect that it is a Next.js project and configure the build settings (`npm run build`).
-5. Click **Deploy**.
+2. Log in to [Vercel](https://vercel.com) and import the repository.
+3. Set the **root directory** to `portfolio/`.
+4. Add your environment variables in the Vercel project settings.
+5. Click **Deploy** — Vercel auto-detects Next.js and configures the build.
 
-### CI/CD Workflows
-Currently, Vercel provides automatic CI/CD on every push to the `main` branch. No custom GitHub Actions are required unless you plan to host elsewhere (e.g., AWS, DigitalOcean) or run automated testing pipelines in the future.
+### CI/CD
+Vercel provides automatic CI/CD on every push to `main`. No custom GitHub Actions are required for basic hosting.
 
 ---
 
 ## Troubleshooting
 
-- **GitHub Repositories not loading**: If the repos section fails to load, you may have hit the unauthenticated GitHub API rate limit (60 requests per hour per IP). The component fetches repos + commits for each, which can consume the rate limit quickly. Wait an hour or authenticate with a GitHub token if needed.
-- **View toggle not working**: Ensure JavaScript is enabled in your browser. The view toggle requires client-side state management.
-- **Styles not applying**: Ensure the class names are correctly spelled. If you added a new file outside of the `src` directory that contains Tailwind classes, make sure to add that path to your Tailwind configuration `content` array.
-- **Hydration Errors**: Next.js hydration mismatches usually occur if browser extensions inject elements into the DOM, or if you use `window` objects without a `useEffect` or `typeof window !== 'undefined'` check.
+- **GitHub Repos not loading**: You may have hit the unauthenticated GitHub API rate limit (60 req/hr). Add a `GITHUB_TOKEN` to `.env.local` to raise it to 5,000 req/hr, or wait an hour.
+- **Admin panel shows 401/403**: Verify `SUPABASE_SERVICE_ROLE_KEY` is set in `.env.local` (not `NEXT_PUBLIC_`). It is a server-side-only secret.
+- **Contact form fails**: Check `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` are correct and the `contact_messages` table exists with proper RLS.
+- **Styles not applying**: Ensure Tailwind class names are correctly spelled. If you added files outside `src/`, add them to the Tailwind `content` array in the config.
+- **Hydration Errors**: Usually caused by browser extensions or `window` object usage without `typeof window !== 'undefined'` guard or `useEffect`.
+- **Resume upload fails**: Verify `SUPABASE_SERVICE_ROLE_KEY` is set and the `resume_files` bucket exists in Supabase Storage.
 
 ---
 
@@ -224,8 +294,8 @@ Currently, Vercel provides automatic CI/CD on every push to the `main` branch. N
 
 1. Fork the repository.
 2. Create your feature branch: `git checkout -b feature/my-new-feature`
-3. Commit your changes: `git commit -m 'Add some feature'`
-4. Push to the branch: `git push origin feature/my-new-feature`
-5. Submit a pull request.
+3. Follow the coding standards in [AGENTS.md](./AGENTS.md).
+4. Commit your changes using Conventional Commits: `git commit -m 'feat(scope): description'`
+5. Push to your branch and open a pull request.
 
-When contributing, please ensure you update the `constants.ts` translation dictionaries if you are adding new text elements, ensuring the multi-language support remains intact.
+When contributing new text content, ensure you update all translation dictionaries in `src/constants/` to maintain multi-language support.

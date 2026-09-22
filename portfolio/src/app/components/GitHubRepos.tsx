@@ -90,7 +90,6 @@ export default function GitHubRepos({
 
       setRepos(json.data as Repo[]);
     } catch (err) {
-      console.error("GitHub repos fetch error:", err);
       setError(err instanceof Error ? err.message : "Failed to load repositories");
       setRepos([]);
     } finally {
@@ -219,9 +218,9 @@ export default function GitHubRepos({
   }
 
   return (
-    <section id="github" className="container mx-auto px-6 py-20">
+    <section id="github" className="container mx-auto px-4 sm:px-6 py-12 sm:py-20">
       {/* Header with View Toggle */}
-      <div className="flex items-end justify-between mb-14 gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 sm:mb-14 gap-4">
         <div className="flex-1">
           <SectionHeading 
             icon={FaGithub} 
