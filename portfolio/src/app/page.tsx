@@ -225,14 +225,14 @@ function MobileBottomNav({ t, isRTL, sectionVisibility }: { t: typeof TRANSLATIO
       transition={{ delay: 0.5, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
       aria-label="Mobile navigation"
       style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
-      className="md:hidden fixed bottom-3 left-1/2 -translate-x-1/2 z-50"
+      className="md:hidden fixed bottom-2.5 left-1/2 -translate-x-1/2 z-50 max-w-full px-2"
     >
-      {/* Nav pill container — full-width minus 1rem gutter on each side, capped at 400px */}
+      {/* Nav pill container — full-width minus gutter on each side, capped at 420px */}
       <div
         className="relative flex items-center justify-around glass rounded-2xl shadow-2xl border border-white/10 backdrop-blur-xl"
         style={{
-          width: "min(calc(100vw - 2rem), 400px)",
-          padding: "6px 4px",
+          width: "min(calc(100vw - 1rem), 420px)",
+          padding: "5px 3px",
         }}
       >
         {visibleNavLinks.map((link) => {
@@ -251,7 +251,7 @@ function MobileBottomNav({ t, isRTL, sectionVisibility }: { t: typeof TRANSLATIO
               style={{
                 flex: isActive ? "0 0 auto" : "1 1 0",
                 minWidth: 0,
-                padding: "7px 6px 5px",
+                padding: "6px 4px 4px",
               }}
             >
               {/* Sliding active background */}
@@ -290,7 +290,7 @@ function MobileBottomNav({ t, isRTL, sectionVisibility }: { t: typeof TRANSLATIO
                 animate={isActive ? { opacity: 1, color: "rgb(129,140,248)" } : { opacity: 0.45, color: "var(--muted-foreground)" }}
                 transition={{ duration: 0.2 }}
                 className="block mt-[3px] font-semibold leading-none"
-                style={{ fontSize: "clamp(8px, 2.5vw, 11px)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "100%" }}
+                style={{ fontSize: "clamp(8px, 2.4vw, 11px)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "100%" }}
               >
                 {label}
               </motion.span>
@@ -450,12 +450,12 @@ export default function Home() {
         className="fixed top-0 left-0 w-full z-50"
         style={{ borderBottom: "1px solid transparent" }}
       >
-        <div className="container mx-auto px-6 h-16 flex items-center justify-between relative">
-          <a href="#home" className="group flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm">
+        <div className="container mx-auto px-4 sm:px-6 h-16 flex items-center justify-between relative">
+          <a href="#home" className="group flex items-center gap-2 min-w-0">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm shrink-0">
               W
             </div>
-            <span className="text-lg font-bold tracking-tight text-gradient">Wajahat</span>
+            <span className="text-base sm:text-lg font-bold tracking-tight text-gradient truncate">Wajahat</span>
           </a>
           <nav className="hidden md:flex md:items-center md:justify-center md:gap-2 lg:absolute lg:left-1/2 lg:transform lg:-translate-x-1/2 items-center justify-center gap-2 bg-white/5 border border-white/10 rounded-full px-4 py-2 glass shadow-lg">
             {NAV_LINKS.filter((link) => {
@@ -474,7 +474,7 @@ export default function Home() {
               </a>
             ))}
           </nav>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <LanguageDropdown
               selectedLang={selectedLang}
               onChange={(lang) => setSelectedLang(lang)}
@@ -484,7 +484,7 @@ export default function Home() {
               <button
                 onClick={() => setIsDark(!isDark)}
                 aria-label={t.ui.themeToggle}
-                className="p-2 rounded-full glass hover:bg-white/20 dark:hover:bg-white/10 transition-all duration-300"
+                className="p-2 rounded-full glass hover:bg-white/20 dark:hover:bg-white/10 transition-all duration-300 shrink-0"
               >
                 {isDark ? (
                   <svg className="w-5 h-5 text-yellow-300" fill="currentColor" viewBox="0 0 20 20">
@@ -525,26 +525,26 @@ export default function Home() {
         {/* ═══════════════════════════════════════════
             HERO SECTION
         ═══════════════════════════════════════════ */}
-        <section id="home" ref={heroRef} className="min-h-screen flex items-center">
+        <section id="home" ref={heroRef} className="min-h-[85vh] sm:min-h-screen flex items-center">
           <motion.div
             style={{ opacity: heroOpacity, scale: heroScale, y: heroY }}
-            className="container mx-auto px-6 py-20"
+            className="container mx-auto px-4 sm:px-6 py-12 sm:py-20"
           >
-            <div className="flex flex-col-reverse lg:flex-row items-center justify-between gap-16">
+            <div className="flex flex-col-reverse lg:flex-row items-center justify-between gap-10 sm:gap-16">
 
               {/* Left: Text Content */}
               <motion.div
                 variants={containerVariants}
                 initial="hidden"
                 animate="visible"
-                className="flex-1 flex flex-col gap-8 text-center lg:text-left"
+                className="flex-1 flex flex-col gap-6 sm:gap-8 text-center lg:text-left w-full"
               >
-                <motion.div variants={itemVariants} className={`space-y-5 ${isRTL ? "text-right lg:text-right" : "text-center lg:text-left"}`}>
-                  <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass text-sm text-[var(--muted-foreground)] w-fit mx-auto lg:mx-0">
+                <motion.div variants={itemVariants} className={`space-y-4 sm:space-y-5 ${isRTL ? "text-right lg:text-right" : "text-center lg:text-left"}`}>
+                  <div className="inline-flex items-center gap-2 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full glass text-xs sm:text-sm text-[var(--muted-foreground)] w-fit mx-auto lg:mx-0">
                     <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                     {heroStatus}
                   </div>
-                  <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold tracking-tight leading-[0.95]">
+                  <h1 className="text-3xl xs:text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-bold tracking-tight leading-[1.05] sm:leading-[0.95]">
                     <span className="text-gradient">{heroTitle1}</span>
                     {heroTitle2 ? (
                       <>
@@ -553,20 +553,20 @@ export default function Home() {
                       </>
                     ) : null}
                   </h1>
-                  <p className="text-xl md:text-2xl text-[var(--muted-foreground)] font-medium flex items-center gap-3 justify-center lg:justify-start">
-                    <Terminal className="w-5 h-5 text-indigo-400" />
-                    {heroRole}
+                  <p className="text-lg sm:text-xl md:text-2xl text-[var(--muted-foreground)] font-medium flex items-center gap-2.5 sm:gap-3 justify-center lg:justify-start">
+                    <Terminal className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-400 shrink-0" />
+                    <span>{heroRole}</span>
                   </p>
                 </motion.div>
 
-                <motion.p variants={itemVariants} className="text-lg text-[var(--muted-foreground)] max-w-xl mx-auto lg:mx-0 leading-relaxed">
+                <motion.p variants={itemVariants} className="text-sm sm:text-base md:text-lg text-[var(--muted-foreground)] max-w-xl mx-auto lg:mx-0 leading-relaxed">
                   {heroBio}
                 </motion.p>
 
-                <motion.div variants={itemVariants} className="flex flex-col sm:flex-row items-center gap-4 justify-center lg:justify-start pt-2">
+                <motion.div variants={itemVariants} className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 justify-center lg:justify-start pt-2 w-full">
                   <a
                     href="#projects"
-                    className="group px-8 py-4 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold hover:shadow-[0_0_40px_rgba(99,102,241,0.3)] transition-all duration-300 flex items-center gap-2"
+                    className="w-full sm:w-auto justify-center px-6 sm:px-8 py-3.5 sm:py-4 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold hover:shadow-[0_0_40px_rgba(99,102,241,0.3)] transition-all duration-300 flex items-center gap-2 text-sm sm:text-base"
                   >
                     {t.hero.cta}
                     <ArrowUpRight className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
@@ -577,13 +577,13 @@ export default function Home() {
                       target="_blank"
                       rel="noopener noreferrer"
                       download="Resume.pdf"
-                      className="group px-6 py-4 rounded-full glass hover:bg-white/10 text-foreground font-semibold border border-white/10 hover:border-indigo-500/40 hover:shadow-[0_0_25px_rgba(99,102,241,0.2)] transition-all duration-300 flex items-center gap-2"
+                      className="w-full sm:w-auto justify-center px-6 sm:px-8 py-3.5 sm:py-4 rounded-full glass hover:bg-white/10 text-foreground font-semibold border border-white/10 hover:border-indigo-500/40 hover:shadow-[0_0_25px_rgba(99,102,241,0.2)] transition-all duration-300 flex items-center gap-2 text-sm sm:text-base"
                     >
                       <FileDown className="w-4 h-4 text-indigo-400 group-hover:scale-110 transition-transform" />
                       <span>Download CV</span>
                     </a>
                   )}
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 pt-2 sm:pt-0">
                     {[
                       { href: githubUrl, icon: FaGithub, label: "GitHub" },
                       { href: linkedinUrl, icon: FaLinkedin, label: "LinkedIn" },
@@ -613,14 +613,14 @@ export default function Home() {
               >
                 <div className="relative">
                   {/* Orbiting ring */}
-                  <div className="absolute inset-[-30px] animate-spin-slow pointer-events-none">
-                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-blue-400/60 shadow-[0_0_15px_rgba(96,165,250,0.6)]" />
+                  <div className="absolute inset-[-18px] sm:inset-[-30px] animate-spin-slow pointer-events-none">
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-blue-400/60 shadow-[0_0_15px_rgba(96,165,250,0.6)]" />
                     <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-purple-400/60 shadow-[0_0_15px_rgba(192,132,252,0.6)]" />
                   </div>
 
-                  <div className="relative w-64 h-64 md:w-80 md:h-80 lg:w-[360px] lg:h-[360px]">
+                  <div className="relative w-48 h-48 xs:w-64 xs:h-64 md:w-80 md:h-80 lg:w-[360px] lg:h-[360px]">
                     {/* Glow */}
-                    <div className="absolute inset-[-20px] rounded-full bg-gradient-to-tr from-blue-500/30 via-indigo-500/20 to-purple-500/30 animate-glow-pulse blur-2xl" />
+                    <div className="absolute inset-[-15px] sm:inset-[-20px] rounded-full bg-gradient-to-tr from-blue-500/30 via-indigo-500/20 to-purple-500/30 animate-glow-pulse blur-xl sm:blur-2xl" />
 
                     {/* Decorative ring */}
                     <div className="absolute inset-[-4px] rounded-full border border-dashed border-white/10 animate-spin-slow" />
@@ -683,7 +683,7 @@ export default function Home() {
             : portfolioData.projects.filter((p) => p.tech.includes(projectFilter));
 
           return (
-            <section id="projects" className="container mx-auto px-6 py-20">
+            <section id="projects" className="container mx-auto px-4 sm:px-6 py-12 sm:py-20">
               <SectionHeading icon={Code2} title={t.projects.title} color="purple" isRTL={isRTL} />
 
               {/* ── Filter Bar ── */}
@@ -692,7 +692,7 @@ export default function Home() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-60px" }}
                 transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-                className="flex flex-wrap gap-2.5 mb-10"
+                className="flex flex-wrap gap-2 sm:gap-2.5 mb-8 sm:mb-10 overflow-x-auto pb-1.5 scrollbar-none -mx-1 px-1"
                 role="toolbar"
                 aria-label="Filter projects by technology"
               >
@@ -704,7 +704,7 @@ export default function Home() {
                       onClick={() => setProjectFilter(tag)}
                       whileTap={{ scale: 0.93 }}
                       aria-pressed={isActive}
-                      className={`relative px-4 py-1.5 rounded-full text-xs font-mono font-semibold transition-all duration-200 border focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500/60 ${
+                      className={`relative px-3.5 sm:px-4 py-1.5 rounded-full text-xs font-mono font-semibold transition-all duration-200 border focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500/60 whitespace-nowrap ${
                         isActive
                           ? "border-purple-500/60 text-purple-300 shadow-[0_0_14px_rgba(168,85,247,0.25)]"
                           : "border-white/10 text-[var(--muted-foreground)] hover:border-purple-500/40 hover:text-purple-300 bg-white/5 hover:bg-purple-500/10"
@@ -730,7 +730,7 @@ export default function Home() {
                 initial="hidden"
                 whileInView="visible"
                 viewport={{ once: true, margin: "-80px" }}
-                className="grid grid-cols-1 md:grid-cols-2 gap-6"
+                className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6"
               >
                 <AnimatePresence mode="popLayout">
                   {filteredProjects.length === 0 ? (
@@ -739,7 +739,7 @@ export default function Home() {
                       initial={{ opacity: 0, scale: 0.95 }}
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0, scale: 0.95 }}
-                      className="col-span-2 flex flex-col items-center justify-center py-20 gap-3 text-[var(--muted-foreground)]"
+                      className="col-span-1 md:col-span-2 flex flex-col items-center justify-center py-16 sm:py-20 gap-3 text-[var(--muted-foreground)] text-center"
                     >
                       <Code2 className="w-10 h-10 opacity-30" />
                       <p className="text-sm font-medium opacity-60">No projects match <span className="text-purple-400 font-mono">{projectFilter}</span></p>
@@ -764,28 +764,28 @@ export default function Home() {
                           exit={{ opacity: 0, scale: 0.94, y: -8 }}
                           whileHover={{ y: -6 }}
                           transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-                          className={`glass-card card-glow shimmer-effect p-8 flex flex-col h-full group cursor-pointer ${
+                          className={`glass-card card-glow shimmer-effect p-5 sm:p-8 flex flex-col h-full group cursor-pointer ${
                             project.featured && projectFilter === "All" ? "md:col-span-2 border-purple-500/30 bg-purple-500/10 dark:bg-purple-900/20" : ""
                           }`}
                         >
-                          <div className="flex justify-between items-start mb-5">
-                            <div className="flex items-center gap-3">
-                              <div className={`w-3 h-3 rounded-full ${dotColorStyles[project.color] || "bg-purple-400/80"}`} />
-                              <h3 className="text-xl font-bold tracking-tight text-[var(--foreground)] dark:text-white">{project.title}</h3>
+                          <div className="flex justify-between items-start mb-4 sm:mb-5 gap-3">
+                            <div className="flex items-center gap-2.5 sm:gap-3 flex-wrap min-w-0">
+                              <div className={`w-3 h-3 rounded-full shrink-0 ${dotColorStyles[project.color] || "bg-purple-400/80"}`} />
+                              <h3 className="text-lg sm:text-xl font-bold tracking-tight text-[var(--foreground)] dark:text-white truncate">{project.title}</h3>
                               {project.featured && (
-                                <span className="text-xs px-2.5 py-0.5 rounded-full bg-purple-500/20 text-purple-700 dark:text-purple-300 font-semibold border border-purple-500/30">
+                                <span className="text-[10px] sm:text-xs px-2.5 py-0.5 rounded-full bg-purple-500/20 text-purple-700 dark:text-purple-300 font-semibold border border-purple-500/30 shrink-0">
                                   {t.projects.fyp}
                                 </span>
                               )}
                             </div>
-                            <ExternalLink className="w-4 h-4 text-[var(--muted-foreground)] group-hover:text-[var(--foreground)] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
+                            <ExternalLink className="w-4 h-4 text-[var(--muted-foreground)] group-hover:text-[var(--foreground)] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all shrink-0 mt-1" />
                           </div>
 
-                          <p className="text-[var(--foreground)]/80 dark:text-gray-300 flex-grow mb-6 leading-relaxed">
+                          <p className="text-sm sm:text-base text-[var(--foreground)]/80 dark:text-gray-300 flex-grow mb-5 sm:mb-6 leading-relaxed">
                             {desc}
                           </p>
 
-                          <div className="flex flex-wrap gap-2 mt-auto">
+                          <div className="flex flex-wrap gap-1.5 sm:gap-2 mt-auto">
                             {project.tech.map((tech) => (
                               <span
                                 key={tech}
@@ -794,7 +794,7 @@ export default function Home() {
                                 tabIndex={0}
                                 onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setProjectFilter(tech); } }}
                                 aria-label={`Filter by ${tech}`}
-                                className={`px-3 py-1 text-xs font-mono font-medium rounded-full border transition-all duration-150 cursor-pointer ${
+                                className={`px-2.5 sm:px-3 py-0.5 sm:py-1 text-[11px] sm:text-xs font-mono font-medium rounded-full border transition-all duration-150 cursor-pointer ${
                                   projectFilter === tech
                                     ? "bg-purple-500/25 border-purple-400/60 text-purple-300"
                                     : "bg-white/10 dark:bg-white/10 border-black/10 dark:border-white/10 text-[var(--foreground)] dark:text-gray-200 hover:border-purple-400/40 hover:text-purple-300"
@@ -825,7 +825,7 @@ export default function Home() {
         {/* ═══════════════════════════════════════════
             EXPERIENCE SECTION
         ═══════════════════════════════════════════ */}
-        {portfolioData.sectionVisibility.experience && <section id="experience" className="container mx-auto px-6 py-20">
+        {portfolioData.sectionVisibility.experience && <section id="experience" className="container mx-auto px-4 sm:px-6 py-12 sm:py-20">
           <SectionHeading icon={Briefcase} title={t.experience.title} color="blue" isRTL={isRTL} />
 
           <motion.div
@@ -836,7 +836,7 @@ export default function Home() {
             className="relative"
           >
             {/* Timeline line */}
-            <div className="absolute left-8 top-0 bottom-0 w-px bg-gradient-to-b from-blue-500/50 via-blue-500/20 to-transparent hidden md:block" />
+            <div className="absolute left-4 sm:left-8 top-0 bottom-0 w-px bg-gradient-to-b from-blue-500/50 via-blue-500/20 to-transparent hidden md:block" />
 
             {portfolioData.experiences.map((work, idx) => {
               const roleText = work.role
@@ -856,26 +856,26 @@ export default function Home() {
                 <motion.div
                   key={work.id || idx}
                   variants={slideInLeft}
-                  className="relative md:pl-20 mb-8"
+                  className="relative md:pl-20 mb-6 sm:mb-8"
                 >
                   {/* Timeline dot */}
-                  <div className="absolute left-[26px] top-8 w-5 h-5 rounded-full border-2 border-blue-500 bg-[var(--background)] hidden md:flex items-center justify-center">
+                  <div className="absolute left-[10px] sm:left-[26px] top-8 w-5 h-5 rounded-full border-2 border-blue-500 bg-[var(--background)] hidden md:flex items-center justify-center">
                     <div className="w-2 h-2 rounded-full bg-blue-400" />
                   </div>
 
-                  <div className="glass-card card-glow p-8">
-                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-3">
+                  <div className="glass-card card-glow p-5 sm:p-8">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 sm:gap-4 mb-3">
                       <div>
-                        <h3 className="text-2xl font-bold">{roleText}</h3>
-                        <p className="text-[var(--muted-foreground)] text-lg">{companyText}</p>
+                        <h3 className="text-xl sm:text-2xl font-bold">{roleText}</h3>
+                        <p className="text-[var(--muted-foreground)] text-base sm:text-lg">{companyText}</p>
                       </div>
                       {durationText && (
-                        <span className="px-4 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-sm font-medium whitespace-nowrap">
+                        <span className="px-3.5 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs sm:text-sm font-medium whitespace-nowrap">
                           {durationText}
                         </span>
                       )}
                     </div>
-                    <p className="text-[var(--muted-foreground)] leading-relaxed">{descText}</p>
+                    <p className="text-sm sm:text-base text-[var(--muted-foreground)] leading-relaxed">{descText}</p>
                   </div>
                 </motion.div>
               );
@@ -888,12 +888,12 @@ export default function Home() {
         {/* ═══════════════════════════════════════════
             SKILLS & TOOLS SECTION
         ═══════════════════════════════════════════ */}
-        {portfolioData.sectionVisibility.skills && <section id="skills" className="container mx-auto px-6 py-20">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
+        {portfolioData.sectionVisibility.skills && <section id="skills" className="container mx-auto px-4 sm:px-6 py-12 sm:py-20">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 sm:gap-16">
             {/* Skills */}
             <div>
               <SectionHeading icon={Code} title={t.skills.title} color="green" isRTL={isRTL} />
-              <div className="space-y-5">
+              <div className="space-y-4 sm:space-y-5">
                 {portfolioData.skills.map((skill, idx) => (
                   <SkillBar key={skill.id || skill.name} name={skill.name} level={skill.level} delay={idx * 0.1} />
                 ))}
@@ -908,19 +908,19 @@ export default function Home() {
                 initial="hidden"
                 whileInView="visible"
                 viewport={{ once: true, margin: "-80px" }}
-                className="grid grid-cols-2 gap-3"
+                className="grid grid-cols-2 gap-2.5 sm:gap-3"
               >
                 {portfolioData.tools.map((tool) => (
                   <motion.div
                     key={tool}
                     variants={itemVariants}
                     whileHover={{ scale: 1.04, y: -2 }}
-                    className="glass p-4 rounded-xl flex items-center gap-3 cursor-default group hover:bg-white/8 transition-all"
+                    className="glass p-3.5 sm:p-4 rounded-xl flex items-center gap-3 cursor-default group hover:bg-white/8 transition-all min-w-0"
                   >
-                    <div className="w-8 h-8 rounded-lg bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-400 font-bold text-xs group-hover:bg-orange-500/20 transition-colors">
+                    <div className="w-8 h-8 rounded-lg bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-400 font-bold text-xs group-hover:bg-orange-500/20 transition-colors shrink-0">
                       {tool.charAt(0)}
                     </div>
-                    <span className="text-sm font-medium text-[var(--foreground)]">{tool}</span>
+                    <span className="text-xs sm:text-sm font-medium text-[var(--foreground)] truncate">{tool}</span>
                   </motion.div>
                 ))}
               </motion.div>
@@ -933,7 +933,7 @@ export default function Home() {
         {/* ═══════════════════════════════════════════
             CERTIFICATIONS SECTION
         ═══════════════════════════════════════════ */}
-        {portfolioData.sectionVisibility.certifications && <section id="certifications" className="container mx-auto px-6 py-20">
+        {portfolioData.sectionVisibility.certifications && <section id="certifications" className="container mx-auto px-4 sm:px-6 py-12 sm:py-20">
           <SectionHeading icon={Award} title={t.certifications.title} color="yellow" isRTL={isRTL} />
 
           <motion.div
@@ -941,7 +941,7 @@ export default function Home() {
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, margin: "-80px" }}
-            className="grid grid-cols-1 md:grid-cols-2 gap-5"
+            className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5"
           >
             {portfolioData.certifications.map((cert, idx) => {
               const translatedTitle = cert.titleKey
@@ -957,16 +957,16 @@ export default function Home() {
                   key={cert.id || idx}
                   variants={itemVariants}
                   whileHover={{ scale: 1.02 }}
-                  className="glass-card card-glow p-6 flex items-start gap-4"
+                  className="glass-card card-glow p-5 sm:p-6 flex items-start gap-3.5 sm:gap-4"
                 >
                   <div className="p-2 rounded-lg bg-yellow-500/10 border border-yellow-500/20 flex-shrink-0 mt-0.5">
                     <Award className="w-5 h-5 text-yellow-400" />
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-[var(--foreground)] mb-1">{titleText}</h3>
-                    <p className="text-sm text-[var(--muted-foreground)]">
-                      {t.certifications.by} {cert.provider}
-                      <span className="ml-2 px-2 py-0.5 rounded-full bg-white/5 text-xs">{typeText}</span>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-semibold text-sm sm:text-base text-[var(--foreground)] mb-1 leading-snug">{titleText}</h3>
+                    <p className="text-xs sm:text-sm text-[var(--muted-foreground)] flex items-center gap-1.5 flex-wrap">
+                      <span>{t.certifications.by} {cert.provider}</span>
+                      <span className="px-2 py-0.5 rounded-full bg-white/5 text-[10px] sm:text-xs">{typeText}</span>
                     </p>
                   </div>
                 </motion.div>
@@ -980,7 +980,7 @@ export default function Home() {
         {/* ═══════════════════════════════════════════
             LANGUAGES SECTION
         ═══════════════════════════════════════════ */}
-        {portfolioData.sectionVisibility.languages && <section id="languages" className="container mx-auto px-6 py-20">
+        {portfolioData.sectionVisibility.languages && <section id="languages" className="container mx-auto px-4 sm:px-6 py-12 sm:py-20">
           <SectionHeading icon={Globe2} title={t.languages.title} color="teal" isRTL={isRTL} />
 
           <motion.div
@@ -988,20 +988,20 @@ export default function Home() {
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, margin: "-80px" }}
-            className="grid grid-cols-1 md:grid-cols-3 gap-6"
+            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6"
           >
             {portfolioData.languages.map((lang, idx) => (
               <motion.div
                 key={lang.id || lang.code || idx}
                 variants={scaleUp}
                 whileHover={{ scale: 1.05, y: -4 }}
-                className="glass-card card-glow p-8 text-center"
+                className="glass-card card-glow p-6 sm:p-8 text-center"
               >
-                <span className="text-4xl mb-4 block">{lang.flag || '🌐'}</span>
-                <h3 className="text-xl font-bold mb-1">
+                <span className="text-3xl sm:text-4xl mb-3 sm:mb-4 block">{lang.flag || '🌐'}</span>
+                <h3 className="text-lg sm:text-xl font-bold mb-1">
                   {lang.name || (t.languages as Record<string, string>)[lang.code]}
                 </h3>
-                <p className="text-sm text-[var(--muted-foreground)] capitalize">
+                <p className="text-xs sm:text-sm text-[var(--muted-foreground)] capitalize">
                   {(t.languages as Record<string, string>)[lang.proficiency] || lang.proficiency}
                 </p>
               </motion.div>
@@ -1011,10 +1011,10 @@ export default function Home() {
 
 
         {/* ─── Footer ─── */}
-        <footer className="container mx-auto px-6 py-12 mt-10">
-          <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent mb-8" />
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <p className="text-sm text-[var(--muted-foreground)]">
+        <footer className="container mx-auto px-4 sm:px-6 py-8 sm:py-12 mt-8 sm:mt-10">
+          <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent mb-6 sm:mb-8" />
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
+            <p className="text-xs sm:text-sm text-[var(--muted-foreground)]">
               © {new Date().getFullYear()} Wajahat Ali. {t.footer.crafted}
             </p>
             <div className="flex items-center gap-4">
@@ -1028,7 +1028,7 @@ export default function Home() {
                   href={s.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors"
+                  className="text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors p-1"
                 >
                   <s.icon className="w-4 h-4" />
                 </a>
