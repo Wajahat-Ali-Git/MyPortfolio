@@ -613,27 +613,36 @@ function AdminDashboardContent() {
 
       {/* Top Navbar */}
       <header className="bg-[#121226]/90 backdrop-blur-md border-b border-white/10 sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-tr from-cyan-500/20 to-purple-500/20 rounded-xl border border-cyan-500/30 flex items-center justify-center">
-              <ShieldCheck className="w-5 h-5 text-cyan-400" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-lg font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
-                  Portfolio Admin Dashboard
-                </h1>
-                <span className="px-2 py-0.5 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-[10px] font-mono uppercase tracking-wider">
-                  Authenticated
-                </span>
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4">
+          <div className="flex items-center justify-between sm:justify-start gap-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-9 h-9 sm:w-10 sm:h-10 bg-gradient-to-tr from-cyan-500/20 to-purple-500/20 rounded-xl border border-cyan-500/30 flex items-center justify-center shrink-0">
+                <ShieldCheck className="w-5 h-5 text-cyan-400" />
               </div>
-              <p className="text-xs text-gray-400 font-mono">
-                Supabase Auth Session Active
-              </p>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h1 className="text-base sm:text-lg font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent truncate">
+                    Portfolio Admin
+                  </h1>
+                  <span className="px-2 py-0.5 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-[10px] font-mono uppercase tracking-wider shrink-0">
+                    Active
+                  </span>
+                </div>
+                <p className="text-[11px] sm:text-xs text-gray-400 font-mono truncate">
+                  Supabase Auth Active
+                </p>
+              </div>
             </div>
+
+            <Link
+              href="/"
+              className="text-xs text-gray-400 hover:text-white transition-colors duration-200 flex sm:hidden items-center gap-1 shrink-0 bg-white/5 px-2.5 py-1.5 rounded-lg border border-white/10"
+            >
+              <Globe className="w-3.5 h-3.5" /> Site
+            </Link>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-4 pt-1 sm:pt-0 border-t sm:border-t-0 border-white/5">
             <Link
               href="/"
               className="text-xs text-gray-400 hover:text-white transition-colors duration-200 hidden sm:flex items-center gap-1"
@@ -641,33 +650,33 @@ function AdminDashboardContent() {
               <Globe className="w-3.5 h-3.5" /> View Public Site
             </Link>
 
-            <div className="flex items-center gap-2 bg-[#0a0a16]/80 px-3 py-1.5 rounded-xl border border-white/10 text-xs">
-              <UserIcon className="w-3.5 h-3.5 text-cyan-400" />
-              <span className="text-gray-300 font-mono max-w-[150px] truncate">
+            <div className="flex items-center gap-2 bg-[#0a0a16]/80 px-2.5 sm:px-3 py-1.5 rounded-xl border border-white/10 text-xs min-w-0 flex-1 sm:flex-initial">
+              <UserIcon className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+              <span className="text-gray-300 font-mono text-[11px] sm:text-xs max-w-[140px] sm:max-w-[180px] truncate">
                 {user?.email}
               </span>
             </div>
 
             <button
               onClick={() => logout()}
-              className="px-3 py-1.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 hover:bg-red-500/20 text-xs font-medium transition-all duration-200 flex items-center gap-1.5"
+              className="px-3 py-1.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 hover:bg-red-500/20 text-xs font-medium transition-all duration-200 flex items-center gap-1.5 shrink-0"
             >
               <LogOut className="w-3.5 h-3.5" />
-              <span>Sign Out</span>
+              <span className="hidden xs:inline">Sign Out</span>
             </button>
           </div>
         </div>
       </header>
 
       {/* Main Content Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col gap-6">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8 flex flex-col gap-5 sm:gap-6">
         {/* Navigation Tabs */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none border-b border-white/10">
+        <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-2 scrollbar-none border-b border-white/10 -mx-1 px-1">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-medium transition-all duration-200 whitespace-nowrap ${
+              className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs font-medium transition-all duration-200 whitespace-nowrap ${
                 activeTab === tab.id
                   ? 'bg-gradient-to-r from-cyan-500/20 to-purple-500/20 text-cyan-300 border border-cyan-500/40 shadow-lg shadow-cyan-500/10'
                   : 'text-gray-400 hover:text-white hover:bg-white/5 border border-transparent'
@@ -687,8 +696,8 @@ function AdminDashboardContent() {
         ) : (
           <>
             {/* Action Header */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
-              <div className="relative flex-1 max-w-md">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4">
+              <div className="relative flex-1 w-full max-w-md">
                 <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <input
                   type="text"
@@ -699,23 +708,23 @@ function AdminDashboardContent() {
                 />
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto justify-between sm:justify-end">
                 <button
                   onClick={() => loadResourceData(activeTab)}
                   disabled={isFetching}
-                  className="p-2 rounded-xl bg-[#121226]/80 border border-white/10 text-gray-300 hover:text-white hover:border-white/20 transition-all text-xs flex items-center gap-1.5"
+                  className="p-2 sm:px-3 rounded-xl bg-[#121226]/80 border border-white/10 text-gray-300 hover:text-white hover:border-white/20 transition-all text-xs flex items-center justify-center gap-1.5"
                   title="Refresh Data"
                 >
                   <RefreshCw className={`w-4 h-4 ${isFetching ? 'animate-spin text-cyan-400' : ''}`} />
-                  <span className="hidden sm:inline">Refresh</span>
+                  <span className="inline sm:inline">Refresh</span>
                 </button>
 
                 {activeTab !== 'contact_messages' && (
                   <button
                     onClick={activeTab === 'personal_info' && items.length > 0 ? () => handleOpenEditModal(items[0]) : handleOpenAddModal}
-                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-purple-600 text-white text-xs font-semibold hover:from-cyan-400 hover:to-purple-500 transition-all shadow-lg shadow-cyan-500/20"
+                    className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-purple-600 text-white text-xs font-semibold hover:from-cyan-400 hover:to-purple-500 transition-all shadow-lg shadow-cyan-500/20"
                   >
-                    <Plus className="w-4 h-4" />
+                    <Plus className="w-4 h-4 shrink-0" />
                     <span>{activeTab === 'personal_info' && items.length > 0 ? 'Edit Personal Info' : `Add ${activeTab.replace('_', ' ').replace(/s$/, '')}`}</span>
                   </button>
                 )}
@@ -724,17 +733,17 @@ function AdminDashboardContent() {
 
             {/* Special Layout for Personal Info Tab */}
             {activeTab === 'personal_info' && personalRecord && !fetchError && !isFetching && (
-              <div className="bg-[#121226]/70 backdrop-blur-md rounded-2xl border border-white/10 p-6 shadow-2xl flex flex-col gap-6">
-                <div className="flex items-start justify-between">
+              <div className="bg-[#121226]/70 backdrop-blur-md rounded-2xl border border-white/10 p-4 sm:p-6 shadow-2xl flex flex-col gap-6">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                   <div className="flex items-center gap-4">
-                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-cyan-500/20 to-purple-500/20 border border-cyan-500/40 flex items-center justify-center text-cyan-400 text-2xl font-bold">
+                    <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-tr from-cyan-500/20 to-purple-500/20 border border-cyan-500/40 flex items-center justify-center text-cyan-400 text-xl sm:text-2xl font-bold shrink-0">
                       {personalRecord.full_name ? personalRecord.full_name[0] : 'U'}
                     </div>
                     <div>
-                      <h2 className="text-xl font-bold text-white">{personalRecord.full_name}</h2>
-                      <p className="text-sm text-cyan-400 font-medium">{personalRecord.role}</p>
+                      <h2 className="text-lg sm:text-xl font-bold text-white">{personalRecord.full_name}</h2>
+                      <p className="text-xs sm:text-sm text-cyan-400 font-medium">{personalRecord.role}</p>
                       {personalRecord.availability_status && (
-                        <span className="inline-block mt-2 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-[10px] font-mono">
+                        <span className="inline-block mt-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-[10px] font-mono">
                           ● {personalRecord.availability_status}
                         </span>
                       )}
@@ -743,7 +752,7 @@ function AdminDashboardContent() {
 
                   <button
                     onClick={() => handleOpenEditModal(personalRecord)}
-                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-semibold text-white transition-all"
+                    className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-semibold text-white transition-all"
                   >
                     <Edit className="w-3.5 h-3.5 text-cyan-400" />
                     <span>Edit Profile & Social Links</span>
@@ -757,9 +766,9 @@ function AdminDashboardContent() {
                   </div>
                 )}
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 border-t border-white/10 pt-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 border-t border-white/10 pt-4">
                   {personalRecord.email && (
-                    <div className="flex items-center gap-2.5 text-xs text-gray-300 bg-white/[0.02] p-3 rounded-xl border border-white/5">
+                    <div className="flex items-center gap-2.5 text-xs text-gray-300 bg-white/[0.02] p-3 rounded-xl border border-white/5 min-w-0">
                       <Mail className="w-4 h-4 text-cyan-400 shrink-0" />
                       <span className="truncate">{personalRecord.email}</span>
                     </div>
@@ -769,11 +778,11 @@ function AdminDashboardContent() {
                       href={personalRecord.github_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-2.5 text-xs text-gray-300 bg-white/[0.02] hover:bg-white/[0.05] p-3 rounded-xl border border-white/5 transition-colors"
+                      className="flex items-center gap-2.5 text-xs text-gray-300 bg-white/[0.02] hover:bg-white/[0.05] p-3 rounded-xl border border-white/5 transition-colors min-w-0"
                     >
                       <Link2 className="w-4 h-4 text-cyan-400 shrink-0" />
                       <span className="truncate">GitHub Profile</span>
-                      <ExternalLink className="w-3 h-3 ml-auto text-gray-500" />
+                      <ExternalLink className="w-3 h-3 ml-auto text-gray-500 shrink-0" />
                     </a>
                   )}
                   {personalRecord.linkedin_url && (
@@ -781,11 +790,11 @@ function AdminDashboardContent() {
                       href={personalRecord.linkedin_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-2.5 text-xs text-gray-300 bg-white/[0.02] hover:bg-white/[0.05] p-3 rounded-xl border border-white/5 transition-colors"
+                      className="flex items-center gap-2.5 text-xs text-gray-300 bg-white/[0.02] hover:bg-white/[0.05] p-3 rounded-xl border border-white/5 transition-colors min-w-0"
                     >
                       <Link2 className="w-4 h-4 text-cyan-400 shrink-0" />
                       <span className="truncate">LinkedIn Profile</span>
-                      <ExternalLink className="w-3 h-3 ml-auto text-gray-500" />
+                      <ExternalLink className="w-3 h-3 ml-auto text-gray-500 shrink-0" />
                     </a>
                   )}
                   {personalRecord.twitter_url && (
@@ -793,18 +802,18 @@ function AdminDashboardContent() {
                       href={personalRecord.twitter_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-2.5 text-xs text-gray-300 bg-white/[0.02] hover:bg-white/[0.05] p-3 rounded-xl border border-white/5 transition-colors"
+                      className="flex items-center gap-2.5 text-xs text-gray-300 bg-white/[0.02] hover:bg-white/[0.05] p-3 rounded-xl border border-white/5 transition-colors min-w-0"
                     >
                       <Link2 className="w-4 h-4 text-cyan-400 shrink-0" />
                       <span className="truncate">Twitter Profile</span>
-                      <ExternalLink className="w-3 h-3 ml-auto text-gray-500" />
+                      <ExternalLink className="w-3 h-3 ml-auto text-gray-500 shrink-0" />
                     </a>
                   )}
                 </div>
               </div>
             )}
 
-            {/* General Content Table */}
+            {/* General Content Table / Mobile Cards */}
             {fetchError ? (
               <div className="p-8 rounded-2xl bg-red-500/10 border border-red-500/30 text-center">
                 <AlertTriangle className="w-8 h-8 text-red-400 mx-auto mb-2" />
@@ -828,7 +837,154 @@ function AdminDashboardContent() {
               </div>
             ) : activeTab !== 'personal_info' && (
               <div className="bg-[#121226]/70 backdrop-blur-md rounded-2xl border border-white/10 overflow-hidden shadow-2xl">
-                <div className="overflow-x-auto">
+                {/* ── MOBILE CARDS VIEW (Visible below md screens) ── */}
+                <div className="block md:hidden divide-y divide-white/5">
+                  {filteredItems.map((item) => (
+                    <div key={item.id || item.slug || Math.random()} className="p-4 flex flex-col gap-3 hover:bg-white/[0.02] transition-colors">
+                      {/* Top Header Row: Name & Status */}
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            {item.flag_emoji && <span className="text-base">{item.flag_emoji}</span>}
+                            <h3 className="font-bold text-white text-sm truncate">
+                              {item.title || item.name || item.full_name || item.company_name || item.language_name || 'Untitled'}
+                            </h3>
+                          </div>
+                          {item.slug && <div className="text-[10px] text-cyan-400 font-mono mt-0.5">{item.slug}</div>}
+                          {item.company_slug && <div className="text-[10px] text-cyan-400 font-mono mt-0.5">{item.company_slug}</div>}
+                        </div>
+
+                        {/* Status/Visibility Pill */}
+                        <div className="shrink-0">
+                          {activeTab !== 'contact_messages' ? (
+                            <button
+                              onClick={() => handleToggleVisibility(item)}
+                              className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-medium transition-all ${
+                                item.is_visible ?? true
+                                  ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                                  : 'bg-red-500/15 text-red-400 border border-red-500/30'
+                              }`}
+                            >
+                              {item.is_visible ?? true ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
+                              <span>{item.is_visible ?? true ? 'Visible' : 'Hidden'}</span>
+                            </button>
+                          ) : (
+                            <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-medium border ${
+                              item.status === 'read'
+                                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+                                : 'bg-amber-500/10 border-amber-500/30 text-amber-400'
+                            }`}>
+                              {item.status === 'read' ? 'Read' : 'Unread'}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Description & Content Details */}
+                      <div className="text-xs text-gray-400">
+                        <div className={`transition-all ${expandedMessageId === item.id ? 'whitespace-pre-wrap' : 'line-clamp-2'}`}>
+                          {item.description || item.role || item.provider || item.category || item.email || item.message || '-'}
+                        </div>
+
+                        {/* Proficiency Bar */}
+                        {item.proficiency !== undefined && item.proficiency !== null && (
+                          <div className="flex items-center gap-2 mt-2">
+                            <div className="flex-1 h-1.5 rounded-full bg-white/10 overflow-hidden">
+                              <div className="h-full bg-cyan-400 rounded-full" style={{ width: `${item.proficiency}%` }} />
+                            </div>
+                            <span className="text-[10px] font-mono text-gray-400">{item.proficiency}%</span>
+                          </div>
+                        )}
+
+                        {/* Tech Stack Chips */}
+                        {Array.isArray(item.tech_stack) && item.tech_stack.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-2">
+                            {item.tech_stack.map((tech: string, i: number) => (
+                              <span key={i} className="px-1.5 py-0.5 rounded bg-cyan-500/10 border border-cyan-500/20 text-cyan-300 text-[10px] font-mono">
+                                {tech}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Bottom Footer Controls: Order & Action Buttons */}
+                      <div className="flex items-center justify-between pt-2 border-t border-white/5">
+                        {/* Order Controls */}
+                        {activeTab !== 'contact_messages' ? (
+                          <div className="flex items-center gap-1">
+                            <span className="text-[10px] text-gray-500 font-mono mr-1">Order:</span>
+                            <button
+                              onClick={() => handleUpdateOrder(item, -1)}
+                              className="p-1 rounded bg-white/5 hover:bg-cyan-500/20 hover:text-cyan-400 border border-white/10 transition-colors"
+                              title="Move Up"
+                            >
+                              <ArrowUp className="w-3 h-3" />
+                            </button>
+                            <span className="w-7 text-center px-1 py-0.5 rounded bg-black/40 border border-white/10 font-mono text-[10px] text-cyan-300 font-bold">
+                              {item.display_order ?? 0}
+                            </span>
+                            <button
+                              onClick={() => handleUpdateOrder(item, 1)}
+                              className="p-1 rounded bg-white/5 hover:bg-cyan-500/20 hover:text-cyan-400 border border-white/10 transition-colors"
+                              title="Move Down"
+                            >
+                              <ArrowDown className="w-3 h-3" />
+                            </button>
+                          </div>
+                        ) : (
+                          <span className="text-[10px] text-gray-500 font-mono">{item.created_at ? new Date(item.created_at).toLocaleDateString() : ''}</span>
+                        )}
+
+                        {/* Actions */}
+                        <div className="flex items-center gap-2">
+                          {activeTab !== 'contact_messages' ? (
+                            <>
+                              <button
+                                onClick={() => handleOpenEditModal(item)}
+                                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 text-xs transition-colors"
+                              >
+                                <Edit className="w-3.5 h-3.5" />
+                                <span>Edit</span>
+                              </button>
+                              <button
+                                onClick={() => handleDeleteItem(item.id)}
+                                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 text-xs transition-colors"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                                <span>Delete</span>
+                              </button>
+                            </>
+                          ) : (
+                            <>
+                              <button
+                                onClick={() => setExpandedMessageId(expandedMessageId === item.id ? null : item.id)}
+                                className="p-1.5 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 transition-colors"
+                              >
+                                {expandedMessageId === item.id ? <ArrowUp className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                              </button>
+                              <button
+                                onClick={() => handleToggleMessageStatus(item)}
+                                className={`p-1.5 rounded-lg border transition-colors ${item.status === 'read' ? 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border-amber-500/30'}`}
+                              >
+                                <CheckCircle className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteItem(item.id)}
+                                className="p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 transition-colors"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* ── DESKTOP TABLE VIEW (Visible on md screens and up) ── */}
+                <div className="hidden md:block overflow-x-auto">
                   <table className="w-full text-left text-xs text-gray-300">
                     <thead className="bg-black/30 border-b border-white/10 text-gray-400 font-mono uppercase text-[10px]">
                       <tr>

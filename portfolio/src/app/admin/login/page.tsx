@@ -50,10 +50,10 @@ function AdminLoginForm() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a16] text-white relative overflow-hidden flex flex-col justify-center items-center p-4">
+    <div className="min-h-screen bg-[#0a0a16] text-white relative overflow-hidden flex flex-col justify-center items-center p-4 sm:p-6 py-10 sm:py-0">
       {/* Background Ambient Glows */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-purple-600/20 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-cyan-600/15 rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] sm:w-[500px] h-[300px] sm:h-[500px] bg-purple-600/20 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-1/4 right-1/4 w-[250px] sm:w-[400px] h-[250px] sm:h-[400px] bg-cyan-600/15 rounded-full blur-[100px] pointer-events-none" />
 
       {/* Grid pattern overlay */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:4rem_4rem] pointer-events-none" />
@@ -61,7 +61,7 @@ function AdminLoginForm() {
       {/* Return to site link */}
       <Link
         href="/"
-        className="absolute top-6 left-6 z-10 flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors duration-200"
+        className="sm:absolute sm:top-6 sm:left-6 z-10 mb-6 sm:mb-0 self-start sm:self-auto flex items-center gap-2 text-xs sm:text-sm text-gray-400 hover:text-white transition-colors duration-200"
       >
         <ArrowLeft className="w-4 h-4" />
         Back to Portfolio
@@ -74,7 +74,7 @@ function AdminLoginForm() {
         className="w-full max-w-md relative z-10"
       >
         {/* Header Card */}
-        <div className="bg-[#121226]/80 backdrop-blur-xl border border-white/10 rounded-2xl p-8 shadow-2xl relative overflow-hidden">
+        <div className="bg-[#121226]/80 backdrop-blur-xl border border-white/10 rounded-2xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500" />
 
           <div className="flex flex-col items-center text-center mb-8">
