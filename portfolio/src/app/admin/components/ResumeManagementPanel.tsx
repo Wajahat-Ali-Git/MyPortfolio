@@ -291,7 +291,7 @@ export default function ResumeManagementPanel({ session, showToast }: ResumeMana
               onDragOver={handleDragOver}
               onDrop={handleDrop}
               onClick={() => fileInputRef.current?.click()}
-              className={`relative flex flex-col items-center justify-center gap-5 p-12 rounded-2xl border-2 border-dashed cursor-pointer transition-all duration-300 group ${
+              className={`relative flex flex-col items-center justify-center gap-4 sm:gap-5 p-6 sm:p-12 rounded-2xl border-2 border-dashed cursor-pointer transition-all duration-300 group ${
                 isDragging
                   ? 'border-cyan-400 bg-cyan-500/10 shadow-lg shadow-cyan-500/10'
                   : 'border-white/15 bg-[#121226]/50 hover:border-cyan-500/50 hover:bg-cyan-500/5'
@@ -310,14 +310,14 @@ export default function ResumeManagementPanel({ session, showToast }: ResumeMana
               <motion.div
                 animate={isDragging ? { scale: 1.15, rotate: 5 } : { scale: 1, rotate: 0 }}
                 transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-                className={`w-20 h-20 rounded-2xl flex items-center justify-center border transition-colors duration-300 ${
+                className={`w-16 h-16 sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center border transition-colors duration-300 ${
                   isDragging
                     ? 'bg-cyan-500/20 border-cyan-500/50'
                     : 'bg-white/5 border-white/10 group-hover:bg-cyan-500/10 group-hover:border-cyan-500/30'
                 }`}
               >
                 <UploadCloud
-                  className={`w-9 h-9 transition-colors duration-300 ${
+                  className={`w-8 h-8 sm:w-9 sm:h-9 transition-colors duration-300 ${
                     isDragging ? 'text-cyan-400' : 'text-gray-500 group-hover:text-cyan-400'
                   }`}
                 />
@@ -426,22 +426,22 @@ export default function ResumeManagementPanel({ session, showToast }: ResumeMana
             className="bg-[#121226]/70 rounded-2xl border border-white/10 overflow-hidden"
           >
             {/* Top success banner */}
-            <div className="flex items-center gap-2 px-6 py-3 bg-emerald-500/10 border-b border-emerald-500/20">
+            <div className="flex items-center gap-2 px-4 sm:px-6 py-3 bg-emerald-500/10 border-b border-emerald-500/20">
               <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0" />
               <span className="text-xs font-semibold text-emerald-300">
                 Resume is active — visible to public portfolio visitors
               </span>
             </div>
 
-            <div className="p-6 flex flex-col sm:flex-row items-start sm:items-center gap-6">
+            <div className="p-4 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
               {/* PDF icon */}
-              <div className="w-16 h-16 rounded-xl bg-red-500/10 border border-red-500/20 flex flex-col items-center justify-center shrink-0 gap-0.5">
-                <FileText className="w-7 h-7 text-red-400" />
+              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl bg-red-500/10 border border-red-500/20 flex flex-col items-center justify-center shrink-0 gap-0.5">
+                <FileText className="w-6 h-6 sm:w-7 sm:h-7 text-red-400" />
                 <span className="text-[9px] font-bold text-red-400 font-mono tracking-widest">PDF</span>
               </div>
 
               {/* File info */}
-              <div className="flex-1 min-w-0">
+              <div className="flex-1 min-w-0 w-full">
                 <p className="text-sm font-semibold text-white truncate">{getDisplayName()}</p>
                 <p className="text-xs text-gray-400 mt-0.5 font-mono break-all line-clamp-1">
                   {resumeUrl.split('?')[0]}
@@ -456,13 +456,13 @@ export default function ResumeManagementPanel({ session, showToast }: ResumeMana
               </div>
 
               {/* Actions */}
-              <div className="flex items-center gap-2 shrink-0">
+              <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-white/5">
                 <a
                   href={resumeUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   id="resume-view-btn"
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-medium text-white transition-all"
+                  className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-medium text-white transition-all"
                 >
                   <Eye className="w-3.5 h-3.5 text-cyan-400" />
                   View
@@ -471,7 +471,7 @@ export default function ResumeManagementPanel({ session, showToast }: ResumeMana
 
                 <label
                   htmlFor="resume-replace-input"
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500/20 to-purple-500/20 hover:from-cyan-500/30 hover:to-purple-500/30 border border-cyan-500/40 text-xs font-semibold text-cyan-300 cursor-pointer transition-all shadow-lg shadow-cyan-500/10"
+                  className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-cyan-500/20 to-purple-500/20 hover:from-cyan-500/30 hover:to-purple-500/30 border border-cyan-500/40 text-xs font-semibold text-cyan-300 cursor-pointer transition-all shadow-lg shadow-cyan-500/10"
                   title="Replace current resume"
                 >
                   <Upload className="w-3.5 h-3.5" />
@@ -489,7 +489,7 @@ export default function ResumeManagementPanel({ session, showToast }: ResumeMana
                 <button
                   onClick={() => setShowDeleteConfirm(true)}
                   id="resume-delete-btn"
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-xs font-semibold text-red-400 transition-all"
+                  className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-xs font-semibold text-red-400 transition-all"
                   title="Delete resume"
                 >
                   <Trash2 className="w-3.5 h-3.5" />

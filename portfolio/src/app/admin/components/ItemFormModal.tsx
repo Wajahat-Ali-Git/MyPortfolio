@@ -341,31 +341,31 @@ export default function ItemFormModal({
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto bg-black/75 backdrop-blur-md">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto bg-black/75 backdrop-blur-md">
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          className="relative w-full max-w-2xl bg-[#121226] border border-white/10 rounded-2xl shadow-2xl overflow-hidden flex flex-col my-8 text-white"
+          className="relative w-full max-w-2xl bg-[#121226] border border-white/10 rounded-2xl shadow-2xl overflow-hidden flex flex-col my-2 sm:my-8 text-white max-h-[92vh] sm:max-h-[85vh]"
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-[#0a0a16]/60">
+          <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 sm:py-4 border-b border-white/10 bg-[#0a0a16]/60 shrink-0">
             <div className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-cyan-400" />
-              <h3 className="text-base font-bold text-white capitalize">
+              <Sparkles className="w-5 h-5 text-cyan-400 shrink-0" />
+              <h3 className="text-sm sm:text-base font-bold text-white capitalize truncate">
                 {initialData ? `Edit ${resource.replace('_', ' ')}` : `Add New ${resource.replace('_', ' ')}`}
               </h3>
             </div>
             <button
               onClick={onClose}
-              className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
+              className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-colors shrink-0"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
+          <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1">
             {/* ── PROJECTS FORM ── */}
             {resource === 'projects' && (
               <>
@@ -1077,18 +1077,18 @@ export default function ItemFormModal({
             )}
 
             {/* Action Buttons */}
-            <div className="flex items-center justify-end gap-3 border-t border-white/10 pt-4 mt-4">
+            <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2 sm:gap-3 border-t border-white/10 pt-4 mt-4">
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 rounded-xl text-xs font-medium text-gray-400 hover:text-white hover:bg-white/5 transition-all"
+                className="w-full sm:w-auto px-4 py-2 rounded-xl text-xs font-medium text-gray-400 hover:text-white hover:bg-white/5 transition-all text-center"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="flex items-center gap-2 px-5 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-purple-600 text-white text-xs font-semibold hover:from-cyan-400 hover:to-purple-500 transition-all shadow-lg shadow-cyan-500/20 disabled:opacity-50"
+                className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-purple-600 text-white text-xs font-semibold hover:from-cyan-400 hover:to-purple-500 transition-all shadow-lg shadow-cyan-500/20 disabled:opacity-50"
               >
                 {isSubmitting ? (
                   <RefreshCw className="w-3.5 h-3.5 animate-spin" />
