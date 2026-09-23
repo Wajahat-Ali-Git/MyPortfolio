@@ -38,6 +38,7 @@ import { supabase } from '@/lib/supabase';
 import { useAdminAuth } from './AdminAuthContext';
 import ItemFormModal, { AdminResourceType } from './components/ItemFormModal';
 import ResumeManagementPanel from './components/ResumeManagementPanel';
+import SeoManagementPanel from './components/SeoManagementPanel';
 import {
   type SectionVisibilityInput,
   type ManageableResource,
@@ -45,6 +46,7 @@ import {
 
 type TabType =
   | 'section_visibility'
+  | 'seo'
   | 'resume'
   | 'projects'
   | 'experiences'
@@ -54,6 +56,7 @@ type TabType =
   | 'spoken_languages'
   | 'personal_info'
   | 'contact_messages';
+
 
 // ─── Section Visibility Panel ─────────────────────────────────────────────────
 
@@ -288,9 +291,10 @@ function AdminDashboardContent() {
   }, [session?.access_token]);
 
   const loadResourceData = useCallback(async (resource: TabType) => {
-    if (resource === 'section_visibility' || resource === 'resume') return;
+    if (resource === 'section_visibility' || resource === 'resume' || resource === 'seo') return;
     setIsFetching(true);
     setFetchError('');
+
     try {
       const headers: Record<string, string> = {};
       const token = await getAuthToken();
@@ -560,6 +564,7 @@ function AdminDashboardContent() {
 
   const tabs: { id: TabType; label: string; icon: React.ReactNode }[] = [
     { id: 'section_visibility', label: 'Visibility',       icon: <Eye className="w-4 h-4" /> },
+    { id: 'seo',                label: 'SEO Meta',         icon: <Search className="w-4 h-4" /> },
     { id: 'resume',             label: 'Resume / CV',      icon: <FileText className="w-4 h-4" /> },
     { id: 'projects',           label: 'Projects',         icon: <FolderGit2 className="w-4 h-4" /> },
     { id: 'experiences',        label: 'Experiences',      icon: <Briefcase className="w-4 h-4" /> },
@@ -570,6 +575,7 @@ function AdminDashboardContent() {
     { id: 'personal_info',      label: 'Personal Info',    icon: <UserCheck className="w-4 h-4" /> },
     { id: 'contact_messages',   label: 'Messages',         icon: <MessageSquare className="w-4 h-4" /> },
   ];
+
 
   const filteredItems = items.filter((item) => {
     if (!searchTerm.trim()) return true;
@@ -691,9 +697,12 @@ function AdminDashboardContent() {
         {/* Tab Content */}
         {activeTab === 'section_visibility' ? (
           <SectionVisibilityPanel session={session} showToast={showToast} />
+        ) : activeTab === 'seo' ? (
+          <SeoManagementPanel session={session} showToast={showToast} />
         ) : activeTab === 'resume' ? (
           <ResumeManagementPanel session={session} showToast={showToast} />
         ) : (
+
           <>
             {/* Action Header */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4">
