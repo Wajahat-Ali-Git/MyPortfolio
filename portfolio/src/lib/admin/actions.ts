@@ -421,6 +421,36 @@ export async function adminUpdateSectionVisibility(
 }
 
 // =============================================================================
+// 8. SEO SETTINGS ADMIN ACTION
+// =============================================================================
+
+export async function adminUpdateSeoSettings(
+  input: Record<string, string>
+): Promise<AdminActionResult> {
+  try {
+    const client = await getAdminClient();
+
+    const rows = Object.entries(input).map(([key, value]) => ({
+      key,
+      value: String(value ?? ''),
+      updated_at: new Date().toISOString(),
+    }));
+
+    const { error } = await client
+      .from('site_settings')
+      .upsert(rows, { onConflict: 'key' });
+
+    if (error) throw error;
+    revalidatePublicSite();
+    return { success: true };
+  } catch (err) {
+    console.error('adminUpdateSeoSettings error:', err);
+    return { success: false, error: err instanceof Error ? err.message : 'Failed to update SEO settings' };
+  }
+}
+
+
+// =============================================================================
 // 8. QUICK TOGGLE VISIBILITY & ORDER UPDATE ACTIONS
 // =============================================================================
 
