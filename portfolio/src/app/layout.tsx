@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { supabase } from "@/lib/supabase";
-
+import { fetchPersonalInfo } from "@/lib/portfolioData";
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
@@ -46,7 +46,10 @@ export async function generateMetadata(): Promise<Metadata> {
       "summary_large_image";
     const robots = settings.seo_robots || "index, follow";
 
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://wajahatali.dev";
+
     return {
+      metadataBase: new URL(siteUrl),
       title,
       description,
       keywords,
@@ -80,14 +83,38 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const personalInfo = await fetchPersonalInfo();
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://wajahatali.dev";
+
   return (
     <html lang="en" className={`${inter.variable} dark antialiased scroll-smooth`}>
       <body className="bg-background text-foreground min-h-screen flex flex-col font-sans">
+        {personalInfo && (
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify({
+                "@context": "https://schema.org",
+                "@type": "Person",
+                name: personalInfo.fullName,
+                url: siteUrl,
+                sameAs: [
+                  personalInfo.githubUrl,
+                  personalInfo.linkedinUrl,
+                  personalInfo.twitterUrl,
+                  personalInfo.portfolioUrl,
+                ].filter(Boolean),
+                jobTitle: personalInfo.role,
+                description: personalInfo.bio,
+              }),
+            }}
+          />
+        )}
         {children}
       </body>
     </html>

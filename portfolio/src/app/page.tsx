@@ -525,7 +525,7 @@ export default function Home() {
         {/* ═══════════════════════════════════════════
             HERO SECTION
         ═══════════════════════════════════════════ */}
-        <section id="home" ref={heroRef} className="min-h-[85vh] sm:min-h-screen flex items-center">
+        <section id="home" aria-label="Hero Profile" ref={heroRef} className="min-h-[85vh] sm:min-h-screen flex items-center">
           <motion.div
             style={{ opacity: heroOpacity, scale: heroScale, y: heroY }}
             className="container mx-auto px-4 sm:px-6 py-12 sm:py-20"
@@ -683,7 +683,7 @@ export default function Home() {
             : portfolioData.projects.filter((p) => p.tech.includes(projectFilter));
 
           return (
-            <section id="projects" className="container mx-auto px-4 sm:px-6 py-12 sm:py-20">
+            <section id="projects" aria-label={t.projects.title} className="container mx-auto px-4 sm:px-6 py-12 sm:py-20">
               <SectionHeading icon={Code2} title={t.projects.title} color="purple" isRTL={isRTL} />
 
               {/* ── Filter Bar ── */}
@@ -825,7 +825,7 @@ export default function Home() {
         {/* ═══════════════════════════════════════════
             EXPERIENCE SECTION
         ═══════════════════════════════════════════ */}
-        {portfolioData.sectionVisibility.experience && <section id="experience" className="container mx-auto px-4 sm:px-6 py-12 sm:py-20">
+        {portfolioData.sectionVisibility.experience && <section id="experience" aria-label={t.experience.title} className="container mx-auto px-4 sm:px-6 py-12 sm:py-20">
           <SectionHeading icon={Briefcase} title={t.experience.title} color="blue" isRTL={isRTL} />
 
           <motion.div
@@ -888,7 +888,7 @@ export default function Home() {
         {/* ═══════════════════════════════════════════
             SKILLS & TOOLS SECTION
         ═══════════════════════════════════════════ */}
-        {portfolioData.sectionVisibility.skills && <section id="skills" className="container mx-auto px-4 sm:px-6 py-12 sm:py-20">
+        {portfolioData.sectionVisibility.skills && <section id="skills" aria-label={t.skills.title} className="container mx-auto px-4 sm:px-6 py-12 sm:py-20">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 sm:gap-16">
             {/* Skills */}
             <div>
