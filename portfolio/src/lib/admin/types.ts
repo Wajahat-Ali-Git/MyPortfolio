@@ -87,9 +87,23 @@ export interface AdminLanguageInput {
   is_visible?: boolean;
 }
 
+export interface AdminSeoSettingsInput {
+  seo_title: string;
+  seo_description: string;
+  seo_keywords: string;
+  seo_og_title: string;
+  seo_og_description: string;
+  seo_og_image_url: string;
+  seo_twitter_card: string;
+  seo_author: string;
+  seo_canonical_url: string;
+  seo_robots: string;
+}
+
 export interface AdminActionResult<T = unknown> {
   success: boolean;
   data?: T;
   error?: string;
 }
+
 
