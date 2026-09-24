@@ -32,6 +32,7 @@ import {
   ArrowUp,
   ArrowDown,
   FileText,
+  BarChart3,
 } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
@@ -39,12 +40,14 @@ import { useAdminAuth } from './AdminAuthContext';
 import ItemFormModal, { AdminResourceType } from './components/ItemFormModal';
 import ResumeManagementPanel from './components/ResumeManagementPanel';
 import SeoManagementPanel from './components/SeoManagementPanel';
+import AnalyticsDashboardPanel from './components/AnalyticsDashboardPanel';
 import {
   type SectionVisibilityInput,
   type ManageableResource,
 } from '@/lib/admin/actions';
 
 type TabType =
+  | 'analytics'
   | 'section_visibility'
   | 'seo'
   | 'resume'
@@ -266,7 +269,7 @@ function AdminDashboardContent() {
   const router = useRouter();
   const { user, isAuthenticated, isLoading, logout, session } = useAdminAuth();
 
-  const [activeTab, setActiveTab] = useState<TabType>('section_visibility');
+  const [activeTab, setActiveTab] = useState<TabType>('analytics');
   const [items, setItems] = useState<any[]>([]);
   const [isFetching, setIsFetching] = useState(false);
   const [fetchError, setFetchError] = useState('');
@@ -291,7 +294,7 @@ function AdminDashboardContent() {
   }, [session?.access_token]);
 
   const loadResourceData = useCallback(async (resource: TabType) => {
-    if (resource === 'section_visibility' || resource === 'resume' || resource === 'seo') return;
+    if (resource === 'analytics' || resource === 'section_visibility' || resource === 'resume' || resource === 'seo') return;
     setIsFetching(true);
     setFetchError('');
 
@@ -563,6 +566,7 @@ function AdminDashboardContent() {
   }
 
   const tabs: { id: TabType; label: string; icon: React.ReactNode }[] = [
+    { id: 'analytics',          label: 'Analytics',        icon: <BarChart3 className="w-4 h-4 text-cyan-400" /> },
     { id: 'section_visibility', label: 'Visibility',       icon: <Eye className="w-4 h-4" /> },
     { id: 'seo',                label: 'SEO Meta',         icon: <Search className="w-4 h-4" /> },
     { id: 'resume',             label: 'Resume / CV',      icon: <FileText className="w-4 h-4" /> },
@@ -695,7 +699,9 @@ function AdminDashboardContent() {
         </div>
 
         {/* Tab Content */}
-        {activeTab === 'section_visibility' ? (
+        {activeTab === 'analytics' ? (
+          <AnalyticsDashboardPanel session={session} showToast={showToast} />
+        ) : activeTab === 'section_visibility' ? (
           <SectionVisibilityPanel session={session} showToast={showToast} />
         ) : activeTab === 'seo' ? (
           <SeoManagementPanel session={session} showToast={showToast} />
