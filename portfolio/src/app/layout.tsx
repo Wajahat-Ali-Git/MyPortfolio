@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { supabase } from "@/lib/supabase";
 import { fetchPersonalInfo } from "@/lib/portfolioData";
+import AnalyticsTracker from "@/components/AnalyticsTracker";
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
@@ -94,6 +95,7 @@ export default async function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} dark antialiased scroll-smooth`}>
       <body className="bg-background text-foreground min-h-screen flex flex-col font-sans">
+        <AnalyticsTracker />
         {personalInfo && (
           <script
             type="application/ld+json"
