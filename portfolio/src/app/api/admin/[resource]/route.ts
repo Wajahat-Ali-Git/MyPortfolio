@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { supabase, isSupabaseConfigured, createAuthenticatedClient } from '@/lib/supabase';
+import { recordAdminActivity } from '@/lib/adminAudit';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,6 +15,7 @@ const ALLOWED_RESOURCES = [
   'personal_info',
   'contact_messages',
   'site_settings',
+  'admin_activity_logs',
 ];
 
 type Props = {
@@ -169,6 +171,25 @@ export async function POST(req: NextRequest, { params }: Props) {
       );
     }
 
+    // Record audit log
+    const isUpdate = body && typeof body === 'object' && body.id;
+    const isToggle = isUpdate && Object.keys(body).length <= 2 && 'is_visible' in body;
+    const action = resource === 'site_settings' ? 'SETTINGS_CHANGE' : isToggle ? 'TOGGLE_VISIBILITY' : isUpdate ? 'UPDATE' : 'CREATE';
+
+    recordAdminActivity({
+      client: auth.client,
+      adminEmail: auth.user.email || 'Admin',
+      adminId: auth.user.id,
+      action,
+      resource,
+      resourceId: body.id || body.key || '',
+      details: {
+        title: body.title || body.name || body.company_name || body.full_name || body.key || resource,
+        payload: body,
+      },
+      req,
+    });
+
     revalidatePath('/');
     return NextResponse.json({ success: true, data: result.data });
   } catch (err) {
@@ -207,6 +228,18 @@ export async function DELETE(req: NextRequest, { params }: Props) {
   try {
     const { error } = await auth.client.from(resource).delete().eq('id', id);
     if (error) throw error;
+
+    recordAdminActivity({
+      client: auth.client,
+      adminEmail: auth.user.email || 'Admin',
+      adminId: auth.user.id,
+      action: 'DELETE',
+      resource,
+      resourceId: id,
+      details: { deleted_id: id },
+      req,
+    });
+
     revalidatePath('/');
     return NextResponse.json({ success: true, message: `Deleted ${id} from ${resource}` });
   } catch (err) {
