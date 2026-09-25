@@ -20,6 +20,7 @@ export const TRANSLATIONS = {
     },
     projects: {
       title: "Featured Projects",
+      sectionDesc: "A showcase of engineering projects, full-stack applications, and open-source software solutions built with modern web and mobile frameworks.",
       fyp: "FYP",
       carsage_desc: "A React Native car recommendation mobile app built with Expo. Features Firebase auth, React Navigation, and AI/ML car features using TensorFlow and Flask services.",
       blogdrf_desc: "A robust backend API for a blogging platform built with Django Rest Framework, featuring CRUD operations, authentication, and RESTful endpoints.",
@@ -28,6 +29,7 @@ export const TRANSLATIONS = {
     },
     experience: {
       title: "Experience",
+      sectionDesc: "My career journey, professional roles, and key engineering contributions in software development.",
       cmit_role: "Full Stack Development Intern",
       cmit_company: "CMIT Internship Program, Lahore",
       cmit_duration: "July 2026 – Present",
@@ -39,10 +41,13 @@ export const TRANSLATIONS = {
     },
     skills: {
       title: "Skills",
+      sectionDesc: "Core technical skills, backend frameworks, database architectures, and engineering tools.",
       tools: "Tools",
+      toolsDesc: "Developer environments, editors, database administration software, and productivity tools.",
     },
     certifications: {
       title: "Certifications",
+      sectionDesc: "Verified technical accreditations, industry certificates, and professional development courses.",
       by: "by",
       online: "Online",
       internship: "Internship",
@@ -54,6 +59,7 @@ export const TRANSLATIONS = {
     },
     languages: {
       title: "Languages",
+      sectionDesc: "Spoken languages and international communication proficiency levels.",
       english: "English",
       urdu: "Urdu",
       hindi_punjabi: "Hindi / Punjabi",
@@ -67,6 +73,7 @@ export const TRANSLATIONS = {
     },
     github: {
       title: "Recent Code Activity",
+      sectionDesc: "Real-time GitHub activity, public repositories, and commit metrics.",
       view_all: "View All Repositories",
       no_description: "No description provided",
       error: "Failed to load repositories",
@@ -109,6 +116,7 @@ export const TRANSLATIONS = {
     },
     projects: {
       title: "نمایاں پروجیکٹس",
+      sectionDesc: "جدید ویب اور موبائل فریم ورکس کے ساتھ بنائے گئے سافٹ ویئر پروجیکٹس، فل اسٹیک ایپلی کیشنز اور اوپن سورس حل۔",
       fyp: "ایف وائی پی",
       carsage_desc: "ایکسپو کے ساتھ بنایا گیا ایک ری ایکٹ نیٹو کاروں کی سفارش والا موبائل ایپ۔ فائر بیس لاگ ان، ملٹی اسکرین فلو، اور مشین لرننگ فیچرز سے لیس۔",
       blogdrf_desc: "ڈینگ ریسٹ فریم ورک کے ساتھ بنایا گیا بلاگنگ پلیٹ فارم کا بیک اینڈ اے پی آئی، جس میں کروڈ آپریشنز اور تصدیق کے فیچرز شامل ہیں۔",
@@ -117,6 +125,7 @@ export const TRANSLATIONS = {
     },
     experience: {
       title: "تجربہ",
+      sectionDesc: "سافٹ ویئر ڈویلپمنٹ میں میری پیشہ ورانہ خدمات، ذمہ داریاں اور کلیدی کاوشیں۔",
       cmit_role: "فل اسٹیک ڈویلپمنٹ انٹرن",
       cmit_company: "سی ایم آئی ٹی انٹرنشپ پروگرام، لاہور",
       cmit_duration: "جولائی 2026 – حال",
@@ -128,10 +137,13 @@ export const TRANSLATIONS = {
     },
     skills: {
       title: "مہارتیں",
+      sectionDesc: "بنیادی تکنیکی مہارتیں، بیک اینڈ فریم ورکس، ڈیٹا بیس سسٹمز اور ٹولز۔",
       tools: "ٹولز",
+      toolsDesc: "ڈویلپر ماحول، ایڈیٹرز اور پروڈکٹیوٹی سافٹ ویئر۔",
     },
     certifications: {
       title: "سرٹیفیکیشنز",
+      sectionDesc: "تصدیق شدہ تکنیکی سرٹیفکیٹس اور پیشہ ورانہ کورسز۔",
       by: "منجانب",
       online: "آن لائن",
       internship: "انٹرنشپ",
@@ -143,6 +155,7 @@ export const TRANSLATIONS = {
     },
     languages: {
       title: "زبانیں",
+      sectionDesc: "بولی جانے والی زبانیں اور ان میں مہارت کی سطح۔",
       english: "انگریزی",
       urdu: "اردو",
       hindi_punjabi: "ہندی / پنجابی",
@@ -156,6 +169,7 @@ export const TRANSLATIONS = {
     },
     github: {
       title: "حالیہ کوڈ سرگرمی",
+      sectionDesc: "گٹ ہب پر لائیو کوڈنگ سرگرمی، اوپن سورس ریپوزٹریز اور میٹرکس۔",
       view_all: "تمام ریپوزٹریز دیکھیں",
       no_description: "کوئی تفصیل فراہم نہیں کی گئی",
       error: "ریپوزٹریز لوڈ کرنے میں ناکام",
@@ -198,6 +212,7 @@ export const TRANSLATIONS = {
     },
     projects: {
       title: "प्रमुख परियोजनाएं",
+      sectionDesc: "आधुनिक वेब और मोबाइल ढांचे के साथ निर्मित सॉफ्टवेयर प्रोजेक्ट्स और फुल-स्टैक एप्लिकेशन।",
       fyp: "एफवाईपी",
       carsage_desc: "एक्सपो के साथ निर्मित एक रिएक्ट नेटिव कार अनुशंसा मोबाइल ऐप। इसमें फायरबेस प्रमाणीकरण, रिएक्ट नेविगेशन और एआई/एमएल कार विशेषताएं शामिल हैं।",
       blogdrf_desc: "जंगो रेस्ट फ्रेमवर्क के साथ बनाया गया ब्लॉगिंग प्लेटफॉर्म के लिए एपीआई, जिसमें क्रूड ऑपरेशन और प्रमाणीकरण शामिल हैं।",
@@ -206,6 +221,7 @@ export const TRANSLATIONS = {
     },
     experience: {
       title: "अनुभव",
+      sectionDesc: "सॉफ्टवेयर विकास में मेरा करियर, पेशेवर भूमिकाएं और योगदान।",
       cmit_role: "फुल स्टैक डेवलपमेंट इंटर्न",
       cmit_company: "CMIT इंटर्नशिप प्रोग्राम, लाहौर",
       cmit_duration: "जुलाई 2026 – वर्तमान",
@@ -217,10 +233,13 @@ export const TRANSLATIONS = {
     },
     skills: {
       title: "कौशल",
+      sectionDesc: "मुख्य तकनीकी कौशल, बैकएंड ढांचा और डेटाबेस सिस्टम।",
       tools: "टूल्स",
+      toolsDesc: "डेवलपर वातावरण, संपादक और उत्पादकता उपकरण।",
     },
     certifications: {
       title: "प्रमाणपत्र",
+      sectionDesc: "सत्यापित तकनीकी प्रमाणपत्र और पेशेवर पाठ्यक्रम।",
       by: "द्वारा",
       online: "ऑनलाइन",
       internship: "इंटर्नशिप",
@@ -232,6 +251,7 @@ export const TRANSLATIONS = {
     },
     languages: {
       title: "भाषाएँ",
+      sectionDesc: "बोली जाने वाली भाषाएं और दक्षता स्तर।",
       english: "अंग्रेज़ी",
       urdu: "उर्दू",
       hindi_punjabi: "हिंदी / पंजाबी",
@@ -245,6 +265,7 @@ export const TRANSLATIONS = {
     },
     github: {
       title: "हालिया कोड गतिविधि",
+      sectionDesc: "लाइव गिटहब गतिविधि और रिपॉजिटरी मेट्रिक्स।",
       view_all: "सभी रिपॉजिटरी देखें",
       no_description: "कोई विवरण प्रदान नहीं किया गया",
       error: "रिपॉजिटरी लोड करने में विफल",
@@ -287,6 +308,7 @@ export const TRANSLATIONS = {
     },
     projects: {
       title: "المشاريع المميزة",
+      sectionDesc: "معرض للمشاريع البرمجية وتطبيقات الويب والهاتف المحمول المصممة بأحدث التقنيات.",
       fyp: "مشروع التخرج",
       carsage_desc: "تطبيق هاتف محمول لتوصية السيارات مبني بـ React Native و Expo. يتميز بالمصادقة عبر Firebase وميزات الذكاء الاصطناعي.",
       blogdrf_desc: "واجهة برمجة تطبيقات قوية لمنصة تدوين مبنية بـ Django Rest Framework، تتميز بعمليات CRUD والمصادقة.",
@@ -295,6 +317,7 @@ export const TRANSLATIONS = {
     },
     experience: {
       title: "الخبرة",
+      sectionDesc: "مسيرتي المهنية وأدواري في تطوير البرمجيات والهندسة.",
       cmit_role: "متدرب تطوير متكامل",
       cmit_company: "برنامج CMIT للتدريب، لاهور",
       cmit_duration: "يوليو 2026 – حتى الآن",
@@ -306,10 +329,13 @@ export const TRANSLATIONS = {
     },
     skills: {
       title: "المهارات",
+      sectionDesc: "المهارات التقنية الأساسية، أطر العمل الخلفية، وأنظمة قواعد البيانات.",
       tools: "الأدوات",
+      toolsDesc: "بيئات التطوير، المحررات وأدوات الإنتاجية.",
     },
     certifications: {
       title: "الشهادات",
+      sectionDesc: "الشهادات التقنية المعتمدة والدورات التدريبية.",
       by: "من قبل",
       online: "عبر الإنترنت",
       internship: "تدريب عملي",
@@ -321,6 +347,7 @@ export const TRANSLATIONS = {
     },
     languages: {
       title: "اللغات",
+      sectionDesc: "اللغات والقدرة على التواصل الدولي.",
       english: "الإنجليزية",
       urdu: "الأردية",
       hindi_punjabi: "الهندية / البنجابية",
@@ -334,6 +361,7 @@ export const TRANSLATIONS = {
     },
     github: {
       title: "نشاط الكود الأخير",
+      sectionDesc: "نشاط جيت هاب المباشر والمستودعات المفتوحة المصدر.",
       view_all: "عرض جميع المستودعات",
       no_description: "لم يتم توفير وصف",
       error: "فشل في تحميل المستودعات",
@@ -376,6 +404,7 @@ export const TRANSLATIONS = {
     },
     projects: {
       title: "Projets à la Une",
+      sectionDesc: "Une vitrine de projets d'ingénierie, d'applications full-stack et de solutions logicielles open-source.",
       fyp: "PFE",
       carsage_desc: "Une application mobile de recommandation de voitures en React Native construite avec Expo. Comprend l'authentification Firebase, la navigation et des fonctionnalités d'IA/ML.",
       blogdrf_desc: "Une API robuste pour une plateforme de blogs construite avec Django Rest Framework, comprenant les opérations CRUD et l'authentification.",
@@ -384,6 +413,7 @@ export const TRANSLATIONS = {
     },
     experience: {
       title: "Expérience",
+      sectionDesc: "Mon parcours professionnel, mes rôles et mes contributions en développement logiciel.",
       cmit_role: "Stagiaire Développeur Full Stack",
       cmit_company: "Programme de Stage CMIT, Lahore",
       cmit_duration: "Juillet 2026 – Présent",
@@ -395,10 +425,13 @@ export const TRANSLATIONS = {
     },
     skills: {
       title: "Compétences",
+      sectionDesc: "Compétences techniques clés, frameworks backend et systèmes de bases de données.",
       tools: "Outils",
+      toolsDesc: "Environnements de développement, éditeurs et outils de productivité.",
     },
     certifications: {
       title: "Certifications",
+      sectionDesc: "Certifications techniques vérifiées et formations professionnelles.",
       by: "par",
       online: "En ligne",
       internship: "Stage",
@@ -410,6 +443,7 @@ export const TRANSLATIONS = {
     },
     languages: {
       title: "Langues",
+      sectionDesc: "Langues parlées et niveaux de maîtrise internationale.",
       english: "Anglais",
       urdu: "Urdu",
       hindi_punjabi: "Hindi / Pendjabi",
@@ -423,6 +457,7 @@ export const TRANSLATIONS = {
     },
     github: {
       title: "Activité Code Récente",
+      sectionDesc: "Activité GitHub en direct, dépôts publics et métriques d'engagement.",
       view_all: "Voir Tous les Dépôts",
       no_description: "Aucune description fournie",
       error: "Échec du chargement des dépôts",
@@ -465,6 +500,7 @@ export const TRANSLATIONS = {
     },
     projects: {
       title: "Ausgewählte Projekte",
+      sectionDesc: "Ein Portfolio aus Softwareprojekten, Full-Stack-Anwendungen und Open-Source-Lösungen.",
       fyp: "Abschlussprojekt",
       carsage_desc: "Eine auf React Native basierende Auto-Empfehlungs-App, entwickelt mit Expo. Bietet Firebase-Authentifizierung, React Navigation und KI/ML-gestützte Funktionen.",
       blogdrf_desc: "Eine robuste Backend-API für eine Blogging-Plattform, entwickelt mit Django Rest Framework, mit CRUD-Operationen und Authentifizierung.",
@@ -473,6 +509,7 @@ export const TRANSLATIONS = {
     },
     experience: {
       title: "Erfahrung",
+      sectionDesc: "Mein beruflicher Werdegang, meine Positionen und Beiträge zur Softwareentwicklung.",
       cmit_role: "Full Stack Entwicklungspraktikant",
       cmit_company: "CMIT Praktikumsprogramm, Lahore",
       cmit_duration: "Juli 2026 – Heute",
@@ -484,10 +521,13 @@ export const TRANSLATIONS = {
     },
     skills: {
       title: "Fähigkeiten",
+      sectionDesc: "Technische Kernkompetenzen, Backend-Frameworks und Datenbanksysteme.",
       tools: "Werkzeuge",
+      toolsDesc: "Entwicklungsumgebungen, Editoren und Produktivitäts-Tools.",
     },
     certifications: {
       title: "Zertifikate",
+      sectionDesc: "Verifizierte technische Zertifikate und berufliche Fortbildungen.",
       by: "von",
       online: "Online",
       internship: "Praktikum",
@@ -499,6 +539,7 @@ export const TRANSLATIONS = {
     },
     languages: {
       title: "Sprachen",
+      sectionDesc: "Gesprochene Sprachen und Sprachkenntnisse.",
       english: "Englisch",
       urdu: "Urdu",
       hindi_punjabi: "Hindi / Punjabi",
@@ -512,6 +553,7 @@ export const TRANSLATIONS = {
     },
     github: {
       title: "Aktuelle Code-Aktivität",
+      sectionDesc: "Live-GitHub-Aktivitäten, öffentliche Repositories und Metriken.",
       view_all: "Alle Repositories anzeigen",
       no_description: "Keine Beschreibung vorhanden",
       error: "Fehler beim Laden der Repositories",
