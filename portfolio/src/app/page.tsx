@@ -11,8 +11,7 @@ import GitHubRepos from "./components/GitHubRepos";
 import { TRANSLATIONS, dotColorStyles, colorStyles, scaleUp, slideInLeft, slideInRight, itemVariants, containerVariants, LANG_OPTIONS, NAV_LINKS } from "../constants/contants";
 import { fetchAllPortfolioData, type DynamicProject, type DynamicExperience, type DynamicSkill, type DynamicCertification, type DynamicLanguage, type DynamicPersonalInfo, type SectionVisibility } from "../lib/portfolioData";
 import type { Language } from "../types/types";
-
-
+import { TechIcon, TechBadge } from "@/components/TechIcon";
 
 /* ─── Section Divider Component ─── */
 
@@ -40,7 +39,7 @@ function SectionDivider() {
 
 /* ─── Section Heading Component ─── */
 
-function SectionHeading({ icon: Icon, title, color, isRTL }: { icon: React.ElementType; title: string; color: string; isRTL?: boolean }) {
+function SectionHeading({ icon: Icon, title, description, color, isRTL }: { icon: React.ElementType; title: string; description?: string; color: string; isRTL?: boolean }) {
   const styles = colorStyles[color] || colorStyles.purple;
   return (
     <motion.div
@@ -48,13 +47,22 @@ function SectionHeading({ icon: Icon, title, color, isRTL }: { icon: React.Eleme
       initial="hidden"
       whileInView="visible"
       viewport={{ once: true, margin: "-80px" }}
-      className="flex items-center gap-4 mb-14"
+      className="mb-10 sm:mb-14"
     >
-      <div className={`p-3 rounded-xl ${styles.bg} border ${styles.border}`}>
-        <Icon className={`w-6 h-6 ${styles.text}`} />
+      <div className="flex items-center gap-4">
+        <div className={`p-3 rounded-xl ${styles.bg} border ${styles.border} shrink-0`}>
+          <Icon className={`w-6 h-6 ${styles.text}`} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-foreground dark:text-white/95">{title}</h2>
+        </div>
+        <div className={`hidden sm:block flex-1 h-px bg-gradient-to-${isRTL ? "l" : "r"} from-black/10 dark:from-white/20 to-transparent ${isRTL ? "mr-4" : "ml-4"}`} />
       </div>
-      <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-foreground dark:text-white/95">{title}</h2>
-      <div className={`flex-1 h-px bg-gradient-to-${isRTL ? "l" : "r"} from-black/10 dark:from-white/20 to-transparent ${isRTL ? "mr-4" : "ml-4"}`} />
+      {description && (
+        <p className={`mt-2.5 text-xs sm:text-sm md:text-base text-[var(--muted-foreground)] max-w-3xl leading-relaxed ${isRTL ? "pr-16" : "pl-16"}`}>
+          {description}
+        </p>
+      )}
     </motion.div>
   );
 }
@@ -74,7 +82,10 @@ function SkillBar({ name, level, delay }: { name: string; level: number; delay: 
       className="space-y-2"
     >
       <div className="flex justify-between items-center">
-        <span className="text-sm font-semibold text-[var(--foreground)]">{name}</span>
+        <span className="text-sm font-semibold text-[var(--foreground)] flex items-center gap-2">
+          <TechIcon name={name} className="w-4 h-4 shrink-0" />
+          {name}
+        </span>
         <span className="text-xs font-mono text-muted-foreground">{level}%</span>
       </div>
       <div className="h-2 rounded-full bg-white/10 overflow-hidden">
@@ -684,7 +695,7 @@ export default function Home() {
 
           return (
             <section id="projects" aria-label={t.projects.title} className="container mx-auto px-4 sm:px-6 py-12 sm:py-20">
-              <SectionHeading icon={Code2} title={t.projects.title} color="purple" isRTL={isRTL} />
+              <SectionHeading icon={Code2} title={t.projects.title} description={t.projects.sectionDesc} color="purple" isRTL={isRTL} />
 
               {/* ── Filter Bar ── */}
               <motion.div
@@ -699,26 +710,12 @@ export default function Home() {
                 {allTechTags.map((tag) => {
                   const isActive = projectFilter === tag;
                   return (
-                    <motion.button
+                    <TechBadge
                       key={tag}
+                      name={tag}
+                      isActive={isActive}
                       onClick={() => setProjectFilter(tag)}
-                      whileTap={{ scale: 0.93 }}
-                      aria-pressed={isActive}
-                      className={`relative px-3.5 sm:px-4 py-1.5 rounded-full text-xs font-mono font-semibold transition-all duration-200 border focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500/60 whitespace-nowrap ${
-                        isActive
-                          ? "border-purple-500/60 text-purple-300 shadow-[0_0_14px_rgba(168,85,247,0.25)]"
-                          : "border-white/10 text-[var(--muted-foreground)] hover:border-purple-500/40 hover:text-purple-300 bg-white/5 hover:bg-purple-500/10"
-                      }`}
-                    >
-                      {isActive && (
-                        <motion.span
-                          layoutId="projectFilterBg"
-                          className="absolute inset-0 rounded-full bg-purple-500/20"
-                          transition={{ type: "spring", stiffness: 380, damping: 30 }}
-                        />
-                      )}
-                      <span className="relative z-10">{tag}</span>
-                    </motion.button>
+                    />
                   );
                 })}
               </motion.div>
@@ -787,21 +784,12 @@ export default function Home() {
 
                           <div className="flex flex-wrap gap-1.5 sm:gap-2 mt-auto">
                             {project.tech.map((tech) => (
-                              <span
+                              <TechBadge
                                 key={tech}
+                                name={tech}
+                                isActive={projectFilter === tech}
                                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); setProjectFilter(tech); }}
-                                role="button"
-                                tabIndex={0}
-                                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setProjectFilter(tech); } }}
-                                aria-label={`Filter by ${tech}`}
-                                className={`px-2.5 sm:px-3 py-0.5 sm:py-1 text-[11px] sm:text-xs font-mono font-medium rounded-full border transition-all duration-150 cursor-pointer ${
-                                  projectFilter === tech
-                                    ? "bg-purple-500/25 border-purple-400/60 text-purple-300"
-                                    : "bg-white/10 dark:bg-white/10 border-black/10 dark:border-white/10 text-[var(--foreground)] dark:text-gray-200 hover:border-purple-400/40 hover:text-purple-300"
-                                }`}
-                              >
-                                {tech}
-                              </span>
+                              />
                             ))}
                           </div>
                         </motion.a>
@@ -826,7 +814,7 @@ export default function Home() {
             EXPERIENCE SECTION
         ═══════════════════════════════════════════ */}
         {portfolioData.sectionVisibility.experience && <section id="experience" aria-label={t.experience.title} className="container mx-auto px-4 sm:px-6 py-12 sm:py-20">
-          <SectionHeading icon={Briefcase} title={t.experience.title} color="blue" isRTL={isRTL} />
+          <SectionHeading icon={Briefcase} title={t.experience.title} description={t.experience.sectionDesc} color="blue" isRTL={isRTL} />
 
           <motion.div
             variants={containerVariants}
@@ -875,7 +863,15 @@ export default function Home() {
                         </span>
                       )}
                     </div>
-                    <p className="text-sm sm:text-base text-[var(--muted-foreground)] leading-relaxed">{descText}</p>
+                    <p className="text-sm sm:text-base text-[var(--muted-foreground)] leading-relaxed mb-4">{descText}</p>
+
+                    {work.techStack && work.techStack.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 pt-2 border-t border-white/10">
+                        {work.techStack.map((tech) => (
+                          <TechBadge key={tech} name={tech} size="sm" />
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </motion.div>
               );
@@ -892,7 +888,7 @@ export default function Home() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 sm:gap-16">
             {/* Skills */}
             <div>
-              <SectionHeading icon={Code} title={t.skills.title} color="green" isRTL={isRTL} />
+              <SectionHeading icon={Code} title={t.skills.title} description={t.skills.sectionDesc} color="green" isRTL={isRTL} />
               <div className="space-y-4 sm:space-y-5">
                 {portfolioData.skills.map((skill, idx) => (
                   <SkillBar key={skill.id || skill.name} name={skill.name} level={skill.level} delay={idx * 0.1} />
@@ -902,7 +898,7 @@ export default function Home() {
 
             {/* Tools */}
             <div>
-              <SectionHeading icon={Wrench} title={t.skills.tools} color="orange" isRTL={isRTL} />
+              <SectionHeading icon={Wrench} title={t.skills.tools} description={t.skills.toolsDesc} color="orange" isRTL={isRTL} />
               <motion.div
                 variants={containerVariants}
                 initial="hidden"
@@ -917,8 +913,8 @@ export default function Home() {
                     whileHover={{ scale: 1.04, y: -2 }}
                     className="glass p-3.5 sm:p-4 rounded-xl flex items-center gap-3 cursor-default group hover:bg-white/8 transition-all min-w-0"
                   >
-                    <div className="w-8 h-8 rounded-lg bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-400 font-bold text-xs group-hover:bg-orange-500/20 transition-colors shrink-0">
-                      {tool.charAt(0)}
+                    <div className="w-8 h-8 rounded-lg bg-orange-500/10 border border-orange-500/20 flex items-center justify-center shrink-0 group-hover:bg-orange-500/20 transition-colors">
+                      <TechIcon name={tool} className="w-4 h-4" />
                     </div>
                     <span className="text-xs sm:text-sm font-medium text-[var(--foreground)] truncate">{tool}</span>
                   </motion.div>
@@ -934,7 +930,7 @@ export default function Home() {
             CERTIFICATIONS SECTION
         ═══════════════════════════════════════════ */}
         {portfolioData.sectionVisibility.certifications && <section id="certifications" className="container mx-auto px-4 sm:px-6 py-12 sm:py-20">
-          <SectionHeading icon={Award} title={t.certifications.title} color="yellow" isRTL={isRTL} />
+          <SectionHeading icon={Award} title={t.certifications.title} description={t.certifications.sectionDesc} color="yellow" isRTL={isRTL} />
 
           <motion.div
             variants={containerVariants}
@@ -981,7 +977,7 @@ export default function Home() {
             LANGUAGES SECTION
         ═══════════════════════════════════════════ */}
         {portfolioData.sectionVisibility.languages && <section id="languages" className="container mx-auto px-4 sm:px-6 py-12 sm:py-20">
-          <SectionHeading icon={Globe2} title={t.languages.title} color="teal" isRTL={isRTL} />
+          <SectionHeading icon={Globe2} title={t.languages.title} description={t.languages.sectionDesc} color="teal" isRTL={isRTL} />
 
           <motion.div
             variants={containerVariants}
