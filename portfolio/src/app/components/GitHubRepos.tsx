@@ -225,6 +225,7 @@ export default function GitHubRepos({
           <SectionHeading 
             icon={FaGithub} 
             title={t.github?.title || "Recent Code Activity"} 
+            description={t.github?.sectionDesc || "Real-time GitHub activity, open-source repositories, and automated commit metrics."}
             color="purple" 
             isRTL={isRTL} 
           />

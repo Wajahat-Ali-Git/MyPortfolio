@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Globe, Image as ImageIcon, Save, RefreshCw, Sparkles, AlertCircle } from 'lucide-react';
+import { Search, Globe, Image as ImageIcon, Save, RefreshCw, Sparkles, AlertCircle, Upload } from 'lucide-react';
 import type { AdminSeoSettingsInput } from '@/lib/admin/types';
 
 const DEFAULT_SEO: AdminSeoSettingsInput = {
@@ -343,12 +343,56 @@ export default function SeoManagementPanel({
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-medium text-gray-300 mb-1.5">OG Image URL</label>
+                <div className="flex justify-between items-center mb-1.5">
+                  <label className="text-xs font-medium text-gray-300">OG Image URL</label>
+                  <label
+                    htmlFor="seo-og-image-file"
+                    className="text-[10px] font-semibold text-cyan-400 hover:text-cyan-300 cursor-pointer flex items-center gap-1"
+                  >
+                    <Upload className="w-3 h-3" />
+                    Upload Image
+                  </label>
+                  <input
+                    type="file"
+                    id="seo-og-image-file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      try {
+                        const headers: Record<string, string> = {};
+                        if (session?.access_token) {
+                          headers['Authorization'] = `Bearer ${session.access_token}`;
+                        }
+                        const formData = new FormData();
+                        formData.append('file', file);
+                        formData.append('folder', 'og');
+
+                        const res = await fetch('/api/admin/media', {
+                          method: 'POST',
+                          headers,
+                          body: formData,
+                        });
+                        const json = await res.json();
+                        if (res.ok && json.success && json.data?.url) {
+                          handleChange('seo_og_image_url', json.data.url);
+                          showToast('success', 'OG Image uploaded to Supabase Storage!');
+                        } else {
+                          throw new Error(json.error || 'Upload failed');
+                        }
+                      } catch (err) {
+                        showToast('error', err instanceof Error ? err.message : 'Image upload failed');
+                      }
+                      e.target.value = '';
+                    }}
+                  />
+                </div>
                 <input
                   type="url"
                   value={seoData.seo_og_image_url}
                   onChange={(e) => handleChange('seo_og_image_url', e.target.value)}
-                  placeholder="https://domain.com/og-image.jpg"
+                  placeholder="https://domain.com/og-image.jpg or upload"
                   className="w-full bg-[#0a0a16] border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/80"
                 />
               </div>

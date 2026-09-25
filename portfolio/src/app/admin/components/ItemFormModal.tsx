@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Plus, Sparkles, Check, AlertCircle, RefreshCw } from 'lucide-react';
+import { X, Plus, Sparkles, Check, AlertCircle, RefreshCw, Upload } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 
 export type AdminResourceType =
   | 'projects'
@@ -964,6 +965,59 @@ export default function ItemFormModal({
                     value={formData.availability_status || ''}
                     onChange={(e) => handleChange('availability_status', e.target.value)}
                     placeholder="e.g. Available for opportunities"
+                    className="w-full mt-1 bg-[#0a0a16] border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/80"
+                  />
+                </div>
+
+                <div>
+                  <div className="flex justify-between items-center mb-1">
+                    <label className="text-xs font-semibold text-gray-300">Hero Profile Image URL</label>
+                    <label
+                      htmlFor="hero-profile-image-file"
+                      className="text-[10px] font-semibold text-cyan-400 hover:text-cyan-300 cursor-pointer flex items-center gap-1"
+                    >
+                      <Upload className="w-3 h-3" />
+                      Upload Image
+                    </label>
+                    <input
+                      type="file"
+                      id="hero-profile-image-file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        try {
+                          const { data: sessionData } = await supabase.auth.getSession();
+                          const token = sessionData?.session?.access_token;
+                          const headers: Record<string, string> = {};
+                          if (token) headers['Authorization'] = `Bearer ${token}`;
+
+                          const formDataUpload = new FormData();
+                          formDataUpload.append('file', file);
+                          formDataUpload.append('folder', 'hero');
+
+                          const res = await fetch('/api/admin/media', {
+                            method: 'POST',
+                            headers,
+                            body: formDataUpload,
+                          });
+                          const json = await res.json();
+                          if (res.ok && json.success && json.data?.url) {
+                            handleChange('profile_image_url', json.data.url);
+                          }
+                        } catch {
+                          // ignore error
+                        }
+                        e.target.value = '';
+                      }}
+                    />
+                  </div>
+                  <input
+                    type="text"
+                    value={formData.profile_image_url || ''}
+                    onChange={(e) => handleChange('profile_image_url', e.target.value)}
+                    placeholder="https://... or upload to Supabase Storage"
                     className="w-full mt-1 bg-[#0a0a16] border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/80"
                   />
                 </div>
