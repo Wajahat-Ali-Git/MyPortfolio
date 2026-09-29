@@ -88,7 +88,7 @@ function SkillBar({ name, level, delay }: { name: string; level: number; delay: 
         </span>
         <span className="text-xs font-mono text-muted-foreground">{level}%</span>
       </div>
-      <div className="h-2 rounded-full bg-white/10 overflow-hidden">
+      <div className="h-2 rounded-full bg-black/5 dark:bg-white/10 overflow-hidden skill-bar-track">
         <motion.div
           initial={{ width: 0 }}
           animate={isInView ? { width: `${level}%` } : {}}
@@ -451,11 +451,23 @@ export default function Home() {
       {/* ─── Navigation ─── */}
       <motion.header
         animate={{
-          backgroundColor: scrolled ? "rgba(12, 12, 18, 0.82)" : "rgba(12, 12, 18, 0)",
+          backgroundColor: scrolled
+            ? isDark
+              ? "rgba(12, 12, 18, 0.82)"
+              : "rgba(248, 249, 252, 0.88)"
+            : "rgba(0, 0, 0, 0)",
           backdropFilter: scrolled ? "blur(20px) saturate(1.4)" : "blur(0px)",
           WebkitBackdropFilter: scrolled ? "blur(20px) saturate(1.4)" : "blur(0px)",
-          borderBottomColor: scrolled ? "rgba(255,255,255,0.10)" : "rgba(255,255,255,0)",
-          boxShadow: scrolled ? "0 4px 32px rgba(0,0,0,0.28)" : "none",
+          borderBottomColor: scrolled
+            ? isDark
+              ? "rgba(255,255,255,0.10)"
+              : "rgba(99,102,241,0.15)"
+            : "rgba(255,255,255,0)",
+          boxShadow: scrolled
+            ? isDark
+              ? "0 4px 32px rgba(0,0,0,0.28)"
+              : "0 4px 24px rgba(15,15,40,0.08)"
+            : "none",
         }}
         transition={{ duration: 0.35, ease: "easeInOut" }}
         className="fixed top-0 left-0 w-full z-50"
@@ -526,9 +538,9 @@ export default function Home() {
 
       {/* ─── Ambient Background ─── */}
       <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute top-[-20%] left-[-15%] w-[50%] h-[50%] rounded-full bg-blue-600/10 blur-[150px] animate-float" />
-        <div className="absolute bottom-[-20%] right-[-15%] w-[50%] h-[50%] rounded-full bg-purple-600/10 blur-[150px] animate-float-reverse" />
-        <div className="absolute top-[40%] left-[60%] w-[30%] h-[30%] rounded-full bg-indigo-600/5 blur-[120px] animate-float" />
+        <div className="absolute top-[-20%] left-[-15%] w-[50%] h-[50%] rounded-full bg-blue-500/10 dark:bg-blue-600/10 blur-[150px] animate-float" />
+        <div className="absolute bottom-[-20%] right-[-15%] w-[50%] h-[50%] rounded-full bg-purple-500/10 dark:bg-purple-600/10 blur-[150px] animate-float-reverse" />
+        <div className="absolute top-[40%] left-[60%] w-[30%] h-[30%] rounded-full bg-indigo-500/8 dark:bg-indigo-600/5 blur-[120px] animate-float" />
       </div>
 
       <div className="relative z-10">
@@ -778,7 +790,7 @@ export default function Home() {
                             <ExternalLink className="w-4 h-4 text-[var(--muted-foreground)] group-hover:text-[var(--foreground)] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all shrink-0 mt-1" />
                           </div>
 
-                          <p className="text-sm sm:text-base text-[var(--foreground)]/80 dark:text-gray-300 flex-grow mb-5 sm:mb-6 leading-relaxed">
+                          <p className="text-sm sm:text-base text-[var(--foreground)] opacity-80 dark:text-gray-300 flex-grow mb-5 sm:mb-6 leading-relaxed">
                             {desc}
                           </p>
 
@@ -866,7 +878,7 @@ export default function Home() {
                     <p className="text-sm sm:text-base text-[var(--muted-foreground)] leading-relaxed mb-4">{descText}</p>
 
                     {work.techStack && work.techStack.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5 pt-2 border-t border-white/10">
+                      <div className="flex flex-wrap gap-1.5 pt-2 border-t border-black/8 dark:border-white/10">
                         {work.techStack.map((tech) => (
                           <TechBadge key={tech} name={tech} size="sm" />
                         ))}

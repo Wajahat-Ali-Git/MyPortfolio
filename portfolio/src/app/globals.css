@@ -6,20 +6,25 @@
 
 @layer base {
   :root {
-    --background: #fafafa;
-    --foreground: #09090b;
+    --background: #f8f9fc;
+    --foreground: #0f0f13;
     --card: #ffffff;
-    --card-foreground: #09090b;
+    --card-foreground: #0f0f13;
     --primary: #18181b;
     --primary-foreground: #fafafa;
-    --secondary: #f4f4f5;
+    --secondary: #f1f2f6;
     --secondary-foreground: #18181b;
-    --muted: #f4f4f5;
-    --muted-foreground: #71717a;
-    --accent: #f4f4f5;
+    --muted: #eef0f5;
+    --muted-foreground: #4a5068;
+    --accent: #f1f2f6;
     --accent-foreground: #18181b;
-    --border: #e4e4e7;
-    --ring: #18181b;
+    --border: #d0d4e0;
+    --ring: #6366f1;
+    /* Light-mode specific helpers */
+    --card-shadow: 0 2px 16px rgba(15, 15, 40, 0.08), 0 1px 4px rgba(15, 15, 40, 0.06);
+    --card-border: 1px solid rgba(99, 102, 241, 0.12);
+    --glass-bg: rgba(255, 255, 255, 0.72);
+    --glass-border: rgba(99, 102, 241, 0.15);
   }
 
   .dark {
@@ -55,6 +60,10 @@ h1, h2, h3, h4, h5, h6 {
 
 .dark h1, .dark h2, .dark h3, .dark h4, .dark h5, .dark h6 {
   color: #ffffff;
+}
+
+p, span, li, a {
+  color: inherit;
 }
 
 /* ---- Custom Keyframe Animations ---- */
@@ -121,6 +130,13 @@ h1, h2, h3, h4, h5, h6 {
     -webkit-backdrop-filter: blur(16px);
     border: 1px solid rgba(255, 255, 255, 0.1);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  }
+
+  /* Light mode glass override */
+  :root:not(.dark) .glass {
+    background: rgba(255, 255, 255, 0.78);
+    border: 1px solid rgba(99, 102, 241, 0.14);
+    box-shadow: 0 4px 24px rgba(15, 15, 40, 0.08);
   }
 
   .themed-select {
@@ -230,6 +246,20 @@ h1, h2, h3, h4, h5, h6 {
     background: rgba(255, 255, 255, 0.1);
     border-color: rgba(255, 255, 255, 0.16);
     box-shadow: 0 16px 48px rgba(0, 0, 0, 0.2);
+    transform: translateY(-4px);
+  }
+
+  /* Light mode card overrides */
+  :root:not(.dark) .glass-card {
+    background: #ffffff;
+    border: 1px solid rgba(99, 102, 241, 0.13);
+    box-shadow: 0 2px 16px rgba(15, 15, 40, 0.07), 0 1px 4px rgba(15, 15, 40, 0.05);
+  }
+
+  :root:not(.dark) .glass-card:hover {
+    background: #ffffff;
+    border-color: rgba(99, 102, 241, 0.28);
+    box-shadow: 0 8px 32px rgba(99, 102, 241, 0.12), 0 2px 8px rgba(15, 15, 40, 0.08);
     transform: translateY(-4px);
   }
 
@@ -355,6 +385,13 @@ h1, h2, h3, h4, h5, h6 {
   overflow: hidden;
 }
 
+/* Light mode wf-root */
+:root:not(.dark) .wf-root {
+  background: #ffffff;
+  border: 1px solid rgba(99, 102, 241, 0.13);
+  box-shadow: 0 2px 20px rgba(15, 15, 40, 0.07);
+}
+
 .wf-root::before {
   content: '';
   position: absolute;
@@ -420,6 +457,18 @@ h1, h2, h3, h4, h5, h6 {
   min-width: 0;
 }
 
+/* Light mode wf-card */
+:root:not(.dark) .wf-card {
+  background: #f8f9fc;
+  border: 1px solid rgba(99, 102, 241, 0.12);
+  box-shadow: 0 1px 8px rgba(15, 15, 40, 0.05);
+}
+
+:root:not(.dark) .wf-card:hover {
+  background: #f4f5ff;
+  border-color: rgba(99, 102, 241, 0.25);
+}
+
 .wf-card:hover {
   background: rgba(255, 255, 255, 0.05);
 }
@@ -443,6 +492,13 @@ h1, h2, h3, h4, h5, h6 {
   padding: 0.2rem 0.75rem;
   border-radius: 9999px;
   border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* Light mode wf-card-label */
+:root:not(.dark) .wf-card-label {
+  background: rgba(99, 102, 241, 0.06);
+  border: 1px solid rgba(99, 102, 241, 0.14);
+  color: #4a5068;
 }
 
 .wf-card-bubble-area {
@@ -602,6 +658,11 @@ h1, h2, h3, h4, h5, h6 {
   transition: background 0.4s ease;
 }
 
+/* Light mode timeline connector */
+:root:not(.dark) .wf-timeline-connector {
+  background: rgba(99, 102, 241, 0.12);
+}
+
 .wf-timeline-connector.active {
   background: linear-gradient(90deg, #6366f1, #60a5fa);
 }
@@ -618,6 +679,12 @@ h1, h2, h3, h4, h5, h6 {
   position: relative;
   z-index: 1;
   transition: all 0.3s ease;
+}
+
+/* Light mode timeline dot */
+:root:not(.dark) .wf-timeline-dot {
+  border: 2px solid rgba(99, 102, 241, 0.2);
+  background: rgba(99, 102, 241, 0.06);
 }
 
 .wf-timeline-dot.done {
@@ -782,16 +849,46 @@ h1, h2, h3, h4, h5, h6 {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(99, 102, 241, 0.2);
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
+  background: rgba(99, 102, 241, 0.35);
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+}
+.dark ::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.2);
 }
 
 /* ---- Selection ---- */
 
 ::selection {
+  background: rgba(99, 102, 241, 0.25);
+  color: #0f0f13;
+}
+
+.dark ::selection {
   background: rgba(129, 140, 248, 0.3);
   color: #fafafa;
+}
+
+/* ---- Light mode skill bar track ---- */
+:root:not(.dark) .skill-bar-track {
+  background: rgba(99, 102, 241, 0.1);
+}
+
+/* ---- Light mode nav links ---- */
+:root:not(.dark) .nav-link {
+  color: var(--muted-foreground);
+}
+:root:not(.dark) .nav-link:hover {
+  color: #6366f1;
+}
+
+/* ---- Light mode section divider ---- */
+:root:not(.dark) .section-divider::before {
+  background: linear-gradient(to bottom, transparent, rgba(99, 102, 241, 0.4), transparent);
 }
