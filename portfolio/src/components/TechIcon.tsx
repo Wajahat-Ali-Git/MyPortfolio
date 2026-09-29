@@ -183,7 +183,7 @@ export function TechBadge({ name, onClick, isActive, size = 'sm' }: TechBadgePro
       } ${
         isActive
           ? 'text-white font-semibold shadow-sm'
-          : 'bg-white/5 dark:bg-white/5 border-white/10 text-foreground/90 dark:text-gray-200 hover:bg-white/10 hover:border-white/20'
+          : 'bg-black/5 dark:bg-white/5 border-black/10 dark:border-white/10 text-foreground hover:bg-indigo-50 dark:hover:bg-white/10 hover:border-indigo-200 dark:hover:border-white/20'
       }`}
     >
       <Icon className={isSmall ? 'w-3.5 h-3.5 shrink-0' : 'w-4 h-4 shrink-0'} style={{ color: meta.color }} />
